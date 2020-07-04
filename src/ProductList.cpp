@@ -16,7 +16,7 @@
 #include "BaseButton.h"
 #include "Constants.h"
 
-std::string ProductList::STR_MSG_DEFF_RELEASE   = "Choose a product from below codes";
+std::string ProductList::STR_MSG_DEFF_RELEASE   = " ";
 
 void ProductList::create_product_table(std::string file_name, FILE *fp) {
     fprintf(fp, "BaseBot %ld: ProductList::create_product_table {\n", time(0)); fflush(fp);
@@ -89,7 +89,7 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     //  Populate the next available row
     createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
     if(isAdmin) createKBBtn(STR_BTN_ADMIN_PAGE, row[iRowIndex], lstBaseBtns);
-    else createKBBtn(STR_BTN_HELP_FAQ, row[iRowIndex], lstBaseBtns);
+    else createKBBtn(STR_BTN_FAQ, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_YOUR_ORDERS, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
@@ -136,7 +136,7 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         strCode = pMsg->text.substr(4);  // yields TF-01
         Product::Ptr pProd  = getDBHandle()->getProductForCode(strCode,fp);
         int iQty = getDBHandle()->addProductToCart(pProd->m_ProductId, pProd->m_Price, pMsg->chat->id, fp);
-        ss << "<b>" << pProd->m_Name << " * " << iQty << "</b> added to Cart.\nClick <b>View Cart</b> for full list.";
+        ss << "<b>" << pProd->m_Name << " * " << iQty << "</b> added to Cart. Clicking it again, increases quantity.";
         STR_MSG_DEFF_RELEASE = ss.str();
     }
 

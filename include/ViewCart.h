@@ -30,7 +30,7 @@ public:
     //  This object is not created on every invocation. So clear it before using.
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
         cartItems.clear(); products.clear(); asset_file.clear(); strAddress.clear();
-        iSelPage = 0; iNoOfItems = 0; STR_MSG_DEFF_RELEASE  = "Your Cart";
+        iSelPage = 0; iNoOfItems = 0; STR_MSG_DEFF_RELEASE  = "\"Add\" => increase quantity\n\"Rmv\" => decreases quantity.";
     }
     std::string getMsg() { return STR_MSG_DEFF_RELEASE;}
     TgBot::GenericReply::Ptr prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& listKBBtns, TgBot::Message::Ptr pMsg, FILE *fp);

@@ -39,6 +39,9 @@ public:
 
     std::string getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, unsigned int iTotal, FILE *fp);
 
+    //  Overriding cleanup, otherwise it clears up what is just set in prepareMenu
+    void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}
+
     static std::string STR_MSG_DEFF_RELEASE;
     static std::string STR_BTN_GPAY, STR_BTN_PAYTM, STR_BTN_BHIM, STR_BTN_CASH, STR_BTN_BACK;
 };

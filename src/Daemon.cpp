@@ -158,7 +158,7 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns["/start"]              = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns["start"]               = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns[STR_BTN_EMPTY_CART]    = listBaseBtns[STR_BTN_MAINMENU];
-    listBaseBtns[STR_BTN_HELP_FAQ]      = std::make_shared<FAQs>(hDB);
+    listBaseBtns[STR_BTN_FAQ]           = std::make_shared<FAQs>(hDB);
 
     listBaseBtns[STR_BTN_VIEW_CART]     = std::make_shared<ViewCart>(hDB);
     listBaseBtns[STR_BTN_REMOVE]        = listBaseBtns[STR_BTN_VIEW_CART];
@@ -193,6 +193,7 @@ void BotMainLoop(FILE *fp) {
     adminChatIds.push_back(550919816);      // Myself
     //adminChatIds.push_back(685954136);    // Sriram
     adminChatIds.push_back(1306802994);     // Sudarshan
+    adminChatIds.push_back(1352652258); // Santosh
 
     pBot->getEvents().onAnyMessage( [pBot, &listBaseBtns, fp, &startSec](TgBot::Message::Ptr pMsg) {
         petWatchDog(fp);
@@ -222,8 +223,8 @@ void BotMainLoop(FILE *fp) {
             pBaseBtn = itrBBtn->second->getSharedPtr();
         } else {
             fprintf(fp, "BaseBot %ld: \"%s\" button missing\n", time(0), pMsg->text.c_str()); fflush(fp);
-            std::stringstream ss;
-            ss << "Hi " << pMsg->from->firstName << ", could not recognize what you say, pls use the buttons below.\nRegret the inconvenience caused.";
+//            std::stringstream ss;
+//            ss << "Hi " << pMsg->from->firstName << ", could not recognize what you say, pls use the buttons below.\nRegret the inconvenience caused.";
             pBaseBtn    = listBaseBtns[STR_BTN_MAINMENU];
         }
 

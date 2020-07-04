@@ -71,12 +71,11 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
     }
 
     else if(pUser->m_Address.empty() || !isMobileNoPresent(pUser->m_Address)) {
-        STR_MSG_DEFF_RELEASE  = "Pls update your shipping address <b>WITH MOBILE NO</b> before checking out.";
-        createKBBtn(STR_BTN_SHPG_ADDRESS, row[iRowIndex], lstBaseBtns);
-        iRowIndex++;
-        createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
-        createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
-        iRowIndex++;
+        m_Context[pMsg->chat->id] = USER_CTXT_ADDRESS;
+        std::string strChatId   = std::to_string(pMsg->chat->id);
+        lstBaseBtns[strChatId]  = lstBaseBtns[STR_BTN_SHPG_ADDRESS];
+        STR_MSG_DEFF_RELEASE    = getAddressNotification();
+        return std::make_shared<TgBot::ReplyKeyboardRemove>();
     }
 
     else if(!pMsg->text.compare(STR_BTN_CHECKOUT)) {

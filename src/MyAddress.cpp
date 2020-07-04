@@ -16,6 +16,16 @@
 
 std::string MyAddress::STR_MSG_DEFF_RELEASE = "Please enter your address";
 
+std::string getAddressNotification() {
+   return
+   std::string("Type address & mobile no in short form & send. <b>MOBILE No IS MUST.</b>") +
+   std::string("\nNote: This screen repeats until you give a 10 digit mobile no.") +
+   std::string("\n\nExample:\nB6 105, SSM Nagar, Perungalathur, 98452 35323") +
+   std::string("\n\n24A 101, Bollineni Hillside, Nookampalayam, 88765 89623") +
+   std::string("\n\nD3F2 Navins Brookfield, Nanmangalam, 91765 66966") +
+   std::string("\n\nM 104 Purva Fountain Square, Marathahalli, 70102 80604");
+}
+
 TgBot::GenericReply::Ptr MyAddress::prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: MyAddress::prepareMenu {\n", time(0)); fflush(fp);
 
@@ -30,16 +40,13 @@ TgBot::GenericReply::Ptr MyAddress::prepareMenu(std::map<std::string, std::share
     iRowIndex       = 0;
     if(strAddress.empty() || !pMsg->text.compare(STR_BTN_CHANGE_ADDRESS)) {
         fprintf(fp, "BaseBot %ld: Asking user to type the address\n", time(0)); fflush(fp);
-        m_Context[pMsg->chat->id] = USER_CTXT_ADDRESS;
-        lstBaseBtns[strChatId]  = getSharedPtr();
-        STR_MSG_DEFF_RELEASE  = std::string("Type address & mobile no in short form & send. <b>MOBILE No IS MUST.</b>") +
-                                std::string("\nNote: This screen repeats until you give a 10 digit mobile no.") +                        
-				std::string("\n\nExample:\nB6 105, SSM Nagar, Perungalathur, 98452 35323") +
-                                std::string("\n\n24A 101, Bollineni Hillside, Nookampalayam, 88765 89623") +
-                                std::string("\n\nD3F2 Navins Brookfield, Nanmangalam, 91765 66966") +
-                                std::string("\n\nM 104 Purva Fountain Square, Marathahalli, 70102 80604");
+        m_Context[pMsg->chat->id]   = USER_CTXT_ADDRESS;
+        lstBaseBtns[strChatId]      = getSharedPtr();
+        STR_MSG_DEFF_RELEASE        = getAddressNotification();
         return std::make_shared<TgBot::ReplyKeyboardRemove>();
-    } else if(!pMsg->text.compare(STR_BTN_SHPG_ADDRESS)) {
+    }
+
+    else if(!pMsg->text.compare(STR_BTN_SHPG_ADDRESS)) {
         fprintf(fp, "BaseBot %ld: Got request to render addresses\n", time(0)); fflush(fp);
         STR_MSG_DEFF_RELEASE  = "Choose the below options.";
 
@@ -48,16 +55,23 @@ TgBot::GenericReply::Ptr MyAddress::prepareMenu(std::map<std::string, std::share
 
         createKBBtn(STR_BTN_CHANGE_ADDRESS, row[iRowIndex++], lstBaseBtns);
 
-    } else if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) ) {
+    }
+
+    else if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) ) {
         fprintf(fp, "BaseBot %ld: Processing typed address\n", time(0)); fflush(fp);
-        STR_MSG_DEFF_RELEASE  = "Thanks. Your shipping address is noted. Please choose a below options to continue.";
+        std::stringstream ss;
+        ss << "Thanks. Your shipping address:\n<b>" << pMsg->text << "</b> is noted.";
+        STR_MSG_DEFF_RELEASE  = ss.str();
 
         m_Context.erase(itrCntxt);
         if(lstBaseBtns.end() != (itrBtn = lstBaseBtns.find(strChatId))) lstBaseBtns.erase(itrBtn);
 
-        createKBBtn(STR_BTN_SHPG_ADDRESS, row[iRowIndex++], lstBaseBtns);
-        createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex++], lstBaseBtns);
-        createKBBtn(STR_BTN_MAINMENU, row[iRowIndex++], lstBaseBtns);
+        createKBBtn(STR_BTN_CHANGE_ADDRESS, row[iRowIndex], lstBaseBtns);
+        createKBBtn(STR_BTN_CHECKOUT, row[iRowIndex], lstBaseBtns);
+        iRowIndex++;
+        createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
+        createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
+        iRowIndex++;
     }
 
     pMainMenu   = std::make_shared<TgBot::ReplyKeyboardMarkup>();

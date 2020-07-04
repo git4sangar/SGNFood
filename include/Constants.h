@@ -161,7 +161,7 @@
 #define STR_BTN_ADD_BY_SN       "Add to Cart by SN"
 #define STR_BTN_CHANGE_ADDRESS  "Change Address"
 #define STR_BTN_ABOUT           "About"
-#define STR_BTN_HELP_FAQ        "Help & FAQ"
+#define STR_BTN_FAQ             "FAQs"
 #define STR_BTN_SHPG_ADDRESS    "Shipping Address"
 #define STR_BTN_MAINMENU        "Main Menu"
 #define STR_BTN_VIEW_CART       "View Cart"
@@ -179,5 +179,7 @@ typedef int UserContext;
 
 extern std::map<unsigned int, UserContext> m_Context;
 extern std::vector<unsigned int> adminChatIds;
+
+extern std::string getAddressNotification();
 
 #endif /* CONSTANTS_H_ */
