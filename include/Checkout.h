@@ -1,0 +1,48 @@
+/*sgn
+ * Checkout.h
+ *
+ *  Created on: 30-May-2020
+ *      Author: tstone10
+ */
+
+#ifndef CHECKOUT_H_
+#define CHECKOUT_H_
+
+#include <iostream>
+#include <vector>
+
+#include "DBInterface.h"
+#include "BaseButton.h"
+
+#define CART_PAGE     "Cart Page"
+
+class Checkout : public BaseButton, public std::enable_shared_from_this<Checkout> {
+    unsigned int iTotal, iNoOfItems;
+    User::Ptr pUser;
+    std::vector<Cart::Ptr> cartItems;
+
+public:
+    Checkout(DBInterface::Ptr hDB) : BaseButton(hDB), iTotal(0), iNoOfItems(0), pUser(nullptr) {}
+    virtual ~Checkout() {}
+
+    //  This object is not created on every invocation. So clear it before using.
+    void init(TgBot::Message::Ptr pMsg, FILE *fp) {
+        pUser = nullptr;
+        iTotal = iNoOfItems = 0; cartItems.clear();
+    }
+    bool isMobileNoPresent(std::string strAddress);
+    std::string getMsg() { return STR_MSG_DEFF_RELEASE;}
+    TgBot::GenericReply::Ptr prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& listKBBtns, TgBot::Message::Ptr pMsg, FILE *fp);
+    void onClick(TgBot::Message::Ptr pMessage, FILE *fp);
+    std::shared_ptr<BaseButton> getSharedPtr() {return shared_from_this();}
+    std::string getParseMode() {return "HTML";}
+
+    std::string getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, unsigned int iTotal, FILE *fp);
+
+    static std::string STR_MSG_DEFF_RELEASE;
+    static std::string STR_BTN_GPAY, STR_BTN_PAYTM, STR_BTN_BHIM, STR_BTN_CASH, STR_BTN_BACK;
+};
+
+
+
+#endif /* CHECKOUT_H_ */
