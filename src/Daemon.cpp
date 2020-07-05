@@ -144,7 +144,7 @@ void BotMainLoop(FILE *fp) {
 
     fprintf(fp, "Main: %ld: Starting MainLoop\n", time(0)); fflush(fp);
 
-    std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>(THRAYA_BOT);
+    std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>(BOT_TOKEN);
     std::thread recv_thread(&plsWaitThread, pBot, fp);
 
     DBInterface::Ptr hDB       = std::make_shared<DBInterface>(root_path + db_path + db_file, fp);

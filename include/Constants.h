@@ -14,7 +14,7 @@
 #define SGN_BOT_VER "1.0.0"
 
 #define MANI_MAMA
-#define _VM_
+#define _Pi_
 
 //------------------------------------Veggies Daily------------------------------------
 #ifdef VEGGIES
