@@ -14,6 +14,8 @@
 #include "DBInterface.h"
 #include "BaseButton.h"
 
+#define PROD_TOKENS (3)
+
 class PriceChange : public BaseButton, public std::enable_shared_from_this<PriceChange> {
     Category::Ptr pCategory;
     std::vector<Product::Ptr> products;

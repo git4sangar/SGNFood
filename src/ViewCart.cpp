@@ -44,7 +44,7 @@ void ViewCart::create_cart_table(std::string file_name, FILE *fp) {
             std::string strCount    = std::to_string(iCount);
             std::string strProdPack = products[iIndex]->m_Name + std::string(" - ") + products[iIndex]->m_Pack;
             std::string strQty      = std::to_string(cartItems[iIndex]->m_Qnty);
-            iSum                    = cartItems[iIndex]->m_Qnty * products[iIndex]->m_Price;
+            iSum                    = cartItems[iIndex]->m_Qnty * cartItems[iIndex]->m_Price;
             std::string strPrice    = std::to_string(iSum);
 
             cart_table.plot_text_utf8((char *)strFontFile.c_str(), 10,     5, iLoop-20, 0.0, (char *)strCount.c_str(), 0, 0, 0);
@@ -63,7 +63,7 @@ void ViewCart::create_cart_table(std::string file_name, FILE *fp) {
     if(iNoOfItems <= (iSelPage * (MAX_ITEMS_PER_PAGE-1))) {
         for(iSum = iQty = iLoop = 0; iLoop < cartItems.size(); iLoop ++) {
             iQty    += cartItems[iLoop]->m_Qnty;
-            iSum    += (cartItems[iLoop]->m_Qnty * products[iLoop]->m_Price);
+            iSum    += (cartItems[iLoop]->m_Qnty * cartItems[iLoop]->m_Price);
         }
         cart_table.plot_text_utf8((char *)strFontFile.c_str(), 12,   70, 10, 0.0, (char *)"Total ₹:", 0, 0, 0);
         cart_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 140+5, 10, 0.0, (char *)std::to_string(iSum).c_str(), 0, 0, 0);
@@ -109,7 +109,7 @@ TgBot::GenericReply::Ptr ViewCart::prepareMenu(std::map<std::string, std::shared
             createKBBtn(strBtns[iLoop], row[iLoop/iItemsPerRow], lstBaseBtns, getSharedPtr());
 
         iRowIndex   = iRowsReqd;
-    } else STR_MSG_DEFF_RELEASE  = "Your Cart is empty. Clicking \"Add to Cart\" button adds the product to Cart.";
+    } else STR_MSG_DEFF_RELEASE  = "Your Cart is empty. Clicking \"Buy\" button adds an item to Cart.";
 
     //  Populate pages in next available row if no. of items more than (MAX_ITEMS_PER_PAGE-1)
     if((MAX_ITEMS_PER_PAGE-1) < iNoOfItems) {

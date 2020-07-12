@@ -98,7 +98,7 @@ int SingleOrder::create_order_items_table(std::shared_ptr<pngwriter> pPNGWriter,
             std::string strCount    = std::to_string(iIndex+1);
             std::string strProdPack = products[iIndex]->m_Name + std::string(" - ") + products[iIndex]->m_Pack;
             std::string strQty      = std::to_string(orderItems[iIndex]->m_Qnty);
-            iSum                    = orderItems[iIndex]->m_Qnty * products[iIndex]->m_Price;
+            iSum                    = orderItems[iIndex]->m_Qnty * orderItems[iIndex]->m_Price;
             std::string strPrice    = std::to_string(iSum);
 
             pPNGWriter->plot_text_utf8((char *)strFontFile.c_str(), 10,     5, iLoop-20, 0.0, (char *)strCount.c_str(), 0, 0, 0);

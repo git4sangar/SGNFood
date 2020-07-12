@@ -13,28 +13,8 @@
 
 #define SGN_BOT_VER "1.0.0"
 
-#define MANI_MAMA
+#define MITTALI
 #define _Pi_
-
-//------------------------------------Veggies Daily------------------------------------
-#ifdef VEGGIES
-    #define BOT_TOKEN       "1094369057:AAE2fqPhC1xcYuEeYIIMIcUtxG7-TH7EhzA"
-    #define BOT_DB_FILE     "sgn_veggies.db"
-    #define BOT_LOG_FILE    "log_file_veggies.log"
-    #define PAYTM_MOBILE    "99402 06626"
-    #define GPAY_MOBILE     "99402 06626"
-    #define BHIM_UPI        "99402 06626@ybl"
-
-    #ifdef _VM_
-        #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNBot/bin/VeggiesBot"
-        #define BOT_ROOT_PATH       "/home/svaithiy/sgn/projs/SGNBot/veggies_daily/"
-    #endif
-
-    #ifdef _Pi_
-        #define BIN_FILE_PATH     "/home/pi/sgn/projs/SGNRetailerBot/bin/VeggiesBot"
-        #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNRetailerBot/veggies_daily/"
-    #endif
-#endif
 
 //------------------------------------Mani Mama------------------------------------
 #ifdef MANI_MAMA
@@ -57,24 +37,26 @@
     #endif
 #endif
 
-//------------------------------------Chekk Boys------------------------------------
-#ifdef CHEKKBOYS
-    #define BOT_TOKEN       "1089935460:AAHqTEk2AX0hbmhHIer-ydcelqTTDru3I3Q"
-    #define BOT_DB_FILE     "sgn_chekkboys.db"
-    #define BOT_LOG_FILE    "log_file_chekkboys.log"
-    #define GPAY_MOBILE     "98406 25165"
+#ifdef MITTALI
+    // Rajaveni: Deleted: #define BOT_TOKEN       "1240037726:AAFG227jcLfO_7tTsredLEE29R1SzAdDZ7c"
+    #define BOT_TOKEN  "1086209332:AAEqeUTkyccsPi22wUWKnUU-o7wpS3k9pRk"
+    #define BOT_DB_FILE     "sgn_mittali.db"
+    #define BOT_LOG_FILE    "log_file_mittali.log"
     #define PAYTM_MOBILE    "98406 25165"
+    #define GPAY_MOBILE     "98406 25165"
+    #define BHIM_UPI        "98406 25165@okaxis"
 
     #ifdef _VM_
-        #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNBot/bin/ChekkboysBot"
-        #define BOT_ROOT_PATH       "/home/svaithiy/sgn/projs/SGNBot/chekkboys/"
+        #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/MittaliBot"
+        #define BOT_ROOT_PATH       "/home/svaithiy/sgn/projs/SGNFood/mittali/"
     #endif
 
     #ifdef _Pi_
-        #define BIN_FILE_PATH     "/home/pi/sgn/projs/SGNRetailerBot/bin/ChekkboysBot"
-        #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNRetailerBot/chekkboys/"
+        #define BIN_FILE_PATH     "/home/pi/sgn/projs/SGNFood/bin/MittaliBot"
+        #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNFood/mittali/"
     #endif
 #endif
+
 
 #define AURA_BOT        "655366902:AAGEaKH0q1xXu0Lwd5C5HBDZsUnPTjn13X4"
 #define THRAYA_BOT      "664320846:AAHffJ_8LG0W8eGCuYsrgkK4fOCj9j2FgTo"
@@ -93,6 +75,8 @@
 #define MIN_ITEMS_FOR_PNG   (4)
 #define MAX_ITEMS_PER_PAGE  (10)
 #define MAX_NO_OF_PAGES     (10)
+
+#define MAX_ITEM_LENGTH     (20)
 
 #define MAX_PIC_SEND_RETRIES    (3)
 #define SKIP_INTERVAL       (5)
@@ -122,17 +106,19 @@
 #define USER_CTXT_ADDRESS       (101)
 #define USER_CTXT_CLEANUP       (102)
 #define USER_CTXT_PRICE_CHANGE  (103)
-#define USER_CTXT_YOUR_ORDER    (104)
-#define USER_CTXT_NEW_ORDER     (105)
-#define USER_CTXT_CNF_ORDER     (106)
-#define USER_CTXT_DLVRD_ORDER   (107)
-#define USER_CTXT_CNCLD_ORDER   (108)
-#define USER_CTXT_REVIEW        (109)
-#define USER_CTXT_SHOW_PRICE    (110)
+#define USER_CTXT_ADD_A_PROD    (104)
+#define USER_CTXT_YOUR_ORDER    (105)
+#define USER_CTXT_NEW_ORDER     (106)
+#define USER_CTXT_CNF_ORDER     (107)
+#define USER_CTXT_DLVRD_ORDER   (108)
+#define USER_CTXT_CNCLD_ORDER   (109)
+#define USER_CTXT_REVIEW        (110)
+#define USER_CTXT_SHOW_PRICE    (111)
 
 #define STR_GPAY    "GPay"
 #define STR_PAYTM   "PayTM"
 #define STR_BHIM    "BHIM"
+#define STR_WALLET  "Wallet"
 #define STR_CASH    "Cash"
 
 //  Commands to process
@@ -144,9 +130,11 @@
 
 #define STR_BTN_MENU_MGMT       "Menu Mgmt"
 #define STR_BTN_ITEM_LIST       "Item List"
+#define STR_BTN_ADD_PROD        "Add Item"
 #define STR_BTN_EDIT_PRICE      "Edit Price"
 #define STR_BTN_EDIT_MENU       "Edit Menu"
 #define STR_BTN_SHOW_MENU       "Show Menu"
+#define STR_BTN_DONE_MENU       "Menu Done"
 #define STR_BTN_ORDERS          "Orders"
 
 //  Category of orders
@@ -155,6 +143,12 @@
 #define STR_BTN_DLVRD_ORDERS    "Delivered Orders"
 #define STR_BTN_CNCLD_ORDERS    "Cancelled Orders"
 #define STR_BTN_YOUR_ORDERS     "Your Orders"
+#define STR_BTN_MY_WALLET       "My Wallet"
+
+#define STR_BTN_TOP_UP_WALLET   "Top Up Wallet"
+#define STR_BTN_GPAY_TOP_UP     "Topped Up via GPay"
+#define STR_BTN_BHIM_TOP_UP     "Topped Up via BHIM"
+#define STR_BTN_PAYTM_TOP_UP    "Topped Up via PayTM"
 
 #define STR_BTN_SINGLE_ORDER    "Single Order"
 #define STR_BTN_ADMIN_PAGE      "Admin"

@@ -31,7 +31,7 @@ public:
     //  This object is not created on every invocation. So clear it before using.
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
         products.clear(); asset_file.clear(); iSelPage = 0; iNoOfItems = 0;
-        STR_MSG_DEFF_RELEASE   = "Click \"Buy\" button below to add an item, with above Code, to Cart.";
+        STR_MSG_DEFF_RELEASE   = "\"Buy\" below adds an item to Cart. Refer \"Code\" above.";
         isAdmin = false; notifyMsgs.clear();
     }
     std::string getMsg() { return STR_MSG_DEFF_RELEASE;}

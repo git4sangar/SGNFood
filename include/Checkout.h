@@ -20,6 +20,7 @@ class Checkout : public BaseButton, public std::enable_shared_from_this<Checkout
     unsigned int iTotal, iNoOfItems;
     User::Ptr pUser;
     std::vector<Cart::Ptr> cartItems;
+    std::map<unsigned int, std::string> notifyMsgs;
 
 public:
     Checkout(DBInterface::Ptr hDB) : BaseButton(hDB), iTotal(0), iNoOfItems(0), pUser(nullptr) {}
@@ -29,6 +30,7 @@ public:
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
         pUser = nullptr;
         iTotal = iNoOfItems = 0; cartItems.clear();
+        notifyMsgs.clear();
     }
     bool isMobileNoPresent(std::string strAddress);
     std::string getMsg() { return STR_MSG_DEFF_RELEASE;}
@@ -38,12 +40,14 @@ public:
     std::string getParseMode() {return "HTML";}
 
     std::string getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, unsigned int iTotal, FILE *fp);
+    std::string getTopUpString();
 
     //  Overriding cleanup, otherwise it clears up what is just set in prepareMenu
     void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}
 
+    std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     static std::string STR_MSG_DEFF_RELEASE;
-    static std::string STR_BTN_GPAY, STR_BTN_PAYTM, STR_BTN_BHIM, STR_BTN_CASH, STR_BTN_BACK;
+    static std::string STR_BTN_GPAY, STR_BTN_PAYTM, STR_BTN_WALLET, STR_BTN_BHIM, STR_BTN_CASH, STR_BTN_BACK;
 };
 
 

@@ -144,7 +144,7 @@ void BotMainLoop(FILE *fp) {
 
     fprintf(fp, "Main: %ld: Starting MainLoop\n", time(0)); fflush(fp);
 
-    std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>(BOT_TOKEN);
+    std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>(THRAYA_BOT);
     std::thread recv_thread(&plsWaitThread, pBot, fp);
 
     DBInterface::Ptr hDB       = std::make_shared<DBInterface>(root_path + db_path + db_file, fp);
@@ -164,6 +164,7 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_REMOVE]        = listBaseBtns[STR_BTN_VIEW_CART];
 
     listBaseBtns[STR_BTN_CHECKOUT]      = std::make_shared<Checkout>(hDB);
+    listBaseBtns[STR_BTN_TOP_UP_WALLET] = listBaseBtns[STR_BTN_CHECKOUT];
 
     listBaseBtns[STR_BTN_SHPG_ADDRESS]  = std::make_shared<MyAddress>(hDB);
     listBaseBtns[STR_BTN_CHANGE_ADDRESS]= listBaseBtns[STR_BTN_SHPG_ADDRESS];
@@ -179,9 +180,11 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_MENU_MGMT]     = std::make_shared<PriceChange>(hDB);
     listBaseBtns[STR_BTN_EDIT_PRICE]    = listBaseBtns[STR_BTN_MENU_MGMT];
     listBaseBtns[STR_BTN_ITEM_LIST]     = listBaseBtns[STR_BTN_MENU_MGMT];
+    listBaseBtns[STR_BTN_ADD_PROD]      = listBaseBtns[STR_BTN_MENU_MGMT];
 
     listBaseBtns[STR_BTN_EDIT_MENU]     = std::make_shared<EditMenu>(hDB);
     listBaseBtns[STR_BTN_SHOW_MENU]     = listBaseBtns[STR_BTN_EDIT_MENU];
+    listBaseBtns[STR_BTN_DONE_MENU]     = listBaseBtns[STR_BTN_EDIT_MENU];
 
     listBaseBtns[STR_BTN_SINGLE_ORDER]  = std::make_shared<SingleOrder>(hDB);
     listBaseBtns[STR_BTN_PRINT_ORDER]   = listBaseBtns[STR_BTN_SINGLE_ORDER];
@@ -192,8 +195,8 @@ void BotMainLoop(FILE *fp) {
     //  Admin Chat Ids
     adminChatIds.push_back(550919816);      // Myself
     //adminChatIds.push_back(685954136);    // Sriram
-    adminChatIds.push_back(1306802994);     // Sudarshan
-    adminChatIds.push_back(1352652258); // Santosh
+    //adminChatIds.push_back(1306802994);   // Sudarshan
+    //adminChatIds.push_back(1352652258);   // Santosh
 
     pBot->getEvents().onAnyMessage( [pBot, &listBaseBtns, fp, &startSec](TgBot::Message::Ptr pMsg) {
         petWatchDog(fp);

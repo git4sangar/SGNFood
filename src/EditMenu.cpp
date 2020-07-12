@@ -99,15 +99,15 @@ TgBot::GenericReply::Ptr EditMenu::prepareMenu(std::map<std::string, std::shared
         strText     = std::string(ITEMS_PAGE) + std::string(" ") + std::to_string(iPrev);
         createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
 
-        createKBBtn(STR_BTN_SHOW_MENU, row[iRowIndex], lstBaseBtns);
-
         iNext       = (iNoOfItems > (iSelPage * MAX_ITEMS_PER_PAGE)) ? (iSelPage + 1) : iSelPage;
         strText     = std::string(ITEMS_PAGE) + std::string(" ") + std::to_string(iNext);
         createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
-
-        //  Pick the next available rowa
-        iRowIndex++;
     }
+    if(pMsg->text.compare(STR_BTN_SHOW_MENU))
+        createKBBtn(STR_BTN_SHOW_MENU, row[iRowIndex], lstBaseBtns);
+    else
+        createKBBtn(STR_BTN_DONE_MENU, row[iRowIndex], lstBaseBtns);
+    iRowIndex++;
 
     //  Populate the next available row
     createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
@@ -139,12 +139,21 @@ void EditMenu::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     iSelPage    = 1;
     iNoOfItems  = products.size();
 
-    User::Ptr pUser = getDBHandle()->getUserForChatId(pMsg->chat->id, fp);
-
+    std::vector<Product::Ptr> actvProds = getDBHandle()->getAllActiveProducts(fp);
     if(!pMsg->text.compare(STR_BTN_SHOW_MENU)) {
-        products    = getDBHandle()->getAllActiveProducts(fp);
+        products    = actvProds;
         iSelPage    = 1;
         iNoOfItems  = products.size();
+    }
+
+    if(!pMsg->text.compare(STR_BTN_DONE_MENU)) {
+        if(actvProds.empty()) {
+            STR_MSG_DEFF_RELEASE = "<b>Tomorrow's menu is empty. Pls create it first.</b>";
+        } else {
+            std::vector<User::Ptr> users    = getDBHandle()->getAllUsers(fp);
+            for(auto &user : users) { notifyMsgs[user->m_ChatId] = std::string("Hi ") + user->m_Name + ", tomorrow's menu is ready. Pls place your order.";}
+            //notifyMsgs[303802126] = std::string("Hi Shalini, tomorrow's menu is ready. Pls place your order.");
+        }
     }
 
     //  Is pagination?
@@ -164,7 +173,6 @@ void EditMenu::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     if('+' == pMsg->text[0] || '-' == pMsg->text[0]) {
         //  +1 or -1
         strId = pMsg->text.substr(1);  // yields 1
-
         for(iLoop = 0; iLoop < iNoOfItems; iLoop++) if(products[iLoop]->m_ProductId == std::stoi(strId)) break;
 
         if(iLoop < iNoOfItems) {

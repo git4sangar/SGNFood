@@ -91,6 +91,7 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     if(isAdmin) createKBBtn(STR_BTN_ADMIN_PAGE, row[iRowIndex], lstBaseBtns);
     else createKBBtn(STR_BTN_FAQ, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_YOUR_ORDERS, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_MY_WALLET, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
     //  Add all the rows to main menu
@@ -145,22 +146,6 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         STR_MSG_DEFF_RELEASE = std::string("Your cart is empty now.\n") + STR_MSG_DEFF_RELEASE;
     }
 
-    //  After checkout, it is redirected here
-    std::string pmtgw;
-         if(std::string::npos != pMsg->text.find(STR_GPAY))   pmtgw = STR_GPAY;
-    else if(std::string::npos != pMsg->text.find(STR_PAYTM))  pmtgw = STR_PAYTM;
-    else if(std::string::npos != pMsg->text.find(STR_BHIM))   pmtgw = STR_BHIM;
-    else if(std::string::npos != pMsg->text.find(STR_CASH))   pmtgw = STR_CASH;
-    if(!pmtgw.empty()) {
-        std::stringstream ss; unsigned int iOrderNo = 0;
-        getDBHandle()->insertToOrder(pUser, CartStatus::PAYMENT_PENDING, pmtgw, fp);
-        iOrderNo    = pUser->m_OrderNo;
-        getDBHandle()->updateOrderNo(pUser->m_UserId, fp);
-        ss << pUser->m_Name << " has made an order, " << iOrderNo << ", using " << pmtgw;
-        for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
-        ss.str(""); ss << "Hi " << pUser->m_Name << ", your order no: " << iOrderNo << " is successfully placed.";
-        STR_MSG_DEFF_RELEASE    = ss.str();
-    }
     fprintf(fp, "BaseBot %ld: ProductList onClick }\n", time(0)); fflush(fp);
 }
 

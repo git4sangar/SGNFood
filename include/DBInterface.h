@@ -18,16 +18,17 @@
 
 #define SECS_IN_A_DAY   (60 * 60 * 24)
 
-enum class CartStatus{PAYMENT_PENDING, READY_FOR_DELIVERY, DELIVERED, CANCELLED, NOTA};
+enum class CartStatus{CARTED, PAYMENT_PENDING, READY_FOR_DELIVERY, DELIVERED, CANCELLED, NOTA};
 
 class User {
 public:
     typedef std::shared_ptr<User> Ptr;
     unsigned int m_UserId, m_ChatId, m_OrderNo;
+    int m_WBalance;
     unsigned long long m_Mobile;
     std::string m_Name, m_Address;
 
-    User() : m_UserId {0}, m_ChatId {0}, m_OrderNo {0}, m_Mobile {0} {}
+    User() : m_UserId {0}, m_ChatId {0}, m_OrderNo {0}, m_WBalance(0), m_Mobile {0} {}
 
     static std::string USER_ID;
     static std::string USER_NAME;
@@ -35,6 +36,7 @@ public:
     static std::string USER_MOBILE;
     static std::string USER_ORDER_NO;
     static std::string USER_ADDRESS;
+    static std::string USER_WBALANCE;
 };
 
 class Viewers {
@@ -180,9 +182,11 @@ public:
     unsigned int generateOrderNo(FILE *fp);
     void updateOrderNo(unsigned int iUserId, FILE *fp);
     bool addNewUser(int64_t chatId, std::string fname, FILE *fp);
+    std::vector<User::Ptr> getAllUsers(FILE *fp);
     User::Ptr getUserForChatId(unsigned int iChatId, FILE *fp);
     User::Ptr getUserForUserId(unsigned int iUserId, FILE *fp);
     int getIntStatus(CartStatus stat);
+    int getWalletBalance(unsigned int iUserId, FILE *fp);
 //    std::vector<std::string> getAddressesForUser(unsigned int iUserId, FILE *fp);
 
     std::vector<Category::Ptr> getCategories(FILE *fp);
@@ -190,6 +194,7 @@ public:
     Category::Ptr getCategoryForName(std::string strName, FILE *fp);
     Category::Ptr getCategoryById(int catId, FILE *fp);
 
+    bool insertNewProduct(std::string strCat, std::string strName, std::string strPrice, FILE *fp);
     std::vector<Product::Ptr> getAllActiveProducts(FILE *fp);
     std::vector<Product::Ptr> getAllProducts(FILE *fp);
     Product::Ptr getProductForCode(std::string strCode, FILE *fp);

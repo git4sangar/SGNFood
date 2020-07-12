@@ -83,6 +83,18 @@ TgBot::GenericReply::Ptr PriceChange::prepareMenu(std::map<std::string, std::sha
         return std::make_shared<TgBot::ReplyKeyboardRemove>();
     }
 
+    if(!pMsg->text.compare(STR_BTN_ADD_PROD)) {
+        m_Context[pMsg->chat->id]   = USER_CTXT_ADD_A_PROD;
+        lstBaseBtns[strChatId]      = getSharedPtr();
+        STR_MSG_DEFF_RELEASE  = std::string("Add a product by typing,\n\"Category(as below), Name (20 chars), Price (only numbers) & send\"") +
+                                        std::string("\n\nExample:\nTF, Chappathi, 60") +
+                                        std::string("\nCR,   Beans Curry,   30") +
+                                        std::string("\nSB,   Onion Sambar,   30") +
+                                        std::string("\nKT,   Tindora Kootu,   30") +
+                                        std::string("\nRS,   Mysore Rasam,   30");
+        return std::make_shared<TgBot::ReplyKeyboardRemove>();
+    }
+
     iRowIndex = 0;
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
         m_Context.erase(itrCntxt);
@@ -95,8 +107,12 @@ TgBot::GenericReply::Ptr PriceChange::prepareMenu(std::map<std::string, std::sha
     createKBBtn(STR_BTN_EDIT_PRICE, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
+    createKBBtn(STR_BTN_ADD_PROD, row[iRowIndex], lstBaseBtns);
+    iRowIndex++;
+
     createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_CNF_ORDERS, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
     //  Add all the rows to main menu
@@ -114,17 +130,16 @@ void PriceChange::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     std::map<unsigned int, UserContext>::const_iterator itrCntxt;
 
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
-        std::string tmpstr, id, price, strMsg = pMsg->text;
+        std::string tmpstr, id, price, prod, strMsg = pMsg->text;
         std::stringstream ssMsg;
-
-        if(std::string::npos != pMsg->text.find_first_not_of("0123456789 -,")) {
-            fprintf(fp, "BaseBot %ld: PriceChange invalid input: %s\n", time(0), pMsg->text.c_str()); fflush(fp);
-            STR_MSG_DEFF_RELEASE = "\nInvalid Input";
-            return;
-        }
 
         ssMsg.str(pMsg->text);
         if(USER_CTXT_PRICE_CHANGE == itrCntxt->second) {
+            if(std::string::npos != pMsg->text.find_first_not_of("0123456789 -,")) {
+                fprintf(fp, "BaseBot %ld: PriceChange invalid input: %s\n", time(0), pMsg->text.c_str()); fflush(fp);
+                STR_MSG_DEFF_RELEASE = "\nInvalid Input";
+                return;
+            }
             while(std::getline(ssMsg, id, '-')) {
                 std::getline(ssMsg, price, ',');
 
@@ -136,6 +151,18 @@ void PriceChange::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                 else STR_MSG_DEFF_RELEASE += (pProd->m_Name + std::string(", ") + pProd->m_Pack + std::string(" - ₹ ")
                                         + std::to_string(pProd->m_Price) + "\n");
             }
+        }
+        if(USER_CTXT_ADD_A_PROD == itrCntxt->second) {
+            std::vector<std::string> tokens;
+            bool isAdded = false;
+            while(std::getline(ssMsg, prod, ',')) {
+                tokens.push_back(myTrim(prod));
+            }
+            if(PROD_TOKENS == tokens.size()) {
+                isAdded = getDBHandle()->insertNewProduct(tokens[0], tokens[1], tokens[2], fp);
+            }
+            if(!isAdded) STR_MSG_DEFF_RELEASE = "Something went wrong. Not added.";
+            else  STR_MSG_DEFF_RELEASE = std::string("Successfully added item ") + tokens[1];
         }
     } else if(!pMsg->text.compare(STR_BTN_ITEM_LIST)) {
         products    = getDBHandle()->getAllProducts(fp);
