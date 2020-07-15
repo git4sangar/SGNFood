@@ -17,12 +17,10 @@
 #include "Checkout.h"
 
 std::string Checkout::STR_MSG_DEFF_RELEASE  = "";
-std::string Checkout::STR_BTN_GPAY      = "GPay to\n" + std::string(GPAY_MOBILE);
-std::string Checkout::STR_BTN_PAYTM     = "PayTM to\n" + std::string(PAYTM_MOBILE);
-//std::string Checkout::STR_BTN_BHIM    = "BHIM to\n" + std::string(BHIM_UPI);
-std::string Checkout::STR_BTN_WALLET    = "Pay from Wallet";
-std::string Checkout::STR_BTN_CASH      = "Cash\non delivery";
-std::string Checkout::STR_BTN_BACK      = "<-Address";
+std::string Checkout::STR_BTN_GPAY_TOP_UP   = "Topped Up GPay";
+std::string Checkout::STR_BTN_PAYTM_TOP_UP  = "Topped Up PayTM";
+std::string Checkout::STR_BTN_BHIM_TOP_UP   = "Topped Up BHIM";
+std::string Checkout::STR_BTN_CASH_TOP_UP   = "Topped Up Cash";
 
 /*std::string Checkout::getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, unsigned int iTotal, FILE *fp) {
     std::stringstream ss;
@@ -39,11 +37,11 @@ std::string Checkout::STR_BTN_BACK      = "<-Address";
     return ss.str();
 }*/
 
-std::string Checkout::getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, unsigned int iTotal, FILE *fp) {
+std::string Checkout::getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp) {
     std::stringstream ss;
     int iNewBal = pUser->m_WBalance - iTotal;
 
-    ss << "Hi " << strName << ", Your order is successfully placed.\nYour Total bill is <b>₹ " << iTotal << "</b>\n";
+    ss << "Hi " << strName << ", Click \"Confirm Checkout\" to place order. Your Total bill is <b>₹ " << iTotal << "</b>\n";
     ss << "\nYour Shipping address is :\n<b>" << strAddress << ".</b>";
     ss << "\nYour Wallet has ₹ " << pUser->m_WBalance << ".\n";
     ss << "\nWallet Balance : " << pUser->m_WBalance << " - " << iTotal << " = " << static_cast<int>(pUser->m_WBalance - iTotal);
@@ -59,9 +57,9 @@ std::string Checkout::getTopUpString() {
     std::stringstream ss;
     ss << "\n\n1) Transfer Top Up amount via GPay / PayTM apps or BHIM." <<
             "\n\nGPay : " << GPAY_MOBILE << ",\nPayTm : " << PAYTM_MOBILE << ",\nUPI id : " << BHIM_UPI <<
-            "\n\n2) Mention <b>\"User-" << pUser->m_UserId << " : Top Up ₹\"</b> in desc." <<
+            "\n\n2) Mention <b>\"Transac " << pUser->m_TransacNo << " Top Up ₹\"</b> in desc." <<
             "\nGPay -> \"What is this for\"\nPayTM -> \"Add a Message\""<<
-            "\n\nExample:\nUser-2 : Top Up ₹1000\nUser-5 : Top Up ₹428\netc...\n" <<
+            "\n\nExample:\nTransac 1002 Top Up 1000\nTransac 1050 Top Up 428\netc...\n" <<
             "\nAfter transferring, click a \"Topped Up\" button below." <<
             " Your Wallet will be updated after verification.";
     return ss.str();
@@ -88,15 +86,34 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
     std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
 
+    std::string strBtn;
     int iRowIndex   = 0, iLoop = 0;
     pMainMenu   = std::make_shared<TgBot::ReplyKeyboardMarkup>();
 
     iRowIndex   = 0;
-    if(!pMsg->text.compare(STR_BTN_TOP_UP_WALLET)) {
-        STR_MSG_DEFF_RELEASE  = getTopUpString();
-        createKBBtn(STR_BTN_GPAY_TOP_UP, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_MAINMENU]);
-        createKBBtn(STR_BTN_PAYTM_TOP_UP, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_MAINMENU]);
-        createKBBtn(STR_BTN_BHIM_TOP_UP, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_MAINMENU]);
+    if(std::string::npos    != pMsg->text.find(STR_BTN_TOP_UP)) {
+        std::string strAmt  = pMsg->text.substr(std::string(STR_BTN_TOP_UP).length());
+
+        //  Is this req coming from OrderMgmt page? then strAmt will be empty
+        if(strAmt.empty()) {
+            STR_MSG_DEFF_RELEASE  = "Pls choose an amount to Top Up.";
+            strBtn = std::string(STR_BTN_TOP_UP) + " 1000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+            strBtn = std::string(STR_BTN_TOP_UP) + " 2000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+            strBtn = std::string(STR_BTN_TOP_UP) + " 5000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+        } else {
+            STR_MSG_DEFF_RELEASE  = getTopUpString();
+            strBtn = STR_BTN_GPAY_TOP_UP + strAmt;  createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+            strBtn = STR_BTN_PAYTM_TOP_UP + strAmt; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+            strBtn = STR_BTN_BHIM_TOP_UP + strAmt;  createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+            strBtn = STR_BTN_CASH_TOP_UP + strAmt;  createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+        }
+        iRowIndex++;
+    }
+
+    else if(std::string::npos != pMsg->text.find("Topped Up")) {
+        STR_MSG_DEFF_RELEASE  = "Top Up request made. Once merchant confirms your payment, your Wallet will be updated. \nYou proceed to checkout.";
+        createKBBtn(STR_BTN_CHECKOUT, row[iRowIndex], lstBaseBtns);
+        createKBBtn(STR_BTN_YOUR_ORDERS, row[iRowIndex], lstBaseBtns);
         iRowIndex++;
     }
 
@@ -109,17 +126,17 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
     }
 
     else if(0 == iNoOfItems) {
-        STR_MSG_DEFF_RELEASE  = "Your Cart is empty. Pls add some products to cart, before checking out.";
+        STR_MSG_DEFF_RELEASE  = "Your Cart is empty. Pls add some products to cart by clicking <b>Main Menu</b> below.";
     }
 
     else if(!pMsg->text.compare(STR_BTN_CHECKOUT)) {
         STR_MSG_DEFF_RELEASE  = getPaymentString(pUser->m_OrderNo, pMsg->from->firstName, pUser->m_Address, iTotal, fp);
-        createKBBtn(STR_BTN_TOP_UP_WALLET, row[iRowIndex], lstBaseBtns);
+        strBtn = std::string(STR_BTN_TOP_UP) + " 1000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+        strBtn = std::string(STR_BTN_TOP_UP) + " 2000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+        strBtn = std::string(STR_BTN_TOP_UP) + " 5000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
         iRowIndex++;
-    }
-
-    else if(std::string::npos != pMsg->text.find("Topped Up")) {
-        STR_MSG_DEFF_RELEASE  = "Top Up request made. Once merchant confirms your payment, You Wallet will be updated.";
+        createKBBtn(STR_BTN_CNF_CHECKOUT, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_MAINMENU]);
+        iRowIndex++;
     }
 
     //  To avoid exception
@@ -142,31 +159,35 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
 void Checkout::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: Checkout onClick pMessage %s {\n", time(0), pMsg->text.c_str()); fflush(fp);
 
-    unsigned int iLoop = 0;
+    unsigned int iLoop = 0, iAmt = 0; std::string strPGw;
     std::stringstream ss; unsigned int iOrderNo = 0;
     std::map<unsigned int, UserContext>::const_iterator itr;
 
     pUser = getDBHandle()->getUserForChatId(pMsg->chat->id, fp);
     if(!pUser) return;
 
+    //  pMsg->text is "Topped Up GPay 1000" or "Topped Up PayTM 5000 or "Topped Up BHIM 2000
     if(std::string::npos != pMsg->text.find("Topped Up")) {
-        ss << pUser->m_Name << ", " << pMsg->text << ", his/her Wallet. Verify his/her payment.";
+        std::string strAmt;
+        if(std::string::npos != pMsg->text.find("GPay"))    {strPGw  = "GPay"; strAmt = pMsg->text.substr(STR_BTN_GPAY_TOP_UP.length()+1);}
+        if(std::string::npos != pMsg->text.find("PayTM"))   {strPGw  = "PayTM";strAmt = pMsg->text.substr(STR_BTN_PAYTM_TOP_UP.length()+1);}
+        if(std::string::npos != pMsg->text.find("BHIM"))    {strPGw  = "BHIM"; strAmt = pMsg->text.substr(STR_BTN_BHIM_TOP_UP.length()+1);}
+        if(std::string::npos != pMsg->text.find("Cash"))    {strPGw  = "CASH"; strAmt = pMsg->text.substr(STR_BTN_CASH_TOP_UP.length()+1);}
+
+        //  Update database
+        try{iAmt = std::stoi(strAmt);} catch(std::exception &e) {iAmt = 0;}
+        getDBHandle()->insertToOrder(pUser, iAmt, CartStatus::PAYMENT_PENDING, strPGw, OrderType::TOPUP, fp);
+        getDBHandle()->updateTransacNo(pUser->m_UserId, fp);
+
+        //  Notify admin
+        ss << pUser->m_Name << " topped up Wallet using " << strPGw << ". Pls verify payment. His transac no is " << pUser->m_TransacNo;
         for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
     }
 
-    if(!pMsg->text.compare(STR_BTN_CHECKOUT)) {
-        cartItems = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
-        iNoOfItems= cartItems.size();
-        for(iLoop = 0; iLoop < iNoOfItems; iLoop++) {
-            iTotal += (cartItems[iLoop]->m_Qnty * cartItems[iLoop]->m_Price);
-        }
-
-        getDBHandle()->insertToOrder(pUser, CartStatus::PAYMENT_PENDING, STR_WALLET, fp);
-        iOrderNo    = pUser->m_OrderNo;
-        getDBHandle()->updateOrderNo(pUser->m_UserId, fp);
-        ss << pUser->m_Name << " has made an order, " << iOrderNo << ", using " << STR_WALLET;
-        for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
+    cartItems = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
+    iNoOfItems= cartItems.size();
+    for(iLoop = 0; iLoop < iNoOfItems; iLoop++) {
+        iTotal += static_cast<int>(cartItems[iLoop]->m_Qnty * cartItems[iLoop]->m_Price);
     }
-
     fprintf(fp, "BaseBot %ld: Checkout onClick }\n", time(0)); fflush(fp);
 }

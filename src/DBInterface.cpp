@@ -23,6 +23,7 @@ std::string User::USER_MOBILE   = "mobile";
 std::string User::USER_ORDER_NO = "order_no";
 std::string User::USER_ADDRESS  = "address";
 std::string User::USER_WBALANCE = "wbalance";
+std::string User::USER_TRANSAC_NO = "transac_no";
 
 std::string Viewers::VIEWER_ID      = "viewer_id";
 std::string Viewers::VIEWER_USER_ID = "user_id";
@@ -50,15 +51,10 @@ std::string POrder::PORDER_USER_ID  = "user_id";
 std::string POrder::PORDER_ORDR_TM  = "ordered_at";
 std::string POrder::PORDER_DLVR_TM  = "dlvrd_at";
 std::string POrder::PORDER_PAY_GW   = "payment_gw";
-std::string POrder::PORDER_OTP      = "otp";
+std::string POrder::PORDER_AMOUNT   = "otp";
 std::string POrder::PORDER_STATUS   = "status_id";
 std::string POrder::PORDER_ADDRESS  = "address";
-
-std::string POrder::PORDER_PAYGW_VAL_PAYTM  = "Paytm";
-std::string POrder::PORDER_PAYGW_VAL_GPAY   = "GPay";
-std::string POrder::PORDER_PAYGW_VAL_BHIM   = "BHIM";
-std::string POrder::PORDER_PAYGW_VAL_CASH   = "Cash";
-std::string POrder::PORDER_PAYGW_VAL_NOTA   = "Unknown";
+std::string POrder::PORDER_WBALANCE = "wbalance";
 
 std::string Cart::CART_ID           = "cart_id";
 std::string Cart::CART_PRODUCT_ID   = "product_id";
@@ -120,24 +116,44 @@ int DBInterface::getIntStatus(CartStatus stat) {
     return iStat;
 }
 
-unsigned int DBInterface::generateOrderNo(FILE *fp) {
+unsigned int DBInterface::generateOrderNo(OrderType orderType, FILE *fp) {
     fprintf(fp, "BaseBot %ld: generateOrderNo\n", time(0)); fflush(fp);
-    int invoice_no = 0;
+    int invoice_no = 1000;
+    std::string clmName;
     std::stringstream ss;
-    ss << "SELECT MAX(" << User::USER_ORDER_NO << ") FROM User;";
+
+    //  Odd number for Orders ('O' to 'O')
+    //  Even number for all Transactions
+    if(orderType == OrderType::PORDER) {
+        clmName = User::USER_ORDER_NO;
+        invoice_no = 1001;
+    } else if(orderType == OrderType::TOPUP) {
+        clmName = User::USER_TRANSAC_NO;
+    }
+
+    ss << "SELECT MAX(" << clmName << ") FROM User;";
     SQLite::Statement query(*m_hDB, ss.str());
     if(query.executeStep()) {
-        ss.str(std::string()); ss << "MAX(" << User::USER_ORDER_NO << ")";
+        ss.str(std::string()); ss << "MAX(" << clmName << ")";
         invoice_no = query.getColumn(ss.str().c_str()).getUInt();
     }
-    return invoice_no + 1;
+    return invoice_no + 2;
 }
 
 void DBInterface::updateOrderNo(unsigned int iUserId, FILE *fp) {
     std::stringstream ss;
-    unsigned int iOrderNo   = generateOrderNo(fp);
+    unsigned int iOrderNo   = generateOrderNo(OrderType::PORDER, fp);
     SQLite::Transaction transaction(*m_hDB);
     ss << "UPDATE User SET " << User::USER_ORDER_NO << " = " << iOrderNo << " WHERE " << User::USER_ID << " = " << iUserId << ";";
+    m_hDB->exec(ss.str());
+    transaction.commit();
+}
+
+void DBInterface::updateTransacNo(unsigned int iUserId, FILE *fp) {
+    std::stringstream ss;
+    unsigned int iTransacNo   = generateOrderNo(OrderType::TOPUP, fp);
+    SQLite::Transaction transaction(*m_hDB);
+    ss << "UPDATE User SET " << User::USER_TRANSAC_NO << " = " << iTransacNo << " WHERE " << User::USER_ID << " = " << iUserId << ";";
     m_hDB->exec(ss.str());
     transaction.commit();
 }
@@ -152,9 +168,9 @@ bool DBInterface::addNewUser(int64_t chatId, std::string fname, FILE *fp) {
         //      A new user. So add him / her to database
         SQLite::Transaction transaction(*m_hDB);
         ss.str(std::string());
-        unsigned int order_no = generateOrderNo(fp);
-        ss << " INSERT INTO User (" << User::USER_NAME << ", " << User::USER_CHAT_ID << ", " << User::USER_ORDER_NO
-                << ") VALUES (\"" << fname << "\", " << chatId << ", " << order_no << ");";
+        unsigned int order_no = generateOrderNo(OrderType::PORDER, fp);
+        ss << " INSERT INTO User (" << User::USER_NAME << ", " << User::USER_CHAT_ID << ", " << User::USER_ORDER_NO << ", " << User::USER_TRANSAC_NO
+                << ") VALUES (\"" << fname << "\", " << chatId << ", " << order_no << ", " << generateOrderNo(OrderType::TOPUP, fp) << ");";
         m_hDB->exec(ss.str());
         transaction.commit();
     } else {
@@ -173,6 +189,7 @@ User::Ptr DBInterface::getUser(SQLite::Statement *pQuery) {
     pUser->m_Mobile     = pQuery->getColumn(User::USER_MOBILE.c_str()).getInt64();
     pUser->m_Address    = pQuery->getColumn(User::USER_ADDRESS.c_str()).getString();
     pUser->m_WBalance   = pQuery->getColumn(User::USER_WBALANCE.c_str()).getInt();
+    pUser->m_TransacNo  = pQuery->getColumn(User::USER_TRANSAC_NO.c_str()).getInt();
     return pUser;
 }
 
@@ -202,6 +219,16 @@ int DBInterface::getWalletBalance(unsigned int iUserId, FILE *fp) {
         iBal    = pUser->m_WBalance;
     }
     return iBal;
+}
+
+void DBInterface::setWalletBalance(User::Ptr pUser, int iBal, FILE *fp) {
+    std::stringstream ss;
+    SQLite::Transaction transaction(*m_hDB);
+
+    ss << "UPDATE User SET " << User::USER_WBALANCE << " = " << iBal << " WHERE "
+                << User::USER_ID << " = " << pUser->m_UserId << ";";
+    m_hDB->exec(ss.str());
+    transaction.commit();
 }
 
 User::Ptr DBInterface::getUserForUserId(unsigned int iUserId, FILE *fp) {
@@ -299,7 +326,39 @@ bool DBInterface::incrementItemQty(int iProdId, unsigned int iOrderNo, FILE *fp)
     return true;
 }
 
-bool DBInterface::removeProductFromCart(int iProdId, unsigned int iOrderNo, FILE *fp){
+bool DBInterface::removeItemFromCart(int iProdId, unsigned int iOrderNo, FILE *fp) {
+    std::stringstream ss;
+    Cart::Ptr pCart;
+
+    ss << "SELECT * FROM Cart WHERE " <<
+        Cart::CART_ORDER_NO << " = " << iOrderNo <<
+                " AND " <<
+        Cart::CART_PRODUCT_ID <<" = " << iProdId << ";";
+
+    SQLite::Statement query(*m_hDB, ss.str());
+    if(query.executeStep()) {
+        pCart = getCart(&query);
+
+        SQLite::Transaction transaction(*m_hDB);
+        ss.str(std::string());
+        ss << "DELETE FROM Cart WHERE " <<
+                Cart::CART_ORDER_NO << " = " << iOrderNo <<
+                        " AND " <<
+                Cart::CART_PRODUCT_ID <<" = " << iProdId << ";";
+        m_hDB->exec(ss.str());
+
+        ss.str(std::string());
+        ss << "UPDATE User SET " << User::USER_WBALANCE << " = "
+                        << User::USER_WBALANCE << " + " << (pCart->m_Price * pCart->m_Qnty)
+                << " WHERE " << User::USER_ID << " = " << pCart->m_UserId << ";";
+        m_hDB->exec(ss.str());
+
+        transaction.commit();
+    }
+    return true;
+}
+
+bool DBInterface::reduceCartQty(int iProdId, unsigned int iOrderNo, FILE *fp){
     std::stringstream ss;
 
     ss << "SELECT * FROM Cart WHERE " <<
@@ -488,7 +547,6 @@ bool DBInterface::insertNewProduct(std::string strCat, std::string strName, std:
                 Product::PRODUCT_DESC << ", " <<
                 Product::PRODUCT_DATE << ") VALUES (\"" << strCat << "\", \"" << strName << "\", \"file\", "
                 << iPrice << ", \"1pk\", \"-\", \"-\");";
-    fprintf(fp, "Query: %s\n", ss.str().c_str()); fflush(fp);
     m_hDB->exec(ss.str());
     transaction.commit();
     return true;
@@ -612,24 +670,80 @@ unsigned int DBInterface::addAddressToShipping(unsigned int iUserId, std::string
     return 0;
 }
 
-void DBInterface::updateOrderStatus(int iOrderNo, CartStatus crtStatus, FILE *fp) {
+/*
++---------+--------------------+-----------------------+
+|         | POrder             | TopUp                 |
++---------+--------------------+-----------------------+
+| Confirm | Update Order, Cart | Update Order, Cart    |
+|         | Status             | Status                |
++---------+--------------------+-----------------------+
+| Cancel  | Update Order, Cart | Update Order, Cart    |
+|         | Status             | Status                |
+|         | Increment Wallet   | Decrement Wallet      |
+|         |                    | Decrement all transac |
++---------+--------------------+-----------------------+
+*/
+void DBInterface::updateOrderStatus(int iOrderNo, CartStatus crtStatus, OrderType ordrTyp, FILE *fp) {
     std::stringstream ss;
+    POrder::Ptr pOrder;
+    int iNewAmt =  0, wBal = 0;
     SQLite::Transaction transaction(*m_hDB);
-    ss.str(std::string());
-    ss << "UPDATE POrder SET " << POrder::PORDER_STATUS << " = " << getIntStatus(crtStatus) << " WHERE "
-            << POrder::PORDER_NO << " = " << iOrderNo << ";";
-    if(CartStatus::DELIVERED == crtStatus) {
-        ss.str(std::string());ss << "UPDATE POrder SET " <<
-                POrder::PORDER_STATUS << " = " << getIntStatus(crtStatus) << ", " <<
-                POrder::PORDER_DLVR_TM << " = \"" << getCurTime() <<
-                "\" WHERE " << POrder::PORDER_NO << " = " << iOrderNo << ";";
-    }
-    m_hDB->exec(ss.str());
 
-    ss.str(std::string());ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(crtStatus)
-                << " WHERE " << Cart::CART_ORDER_NO << " = " << iOrderNo << ";";
-    m_hDB->exec(ss.str());
-    transaction.commit();
+    ss << "SELECT * FROM POrder WHERE " << POrder::PORDER_NO << " = " << iOrderNo << ";";
+    SQLite::Statement query(*m_hDB, ss.str());
+    if(query.executeStep()) {
+        pOrder  = getPOrder(&query);
+        iNewAmt = pOrder->m_Amt;
+        wBal    = pOrder->m_WBalance;
+
+//--------------- Wallet & transactions update. Only applicable for Cancel request-----------------------------------------------
+        if(CartStatus::CANCELLED == crtStatus) {
+            if(OrderType::PORDER == ordrTyp) {
+                ss.str(std::string());
+                ss << "UPDATE User SET " << User::USER_WBALANCE << " = "  << User::USER_WBALANCE << " + " << iNewAmt << " WHERE "
+                        << User::USER_ID << " = " << pOrder->m_UserId << ";";
+                m_hDB->exec(ss.str());
+            }
+            if(OrderType::TOPUP == ordrTyp) {
+                ss.str(std::string());
+                ss << "UPDATE User SET " << User::USER_WBALANCE << " = "  << User::USER_WBALANCE << " - " << iNewAmt << " WHERE "
+                        << User::USER_ID << " = " << pOrder->m_UserId << ";";
+                m_hDB->exec(ss.str());
+
+                //  Decrement all the transactions after that
+                ss.str(std::string());
+                ss << "UPDATE POrder SET " << POrder::PORDER_WBALANCE << " = " << POrder::PORDER_WBALANCE << " - " << iNewAmt
+                        << " WHERE " << POrder::PORDER_ORDR_TM << " > \"" << pOrder->m_OrdrTm << "\" AND "
+                        << POrder::PORDER_USER_ID << " = " << pOrder->m_UserId << ";";
+                m_hDB->exec(ss.str());
+
+                wBal    = (wBal - iNewAmt);
+                iNewAmt = 0;
+            }
+        }
+
+// ----------------------Update Order / Cart status. Common for all scenarios------------------------------------------------------
+        ss.str(std::string());
+        ss << "UPDATE POrder SET " << POrder::PORDER_STATUS << " = " << getIntStatus(crtStatus)
+                << ", " << POrder::PORDER_AMOUNT << " = " << iNewAmt
+                << ", " << POrder::PORDER_WBALANCE << " = " << wBal
+                << " WHERE " << POrder::PORDER_NO << " = " << iOrderNo << ";";
+
+        //  There is no delivered status for TopUp
+        if(CartStatus::DELIVERED == crtStatus && (iOrderNo % 2)) {
+            ss.str(std::string());ss << "UPDATE POrder SET " <<
+                    POrder::PORDER_STATUS << " = " << getIntStatus(crtStatus) << ", " <<
+                    POrder::PORDER_DLVR_TM << " = \"" << getCurTime() <<
+                    "\" WHERE " << POrder::PORDER_NO << " = " << iOrderNo << ";";
+        }
+        m_hDB->exec(ss.str());
+
+        ss.str(std::string());ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(crtStatus)
+                    << " WHERE " << Cart::CART_ORDER_NO << " = " << iOrderNo << ";";
+        m_hDB->exec(ss.str());
+
+        transaction.commit();
+    }
 }
 
 std::string DBInterface::getTmrwDate() {
@@ -642,24 +756,29 @@ std::string DBInterface::getTmrwDate() {
 std::string DBInterface::getCurTime() {
     time_t t = time(NULL);
     char buffer[64];
-    strftime(buffer, 64, "%Y-%m-%d  -  %H:%M", localtime(&t));
+    strftime(buffer, 64, "%Y-%m-%d %T", localtime(&t));
     return std::string(buffer);
 }
 
-void DBInterface::insertToOrder(User::Ptr pUser, CartStatus crtStatus, std::string strGW, FILE *fp) {
+void DBInterface::insertToOrder(User::Ptr pUser, unsigned int uiAmt, CartStatus crtStatus, std::string strGW, OrderType ordrTyp, FILE *fp) {
     std::stringstream ss;
-    time_t t = time(NULL);
+    time_t t    = time(NULL);
+    int wBal    = (OrderType::TOPUP == ordrTyp) ? (pUser->m_WBalance + uiAmt) : static_cast<int>(pUser->m_WBalance - uiAmt);
+    unsigned int uiOrdNo    =  (OrderType::TOPUP == ordrTyp) ? pUser->m_TransacNo : pUser->m_OrderNo;
+
     SQLite::Transaction transaction(*m_hDB);
     ss << "INSERT INTO POrder (" <<
             POrder::PORDER_NO << ", " <<
             POrder::PORDER_USER_ID << ", " <<
+            POrder::PORDER_AMOUNT << ", " <<
+            POrder::PORDER_WBALANCE << ", " <<
             POrder::PORDER_USER_NAME << ", " <<
             POrder::PORDER_ORDR_TM << ", " <<
             POrder::PORDER_DLVR_TM << ", " <<
             POrder::PORDER_PAY_GW << ", " <<
             POrder::PORDER_STATUS << ", " <<
             POrder::PORDER_ADDRESS << ") VALUES (" <<
-            pUser->m_OrderNo << ", " << pUser->m_UserId << ", \"" << pUser->m_Name
+            uiOrdNo << ", " << pUser->m_UserId << ", " << uiAmt << ", " << wBal << ", \"" << pUser->m_Name
             << "\", \"" << getCurTime() << "\", \"-\", \"" << strGW << "\", " <<
             getIntStatus(crtStatus) << ", \"" << pUser->m_Address << "\" );";
     m_hDB->exec(ss.str());
@@ -669,12 +788,17 @@ void DBInterface::insertToOrder(User::Ptr pUser, CartStatus crtStatus, std::stri
             << Cart::CART_ORDER_NO << " = " << pUser->m_OrderNo << ";";
     m_hDB->exec(ss.str());
 
+    ss.str(std::string());
+    ss << "UPDATE User SET " << User::USER_WBALANCE << " = " << wBal << " WHERE "
+                << User::USER_ID << " = " << pUser->m_UserId << ";";
+    m_hDB->exec(ss.str());
+
     transaction.commit();
 }
 
 POrder::Ptr DBInterface::getPOrder(SQLite::Statement *pQuery) {
     POrder::Ptr pOrder  = std::make_shared<POrder>();
-    pOrder->m_OTP       = pQuery->getColumn(POrder::PORDER_OTP.c_str()).getInt();
+    pOrder->m_Amt       = pQuery->getColumn(POrder::PORDER_AMOUNT.c_str()).getInt();
     pOrder->m_OrderId   = pQuery->getColumn(POrder::PORDER_ID.c_str()).getInt();
     pOrder->m_OrderNo   = pQuery->getColumn(POrder::PORDER_NO.c_str()).getInt();
     pOrder->m_UserId    = pQuery->getColumn(POrder::PORDER_USER_ID.c_str()).getInt();
@@ -683,10 +807,38 @@ POrder::Ptr DBInterface::getPOrder(SQLite::Statement *pQuery) {
     pOrder->m_DlvrdTm   = pQuery->getColumn(POrder::PORDER_DLVR_TM.c_str()).getString();
     pOrder->m_PayGW     = pQuery->getColumn(POrder::PORDER_PAY_GW.c_str()).getString();
     pOrder->m_Address   = pQuery->getColumn(POrder::PORDER_ADDRESS.c_str()).getString();
+    pOrder->m_WBalance  = pQuery->getColumn(POrder::PORDER_WBALANCE.c_str()).getInt();
     pOrder->m_Status    = static_cast<CartStatus>(pQuery->getColumn(POrder::PORDER_STATUS.c_str()).getInt());
     return pOrder;
 }
 
+void DBInterface::confirmTopUpAmount(unsigned int iOrderNo, unsigned int iAmount, FILE *fp) {
+    std::stringstream ss;
+    POrder::Ptr pOrder = nullptr;
+
+    ss << "SELECT * FROM POrder WHERE " << POrder::PORDER_NO << " = " << iOrderNo << ";";
+    SQLite::Statement query(*m_hDB, ss.str());
+    if(query.executeStep()) {
+        SQLite::Transaction transaction(*m_hDB);
+        pOrder  = getPOrder(&query);
+
+        ss.str("");
+        ss << "UPDATE POrder SET " << POrder::PORDER_AMOUNT << " = " << iAmount
+                << ", " << POrder::PORDER_DLVR_TM << " = \"" << getCurTime()
+                << "\", " << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY)
+                << " WHERE " << POrder::PORDER_NO << " = " << iOrderNo << ";";
+        m_hDB->exec(ss.str());
+
+        ss.str("");
+        ss << "UPDATE User SET " << User::USER_WBALANCE << " = " << User::USER_WBALANCE << " + " << iAmount << " WHERE "
+            << User::USER_ID << " = " << pOrder->m_UserId << ";";
+        m_hDB->exec(ss.str());
+
+        transaction.commit();
+    }
+}
+
+//  Do not discrimiate if the order type is POrder or TopUp. Coz, user is going to see all
 POrder::Ptr DBInterface::getOrderForOrderNo(unsigned int iOrderNo, FILE *fp) {
     POrder::Ptr pOrder = nullptr;
     std::stringstream ss;
@@ -705,7 +857,7 @@ std::vector<POrder::Ptr> DBInterface::getOrdersByUser(unsigned int iUserId, FILE
     POrder::Ptr pOrder;
     std::stringstream ss;
 
-    ss << "SELECT * FROM POrder WHERE " << POrder::PORDER_USER_ID << " = " << iUserId << " ORDER BY " << POrder::PORDER_NO << " DESC;";
+    ss << "SELECT * FROM POrder WHERE " << POrder::PORDER_USER_ID << " = " << iUserId << " ORDER BY " << POrder::PORDER_ORDR_TM << " DESC;";
     SQLite::Statement query(*m_hDB, ss.str());
 
     int iLoop = 0;
@@ -717,7 +869,7 @@ std::vector<POrder::Ptr> DBInterface::getOrdersByUser(unsigned int iUserId, FILE
     return pOrders;
 }
 
-std::vector<POrder::Ptr> DBInterface::getOrderByStatus(CartStatus crtStat, FILE *fp) {
+std::vector<POrder::Ptr> DBInterface::getOrderByStatus(CartStatus crtStat, OrderType orderType, FILE *fp) {
     std::vector<POrder::Ptr> pOrders;
     User::Ptr   pUser;
     POrder::Ptr pOrder;
@@ -736,11 +888,14 @@ std::vector<POrder::Ptr> DBInterface::getOrderByStatus(CartStatus crtStat, FILE 
 
     SQLite::Statement query(*m_hDB, ss.str());
 
-    int iLoop = 0;
+    unsigned int iLoop = 0;
+    unsigned int ordrRtpup  = (OrderType::PORDER == orderType) ? 1 : 0;
     while(query.executeStep()) {
         pOrder  = getPOrder(&query);
-        pOrders.push_back(pOrder);
-        if(++iLoop >= MAX_YOUR_ORDERS) break;
+        if(ordrRtpup == (pOrder->m_OrderNo % 2)) {
+            pOrders.push_back(pOrder);
+            if(++iLoop >= MAX_YOUR_ORDERS) break;
+        }
     }
     return pOrders;
 }

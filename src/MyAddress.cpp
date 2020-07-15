@@ -48,13 +48,12 @@ TgBot::GenericReply::Ptr MyAddress::prepareMenu(std::map<std::string, std::share
 
     else if(!pMsg->text.compare(STR_BTN_SHPG_ADDRESS)) {
         fprintf(fp, "BaseBot %ld: Got request to render addresses\n", time(0)); fflush(fp);
-        STR_MSG_DEFF_RELEASE  = "Choose the below options.";
+        STR_MSG_DEFF_RELEASE  = "Check your shipping address.";
 
         createKBBtn(strAddress, row[iRowIndex++], lstBaseBtns, (isCartEmpty) ? lstBaseBtns[STR_BTN_MAINMENU] : lstBaseBtns[STR_BTN_VIEW_CART]);
         m_Context[pMsg->chat->id] = USER_CTXT_CLEANUP;
 
         createKBBtn(STR_BTN_CHANGE_ADDRESS, row[iRowIndex++], lstBaseBtns);
-
     }
 
     else if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) ) {

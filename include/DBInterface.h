@@ -18,17 +18,19 @@
 
 #define SECS_IN_A_DAY   (60 * 60 * 24)
 
+enum class OrderType{ PORDER, TOPUP, NOTA };
+
 enum class CartStatus{CARTED, PAYMENT_PENDING, READY_FOR_DELIVERY, DELIVERED, CANCELLED, NOTA};
 
 class User {
 public:
     typedef std::shared_ptr<User> Ptr;
-    unsigned int m_UserId, m_ChatId, m_OrderNo;
+    unsigned int m_UserId, m_ChatId, m_OrderNo, m_TransacNo;
     int m_WBalance;
     unsigned long long m_Mobile;
     std::string m_Name, m_Address;
 
-    User() : m_UserId {0}, m_ChatId {0}, m_OrderNo {0}, m_WBalance(0), m_Mobile {0} {}
+    User() : m_UserId {0}, m_ChatId {0}, m_OrderNo {0}, m_WBalance(0), m_Mobile {0}, m_TransacNo {0} {}
 
     static std::string USER_ID;
     static std::string USER_NAME;
@@ -37,6 +39,7 @@ public:
     static std::string USER_ORDER_NO;
     static std::string USER_ADDRESS;
     static std::string USER_WBALANCE;
+    static std::string USER_TRANSAC_NO;
 };
 
 class Viewers {
@@ -82,9 +85,10 @@ public:
 class POrder {
 public:
     typedef std::shared_ptr<POrder> Ptr;
-    unsigned int m_OrderId, m_OrderNo, m_UserId, m_OTP;
+    unsigned int m_OrderId, m_OrderNo, m_UserId, m_Amt;
     std::string m_OrdrTm, m_DlvrdTm, m_PayGW, m_Address, m_Name;
     CartStatus m_Status;
+    int m_WBalance;
 
     static std::string PORDER_ID;
     static std::string PORDER_USER_NAME;
@@ -93,15 +97,10 @@ public:
     static std::string PORDER_ORDR_TM;
     static std::string PORDER_DLVR_TM;
     static std::string PORDER_PAY_GW;
-    static std::string PORDER_OTP;
+    static std::string PORDER_AMOUNT;
     static std::string PORDER_STATUS;
     static std::string PORDER_ADDRESS;
-
-    static std::string PORDER_PAYGW_VAL_PAYTM;
-    static std::string PORDER_PAYGW_VAL_GPAY;
-    static std::string PORDER_PAYGW_VAL_CASH;
-    static std::string PORDER_PAYGW_VAL_BHIM;
-    static std::string PORDER_PAYGW_VAL_NOTA;
+    static std::string PORDER_WBALANCE;
 };
 
 class Cart {
@@ -179,14 +178,16 @@ public:
     std::string     getCurTime();
     std::string     getTmrwDate();
 
-    unsigned int generateOrderNo(FILE *fp);
+    unsigned int generateOrderNo(OrderType orderType, FILE *fp);
     void updateOrderNo(unsigned int iUserId, FILE *fp);
+    void updateTransacNo(unsigned int iUserId, FILE *fp);
     bool addNewUser(int64_t chatId, std::string fname, FILE *fp);
     std::vector<User::Ptr> getAllUsers(FILE *fp);
     User::Ptr getUserForChatId(unsigned int iChatId, FILE *fp);
     User::Ptr getUserForUserId(unsigned int iUserId, FILE *fp);
     int getIntStatus(CartStatus stat);
     int getWalletBalance(unsigned int iUserId, FILE *fp);
+    void setWalletBalance(User::Ptr pUser, int iBal, FILE *fp);
 //    std::vector<std::string> getAddressesForUser(unsigned int iUserId, FILE *fp);
 
     std::vector<Category::Ptr> getCategories(FILE *fp);
@@ -209,17 +210,19 @@ public:
 
     void addProductsForCodeToCart(std::string strCode, unsigned int chatId, FILE *fp);
     int addProductToCart(unsigned int iProdId, unsigned int iPrice, unsigned int chatId, FILE *fp);
-    bool removeProductFromCart(int iProdId, unsigned int iOrderNo, FILE *fp);
+    bool reduceCartQty(int iProdId, unsigned int iOrderNo, FILE *fp);
+    bool removeItemFromCart(int iProdId, unsigned int iOrderNo, FILE *fp);
     bool incrementItemQty(int iProdId, unsigned int iOrderNo, FILE *fp);
     std::vector<Cart::Ptr> getCartItemsForOrderNo(unsigned int iOrderNo, FILE *fp);
     bool emptyCartForUser(unsigned int iOrderNo, FILE *fp);
 
     unsigned int addAddressToShipping(unsigned int iUserId, std::string strAddress, FILE *fp);
-    void insertToOrder(User::Ptr pUser, CartStatus crtStatus, std::string strGW, FILE *fp);
-    void updateOrderStatus(int iOrderNo, CartStatus crtStatus, FILE *fp);
+    void insertToOrder(User::Ptr pUser, unsigned int iAmt, CartStatus crtStatus, std::string strGW, OrderType ordrTyp, FILE *fp);
+    void updateOrderStatus(int iOrderNo, CartStatus crtStatus, OrderType ordrTyp, FILE *fp);
 
+    void confirmTopUpAmount(unsigned int iOrderNo, unsigned int iAmount, FILE *fp);
     POrder::Ptr getOrderForOrderNo(unsigned int iOrderNo, FILE *fp);
-    std::vector<POrder::Ptr> getOrderByStatus(CartStatus crtStat, FILE *fp);
+    std::vector<POrder::Ptr> getOrderByStatus(CartStatus crtStat, OrderType orderType, FILE *fp);
     std::vector<POrder::Ptr> getOrdersByUser(unsigned int iUserId, FILE *fp);
 };
 

@@ -28,8 +28,6 @@ void SingleOrder::init(TgBot::Message::Ptr pMsg, FILE *fp) {
 
    mapCmdToInt[STR_BTN_CNFM_ORDER]  = INT_CNFM_ORDER;
    mapCmdToInt[STR_BTN_CNCL_ORDER]  = INT_CNCL_ORDER;
-   mapCmdToInt[STR_BTN_EDIT_ORDER]  = INT_EDIT_ORDER;
-   mapCmdToInt[STR_BTN_PRINT_ORDER] = INT_PRINT_ORDER;
    mapCmdToInt[SRT_BTN_DLVR_ORDER]  = INT_DLVR_ORDER;
 }
 
@@ -137,7 +135,7 @@ int SingleOrder::create_order_items_table(std::shared_ptr<pngwriter> pPNGWriter,
 TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SingleOrder::prepareMenu {\n", time(0)); fflush(fp);
 
-    if(0 == iNoOfItems && std::string::npos == pMsg->text.find(STR_BTN_EDIT_ORDER)) {
+    if(0 == iNoOfItems) {
         STR_MSG_DEFF_RELEASE  = "No more orders";
         return nullptr;
     }
@@ -151,24 +149,6 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
     std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
     std::string strChatId       = std::to_string(pMsg->chat->id);
 
-    if(std::string::npos != pMsg->text.find(STR_BTN_EDIT_ORDER)) {
-        m_Context[pMsg->chat->id]   = iOrderNo;
-        lstBaseBtns[strChatId]      = getSharedPtr();
-        STR_MSG_DEFF_RELEASE  = std::string("Remove <b>non-available items</b> by typing their SNos like,\n\"SNo, SNo, SNo...\"") +
-                                std::string("\n\nExample:\n<b> SN| Name   | Pack| Qty| Rs</b>") +
-                                std::string("\n  15 | Potato | 500g |  2   | 60") +
-                                std::string("\n  16 | Tomato|    1kg|  1   | 38") +
-                                std::string("\n\nTo remove Potato & Tomato,") +
-                                std::string("\nType: 15, 16, etc.. and send");
-        return std::make_shared<TgBot::ReplyKeyboardRemove>();
-    }
-
-    if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
-        m_Context.erase(itrCntxt);
-        if(lstBaseBtns.end() != (itrBtn = lstBaseBtns.find(strChatId))) lstBaseBtns.erase(itrBtn);
-        STR_MSG_DEFF_RELEASE  = "Updated items. Pls check it.";
-    }
-
     iRowIndex = 0;
     if(USER_CTXT_NEW_ORDER == usrCtxt) {
         strText =   std::string(STR_BTN_CNFM_ORDER) + std::string(" ") + std::to_string(iOrderNo);
@@ -177,16 +157,15 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
         createKBBtn(strText, row[iRowIndex], lstBaseBtns);
         iRowIndex++;
 
-        strText =   std::string(STR_BTN_EDIT_ORDER) + std::string(" ") + std::to_string(iOrderNo);
-        createKBBtn(strText, row[iRowIndex], lstBaseBtns);
-        strText =   std::string(STR_BTN_PRINT_ORDER) + std::string(" ") + std::to_string(iOrderNo);
-        createKBBtn(strText, row[iRowIndex], lstBaseBtns);
-        iRowIndex++;
     } else if(USER_CTXT_CNF_ORDER == usrCtxt) {
         strText =   std::string(SRT_BTN_DLVR_ORDER) + std::string(" ") + std::to_string(iOrderNo);
         createKBBtn(strText, row[iRowIndex], lstBaseBtns);
-        strText =   std::string(STR_BTN_PRINT_ORDER) + std::string(" ") + std::to_string(iOrderNo);
-        createKBBtn(strText, row[iRowIndex], lstBaseBtns);
+        iRowIndex++;
+    }
+
+    //  Easy for the user to navigate back to the orders page if there are more order-pages
+    if(0 < iPgNo) {
+        createKBBtn(pageName + std::string(" page ") + std::to_string(iPgNo), row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_ORDERS]);
         iRowIndex++;
     }
 
@@ -198,18 +177,8 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
         iRowIndex++;
     } else {
         createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
-        createKBBtn(STR_BTN_CNF_ORDERS, row[iRowIndex], lstBaseBtns);
-        createKBBtn(STR_BTN_MENU_MGMT, row[iRowIndex], lstBaseBtns);
-        iRowIndex++;
-
-        createKBBtn(STR_BTN_DLVRD_ORDERS, row[iRowIndex], lstBaseBtns);
-        createKBBtn(STR_BTN_CNCLD_ORDERS, row[iRowIndex], lstBaseBtns);
-        iRowIndex++;
-    }
-
-    //  Easy for the user to navigate back to the orders page if there are more order-pages
-    if(0 < iPgNo) {
-        createKBBtn(pageName + std::string(" page ") + std::to_string(iPgNo), row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_ORDERS]);
+        createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
+        createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
         iRowIndex++;
     }
 
@@ -227,7 +196,6 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SingleOrder onClick pMessage %s {\n", time(0), pMsg->text.c_str()); fflush(fp);
 
     unsigned int iLoop = 0, iOrdrsSz = 0;
-    std::vector<unsigned int> toRmvLst;
     std::vector<POrder::Ptr> orders;
     Product::Ptr pProduct;
     std::string strOrderNo, strCmd, strSNo;
@@ -240,72 +208,57 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
     fprintf(fp, "BaseBot %ld: SingleOrder onClick, isAdmin: %d\n", time(0), isAdmin); fflush(fp);
 
-    //  Handle remove items
-    if(isAdmin && m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
-        std::stringstream ssMsg(pMsg->text);
-        while(std::getline(ssMsg, strSNo, ',')) {
-            try { int SNo = std::stoi(strSNo); toRmvLst.push_back(SNo); } catch(std::exception &e) {}
-        }
-        iOrderNo    = itrCntxt->second;
+
+    //  Get the Order No. Possible values: "1087", "Confirm Order 1003", "Cancel Order 1342", "Edit Order 3214", "Print Order 4923", "Deliver Order 3387"
+    std::string::size_type pos  = pMsg->text.find_first_of("0123456789");
+    try {
+        if(0 < pos) strCmd = pMsg->text.substr(0, pos-1);
+        strOrderNo  = pMsg->text.substr(pos);
+        iOrderNo    = std::stoi(strOrderNo);
+    } catch(std::exception &e) {
+        strCmd.clear();
+        iOrderNo = 0;
     }
 
-    if(0 == toRmvLst.size()) {
-        //  Get the Order No. Possible values: "1087", "Confirm Order 1003", "Cancel Order 1342", "Edit Order 3214", "Print Order 4923", "Deliver Order 3387"
-        std::string::size_type pos  = pMsg->text.find_first_of("0123456789");
-        try {
-            if(0 < pos) strCmd = pMsg->text.substr(0, pos-1);
-            strOrderNo  = pMsg->text.substr(pos);
-            iOrderNo    = std::stoi(strOrderNo);
-        } catch(std::exception &e) {
-            strCmd.clear();
-            iOrderNo = 0;
-        }
+    //  Confirm, Print, Deliver or Cancel order accordingly
+    if(!strCmd.empty() && 0 < iOrderNo) {
+        pOrder  = getDBHandle()->getOrderForOrderNo(iOrderNo, fp);
+        pUser   = getDBHandle()->getUserForUserId(pOrder->m_UserId, fp);
+        switch(mapCmdToInt[strCmd]) {
+            case INT_CNFM_ORDER:
+                getDBHandle()->updateOrderStatus(iOrderNo, CartStatus::READY_FOR_DELIVERY, OrderType::PORDER, fp);
+                notifyMsgs[pUser->m_ChatId] = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Confirmed.");
+                fprintf(fp, "BaseBot %ld: SingleOrder onClick, Confirming Order: %d\n", time(0), iOrderNo); fflush(fp);
 
-        //  Confirm, Print, Deliver or Cancel order accordingly
-        if(!strCmd.empty() && 0 < iOrderNo) {
-            pOrder  = getDBHandle()->getOrderForOrderNo(iOrderNo, fp);
-            pUser   = getDBHandle()->getUserForUserId(pOrder->m_UserId, fp);
-            switch(mapCmdToInt[strCmd]) {
-                case INT_CNFM_ORDER:
-                    getDBHandle()->updateOrderStatus(iOrderNo, CartStatus::READY_FOR_DELIVERY, fp);
-                    notifyMsgs[pUser->m_ChatId] = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Confirmed.");
-                    fprintf(fp, "BaseBot %ld: SingleOrder onClick, Confirming Order: %d\n", time(0), iOrderNo); fflush(fp);
+                orders = getDBHandle()->getOrderByStatus(CartStatus::PAYMENT_PENDING, OrderType::PORDER, fp);
+                iOrderNo = (orders.empty()) ? 0 : orders[0]->m_OrderNo;
+                fprintf(fp, "BaseBot %ld: SingleOrder onClick, Picking next New Order: %d\n", time(0), iOrderNo); fflush(fp);
+                break;
 
-                    orders = getDBHandle()->getOrderByStatus(CartStatus::PAYMENT_PENDING, fp);
-                    iOrderNo = (orders.empty()) ? 0 : orders[0]->m_OrderNo;
-                    fprintf(fp, "BaseBot %ld: SingleOrder onClick, Picking next New Order: %d\n", time(0), iOrderNo); fflush(fp);
-                    break;
+            case INT_CNCL_ORDER:
+                getDBHandle()->updateOrderStatus(iOrderNo, CartStatus::CANCELLED, OrderType::PORDER, fp);
+                notifyMsgs[pUser->m_ChatId] = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Cancelled & Wallet updated. Please call the merchant for details");
+                fprintf(fp, "BaseBot %ld: SingleOrder onClick, Canceling Order: %d\n", time(0), iOrderNo); fflush(fp);
 
-                case INT_CNCL_ORDER:
-                    getDBHandle()->updateOrderStatus(iOrderNo, CartStatus::CANCELLED, fp);
-                    notifyMsgs[pUser->m_ChatId] = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Cancelled. Please call the merchant for details");
-                    fprintf(fp, "BaseBot %ld: SingleOrder onClick, Canceling Order: %d\n", time(0), iOrderNo); fflush(fp);
+                orders = getDBHandle()->getOrderByStatus(CartStatus::PAYMENT_PENDING, OrderType::PORDER, fp);
+                iOrderNo = (orders.empty()) ? 0 : orders[0]->m_OrderNo;
+                fprintf(fp, "BaseBot %ld: SingleOrder onClick, Picking next New Order: %d\n", time(0), iOrderNo); fflush(fp);
+                break;
 
-                    orders = getDBHandle()->getOrderByStatus(CartStatus::PAYMENT_PENDING, fp);
-                    iOrderNo = (orders.empty()) ? 0 : orders[0]->m_OrderNo;
-                    fprintf(fp, "BaseBot %ld: SingleOrder onClick, Picking next New Order: %d\n", time(0), iOrderNo); fflush(fp);
-                    break;
+            case INT_DLVR_ORDER:
+                getDBHandle()->updateOrderStatus(iOrderNo, CartStatus::DELIVERED, OrderType::PORDER, fp);
+                notifyMsgs[pUser->m_ChatId] = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Delivered.");
+                fprintf(fp, "BaseBot %ld: SingleOrder onClick, Delivered Order: %d\n", time(0), iOrderNo); fflush(fp);
 
-                case INT_PRINT_ORDER:
-                    isPrint = true;
-                    fprintf(fp, "BaseBot %ld: SingleOrder onClick, Printing Order: %d\n", time(0), iOrderNo); fflush(fp);
-                    break;
-
-                case INT_DLVR_ORDER:
-                    getDBHandle()->updateOrderStatus(iOrderNo, CartStatus::DELIVERED, fp);
-                    notifyMsgs[pUser->m_ChatId] = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Delivered.");
-                    fprintf(fp, "BaseBot %ld: SingleOrder onClick, Delivered Order: %d\n", time(0), iOrderNo); fflush(fp);
-
-                    orders = getDBHandle()->getOrderByStatus(CartStatus::READY_FOR_DELIVERY, fp);
-                    iOrderNo = (orders.empty()) ? 0 : orders[0]->m_OrderNo;
-                    fprintf(fp, "BaseBot %ld: SingleOrder onClick, Picking next Confirmed Order: %d\n", time(0), iOrderNo); fflush(fp);
-                    break;
-            }
+                orders = getDBHandle()->getOrderByStatus(CartStatus::READY_FOR_DELIVERY, OrderType::PORDER, fp);
+                iOrderNo = (orders.empty()) ? 0 : orders[0]->m_OrderNo;
+                fprintf(fp, "BaseBot %ld: SingleOrder onClick, Picking next Confirmed Order: %d\n", time(0), iOrderNo); fflush(fp);
+                break;
         }
     }
 
     //  At this stage there shall be a valid order number
-    if(0 == iOrderNo || !strCmd.compare(STR_BTN_EDIT_ORDER)) return;
+    if(0 == iOrderNo) return;
     pOrder  = getDBHandle()->getOrderForOrderNo(iOrderNo, fp);
 
     if(!isAdmin) {
@@ -317,22 +270,22 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     else if(pOrder && CartStatus::PAYMENT_PENDING == pOrder->m_Status) {
         usrCtxt     = USER_CTXT_NEW_ORDER;
         pageName    = STR_BTN_NEW_ORDERS;
-        if(orders.empty()) orders = getDBHandle()->getOrderByStatus(CartStatus::PAYMENT_PENDING, fp);
+        if(orders.empty()) orders = getDBHandle()->getOrderByStatus(CartStatus::PAYMENT_PENDING, OrderType::PORDER, fp);
     }
     else if(pOrder && CartStatus::READY_FOR_DELIVERY == pOrder->m_Status) {
         usrCtxt     = USER_CTXT_CNF_ORDER;
         pageName    = STR_BTN_CNF_ORDERS;
-        if(orders.empty()) orders = getDBHandle()->getOrderByStatus(CartStatus::READY_FOR_DELIVERY, fp);
+        if(orders.empty()) orders = getDBHandle()->getOrderByStatus(CartStatus::READY_FOR_DELIVERY, OrderType::PORDER, fp);
     }
     else if(pOrder && CartStatus::DELIVERED == pOrder->m_Status) {
         usrCtxt     = USER_CTXT_DLVRD_ORDER;
         pageName    = STR_BTN_DLVRD_ORDERS;
-        if(orders.empty()) orders = getDBHandle()->getOrderByStatus(CartStatus::DELIVERED, fp);
+        if(orders.empty()) orders = getDBHandle()->getOrderByStatus(CartStatus::DELIVERED, OrderType::PORDER, fp);
     }
     else if(pOrder && CartStatus::CANCELLED == pOrder->m_Status) {
         usrCtxt     = USER_CTXT_CNCLD_ORDER;
         pageName    = STR_BTN_CNCLD_ORDERS;
-        if(orders.empty()) orders = getDBHandle()->getOrderByStatus(CartStatus::CANCELLED, fp);
+        if(orders.empty()) orders = getDBHandle()->getOrderByStatus(CartStatus::CANCELLED, OrderType::PORDER, fp);
     }
 
     fprintf(fp, "BaseBot %ld: SingleOrder onClick, pageName: %s\n", time(0), pageName.c_str()); fflush(fp);
@@ -348,25 +301,6 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     orderItems  = getDBHandle()->getCartItemsForOrderNo(iOrderNo, fp);
     iNoOfItems  = orderItems.size();
     if(0 == iNoOfItems) return;
-
-    //  Check if any items to be removed. If so, remove and update the orderItems again
-    pUser   = getDBHandle()->getUserForUserId(pOrder->m_UserId, fp);
-    std::string strRmvLst;
-    for(iLoop = 0; iLoop < toRmvLst.size(); iLoop++) {
-        int iSNo    = toRmvLst[iLoop] - 1;
-        if(0 > iSNo || iSNo >= iNoOfItems) continue;
-        pProduct    = getDBHandle()->getProductById(orderItems[iSNo]->m_ProductId, fp);
-        getDBHandle()->removeProductFromCart(orderItems[iSNo]->m_ProductId, iOrderNo, fp);
-        strRmvLst   += ((toRmvLst.size()-1) == iLoop) ? (pProduct->m_Name + std::string("-") + pProduct->m_Pack) : (pProduct->m_Name + std::string("-") + pProduct->m_Pack + "\n");
-        fprintf(fp, "BaseBot %ld: SingleOrder onClick, Removing Prd: %s-%s\n", time(0),
-                pProduct->m_Name.c_str(), pProduct->m_Pack.c_str()); fflush(fp);
-    }
-    if(0 < iLoop) {
-        orderItems  = getDBHandle()->getCartItemsForOrderNo(iOrderNo, fp);
-        iNoOfItems  = orderItems.size();
-        notifyMsgs[pUser->m_ChatId] = strRmvLst + std::string(" - Removed from your order no: ") + std::to_string(iOrderNo) + std::string(" by merchant");
-        if(!orderItems.size()) return;
-    }
 
     //  Populate all the products in the cart
     for(iLoop = 0; iLoop < iNoOfItems; iLoop++) {
