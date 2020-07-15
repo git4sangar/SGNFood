@@ -36,6 +36,8 @@
 #include "OrderMgmt.h"
 #include "ViewCart.h"
 #include "PriceChange.h"
+#include "WalletMgmt.h"
+#include "SGNAdmin.h"
 #include "MyAddress.h"
 #include "Constants.h"
 
@@ -125,8 +127,6 @@ std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator isSingleOrder
     std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator retItr;
     retItr  = listBaseBtns.end();
     if(std::string::npos    == strCmd.find_first_not_of("0123456789") ||
-        std::string::npos   != strCmd.find(STR_BTN_PRINT_ORDER) ||
-        std::string::npos   != strCmd.find(STR_BTN_EDIT_ORDER) ||
         std::string::npos   != strCmd.find(STR_BTN_CNFM_ORDER) ||
         std::string::npos   != strCmd.find(STR_BTN_CNCL_ORDER) ||
         std::string::npos   != strCmd.find(SRT_BTN_DLVR_ORDER)
@@ -164,13 +164,12 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_REMOVE]        = listBaseBtns[STR_BTN_VIEW_CART];
 
     listBaseBtns[STR_BTN_CHECKOUT]      = std::make_shared<Checkout>(hDB);
-    listBaseBtns[STR_BTN_TOP_UP_WALLET] = listBaseBtns[STR_BTN_CHECKOUT];
+    listBaseBtns[STR_BTN_TOP_UP]        = std::make_shared<Checkout>(hDB);
 
     listBaseBtns[STR_BTN_SHPG_ADDRESS]  = std::make_shared<MyAddress>(hDB);
     listBaseBtns[STR_BTN_CHANGE_ADDRESS]= listBaseBtns[STR_BTN_SHPG_ADDRESS];
 
     listBaseBtns[STR_BTN_ORDERS]        = std::make_shared<OrderMgmt>(hDB);
-    listBaseBtns[STR_BTN_ADMIN_PAGE]    = listBaseBtns[STR_BTN_ORDERS];
     listBaseBtns[STR_BTN_NEW_ORDERS]    = listBaseBtns[STR_BTN_ORDERS];
     listBaseBtns[STR_BTN_CNF_ORDERS]    = listBaseBtns[STR_BTN_ORDERS];
     listBaseBtns[STR_BTN_YOUR_ORDERS]   = listBaseBtns[STR_BTN_ORDERS];
@@ -187,16 +186,20 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_DONE_MENU]     = listBaseBtns[STR_BTN_EDIT_MENU];
 
     listBaseBtns[STR_BTN_SINGLE_ORDER]  = std::make_shared<SingleOrder>(hDB);
-    listBaseBtns[STR_BTN_PRINT_ORDER]   = listBaseBtns[STR_BTN_SINGLE_ORDER];
-    listBaseBtns[STR_BTN_EDIT_ORDER]    = listBaseBtns[STR_BTN_SINGLE_ORDER];
     listBaseBtns[STR_BTN_CNFM_ORDER]    = listBaseBtns[STR_BTN_SINGLE_ORDER];
     listBaseBtns[STR_BTN_CNCL_ORDER]    = listBaseBtns[STR_BTN_SINGLE_ORDER];
+
+    listBaseBtns[STR_BTN_NEW_TOPUPs]    = std::make_shared<WalletMgmt>(hDB);
+    listBaseBtns[STR_BTN_CNF_TOPUPs]    = listBaseBtns[STR_BTN_NEW_TOPUPs];
+    listBaseBtns[STR_BTN_CNCLD_TOPUPs]  = listBaseBtns[STR_BTN_NEW_TOPUPs];
+
+    listBaseBtns[STR_BTN_ADMIN_PG]      = std::make_shared<SGNAdmin>(hDB);
 
     //  Admin Chat Ids
     adminChatIds.push_back(550919816);      // Myself
     //adminChatIds.push_back(685954136);    // Sriram
     //adminChatIds.push_back(1306802994);   // Sudarshan
-    //adminChatIds.push_back(1352652258);   // Santosh
+    adminChatIds.push_back(1352652258);   // Santosh
 
     pBot->getEvents().onAnyMessage( [pBot, &listBaseBtns, fp, &startSec](TgBot::Message::Ptr pMsg) {
         petWatchDog(fp);

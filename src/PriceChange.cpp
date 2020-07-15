@@ -78,7 +78,7 @@ TgBot::GenericReply::Ptr PriceChange::prepareMenu(std::map<std::string, std::sha
                                         std::string("\n\nExample:\n<b> Id  |Product                   |  Pack| Rs</b>") +
                                         std::string("\n21 | Cauliflower Kootu |250ml| 50") +
                                         std::string("\n28 | Beetroot Curry        |200g  | 50") +
-                                        std::string("\n\nTo change price for Cauliflower Kootu 250ml & Beetroot Curry 200g") +
+                                        std::string("\n\nTo change price for Cauliflower Kootu 1pk & Beetroot Curry 1pk") +
                                         std::string("\nType: <b>21-45, 28-60,</b> etc.. and send");
         return std::make_shared<TgBot::ReplyKeyboardRemove>();
     }
@@ -87,7 +87,7 @@ TgBot::GenericReply::Ptr PriceChange::prepareMenu(std::map<std::string, std::sha
         m_Context[pMsg->chat->id]   = USER_CTXT_ADD_A_PROD;
         lstBaseBtns[strChatId]      = getSharedPtr();
         STR_MSG_DEFF_RELEASE  = std::string("Add a product by typing,\n\"Category(as below), Name (20 chars), Price (only numbers) & send\"") +
-                                        std::string("\n\nExample:\nTF, Chappathi, 60") +
+                                        std::string("\n\nExample:\nTF,   Chappathi, 60") +
                                         std::string("\nCR,   Beans Curry,   30") +
                                         std::string("\nSB,   Onion Sambar,   30") +
                                         std::string("\nKT,   Tindora Kootu,   30") +
@@ -111,8 +111,8 @@ TgBot::GenericReply::Ptr PriceChange::prepareMenu(std::map<std::string, std::sha
     iRowIndex++;
 
     createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
-    createKBBtn(STR_BTN_CNF_ORDERS, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
     //  Add all the rows to main menu

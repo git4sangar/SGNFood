@@ -14,10 +14,13 @@
 #include "DBInterface.h"
 #include "BaseButton.h"
 
-#define CART_PAGE     "Cart Page"
+//#define STR_BTN_GPAY_TOP_UP     "Topped Up GPay"
+//#define STR_BTN_BHIM_TOP_UP     "Topped Up BHIM"
+//#define STR_BTN_PAYTM_TOP_UP    "Topped Up PayTM"
 
 class Checkout : public BaseButton, public std::enable_shared_from_this<Checkout> {
-    unsigned int iTotal, iNoOfItems;
+    int iTotal;
+    unsigned int iNoOfItems;
     User::Ptr pUser;
     std::vector<Cart::Ptr> cartItems;
     std::map<unsigned int, std::string> notifyMsgs;
@@ -28,8 +31,8 @@ public:
 
     //  This object is not created on every invocation. So clear it before using.
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
-        pUser = nullptr;
-        iTotal = iNoOfItems = 0; cartItems.clear();
+        pUser = nullptr;iTotal = 0;
+        iNoOfItems = 0; cartItems.clear();
         notifyMsgs.clear();
     }
     bool isMobileNoPresent(std::string strAddress);
@@ -39,7 +42,7 @@ public:
     std::shared_ptr<BaseButton> getSharedPtr() {return shared_from_this();}
     std::string getParseMode() {return "HTML";}
 
-    std::string getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, unsigned int iTotal, FILE *fp);
+    std::string getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp);
     std::string getTopUpString();
 
     //  Overriding cleanup, otherwise it clears up what is just set in prepareMenu
@@ -47,7 +50,7 @@ public:
 
     std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     static std::string STR_MSG_DEFF_RELEASE;
-    static std::string STR_BTN_GPAY, STR_BTN_PAYTM, STR_BTN_WALLET, STR_BTN_BHIM, STR_BTN_CASH, STR_BTN_BACK;
+    static std::string STR_BTN_GPAY_TOP_UP, STR_BTN_PAYTM_TOP_UP, STR_BTN_BHIM_TOP_UP, STR_BTN_CASH_TOP_UP;
 };
 
 

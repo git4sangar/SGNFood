@@ -20,13 +20,6 @@
 
 std::string OrderMgmt::STR_MSG_DEFF_RELEASE   = "New orders";
 
-UserContext OrderMgmt::getContextForPageName(std::string strPageName) {
-    if(!strPageName.compare(STR_BTN_YOUR_ORDERS))    return USER_CTXT_YOUR_ORDER;
-    if(!strPageName.compare(STR_BTN_NEW_ORDERS))     return USER_CTXT_NEW_ORDER;
-    if(!strPageName.compare(STR_BTN_CNF_ORDERS))     return USER_CTXT_CNF_ORDER;
-    return USER_CTXT_NOTA;
-}
-
 void OrderMgmt::create_order_table(std::string file_name, int iPageNo, FILE *fp) {
     fprintf(fp, "BaseBot %ld: OrderMgmt::create_product_table {\n", time(0)); fflush(fp);
 
@@ -38,8 +31,10 @@ void OrderMgmt::create_order_table(std::string file_name, int iPageNo, FILE *fp)
     std::string strFontFile = std::string(BOT_ROOT_PATH) + std::string(BOT_FONT_PATH) + std::string(BOT_FONT_FILE_BOLD);
     product_table.filledsquare(0, 300, 320, 320, 0.0, 0.5, 0.5);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,     5, 305, 0.0, (char *)"SN", 1.0, 1.0, 1.0);
-    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  30+5, 305, 0.0, (char *)pageName.c_str(), 1.0, 1.0, 1.0);
-    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 225+5, 305, 0.0, (char *)"Order No", 1.0, 1.0, 1.0);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  35+5, 305, 0.0, (char *)pageName.c_str(), 1.0, 1.0, 1.0);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 150+5, 305, 0.0, (char *)"No", 1.0, 1.0, 1.0);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 210+5, 305, 0.0, (char *)"Amt", 1.0, 1.0, 1.0);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 265+5, 305, 0.0, (char *)"Bal", 1.0, 1.0, 1.0);
 
     //  Highlight alternate rows
     int iLoop = 0, iIndex = 0;
@@ -50,20 +45,24 @@ void OrderMgmt::create_order_table(std::string file_name, int iPageNo, FILE *fp)
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,     5, iLoop-20, 0.0, (char *)std::to_string(iIndex+1).c_str(), 0, 0, 0);
 
             //  Who or When ordered it
-            strName = orders[iIndex]->m_Name;
-            if(!pageName.compare(STR_BTN_YOUR_ORDERS)) strName = orders[iIndex]->m_OrdrTm;
-            else if(!pageName.compare(STR_BTN_DLVRD_ORDERS)) strName = orders[iIndex]->m_DlvrdTm;
+            strName = orders[iIndex]->m_Name.substr(0,10);
+            if(!pageName.compare(STR_BTN_YOUR_ORDERS))  strName = orders[iIndex]->m_OrdrTm.substr(5,5);
+            else if(!pageName.compare(STR_BTN_DLVRD_ORDERS)) strName = orders[iIndex]->m_DlvrdTm.substr(5,5);
+            if(0 == (orders[iIndex]->m_OrderNo % 2))    strName = std::string("TopUp ") + strName;
 
-            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,  30+5, iLoop-20, 0.0, (char *)strName.c_str(), 0, 0, 0);
-            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 225+5, iLoop-20, 0.0, (char *)std::to_string(orders[iIndex]->m_OrderNo).c_str(), 0, 0, 0);
+            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,  35+5, iLoop-20, 0.0, (char *)strName.c_str(), 0, 0, 0);
+            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 150+5, iLoop-20, 0.0, (char *)std::to_string(orders[iIndex]->m_OrderNo).c_str(), 0, 0, 0);
+            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 210+5, iLoop-20, 0.0, (char *)std::to_string(orders[iIndex]->m_Amt).c_str(), 0, 0, 0);
+            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 265+5, iLoop-20, 0.0, (char *)std::to_string(orders[iIndex]->m_WBalance).c_str(), 0, 0, 0);
             iIndex++;
         }
     }
 
     //  Vertical lines
-    product_table.line( 30, 320,  30, 0, 0, 0, 0);
-    product_table.line(225, 320, 225, 0, 0, 0, 0);
-    product_table.line(320, 320, 320, 0, 0, 0, 0);
+    product_table.line( 35, 300,  35, 0, 0, 0, 0);
+    product_table.line(150, 300, 150, 0, 0, 0, 0);
+    product_table.line(210, 300, 210, 0, 0, 0, 0);
+    product_table.line(265, 300, 265, 0, 0, 0, 0);
 
     product_table.close();
     fprintf(fp, "BaseBot %ld: OrderMgmt::create_product_table }\n", time(0)); fflush(fp);
@@ -80,12 +79,14 @@ TgBot::GenericReply::Ptr OrderMgmt::prepareMenu(std::map<std::string, std::share
     STR_MSG_DEFF_RELEASE    = pageName;
     iRowIndex = 0;
     if(0 < iNoOfItems) {
-        for(iToggle = 0, iLoop = (iSelPage - 1) * MAX_ITEMS_PER_PAGE; (iNoOfItems > iLoop) && (iLoop < (iSelPage * MAX_ITEMS_PER_PAGE)); iLoop++, iToggle = (1-iToggle)) {
+        for(iToggle = 0, iLoop = (iSelPage - 1) * MAX_ITEMS_PER_PAGE; (iNoOfItems > iLoop) && (iLoop < (iSelPage * MAX_ITEMS_PER_PAGE)); iLoop++) {
+            if(0 == (orders[iLoop]->m_OrderNo %2)) continue;        // Skip the TopUps
             strText = std::to_string(orders[iLoop]->m_OrderNo);
-            //  If the button name is integer, Daemon will redirect it to SingleOrder page
             createKBBtn(strText, row[iToggle], lstBaseBtns);
+
+            iRowIndex   = (iRowIndex < (iToggle+1)) ? (iToggle+1) : iRowIndex;
+            iToggle     = (1-iToggle);
         }
-        iRowIndex   = (0 == row[1].size()) ? 1 : 2;
 
         if(MAX_ITEMS_PER_PAGE < iNoOfItems) {
             iPrev       = (iSelPage == 1) ? 1 : (iSelPage - 1);
@@ -103,18 +104,19 @@ TgBot::GenericReply::Ptr OrderMgmt::prepareMenu(std::map<std::string, std::share
 
     //  If it is "Your Order", meaning NOT Admin page
     if(!pageName.compare(STR_BTN_YOUR_ORDERS)) {
-        createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
         createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
+        createKBBtn(STR_BTN_TOP_UP, row[iRowIndex], lstBaseBtns);
+        createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
         iRowIndex++;
     } else {
         createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
         createKBBtn(STR_BTN_CNF_ORDERS, row[iRowIndex], lstBaseBtns);
-        createKBBtn(STR_BTN_MENU_MGMT, row[iRowIndex], lstBaseBtns);
+        createKBBtn(STR_BTN_DLVRD_ORDERS, row[iRowIndex], lstBaseBtns);
         iRowIndex++;
 
-        createKBBtn(STR_BTN_DLVRD_ORDERS, row[iRowIndex], lstBaseBtns);
-        createKBBtn(STR_BTN_CNCLD_ORDERS, row[iRowIndex], lstBaseBtns);
+        createKBBtn(STR_BTN_NEW_TOPUPs, row[iRowIndex], lstBaseBtns);
         createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
+        createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
         iRowIndex++;
     }
 
@@ -181,7 +183,7 @@ void OrderMgmt::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                 iSelPage    = iLoop;
             }
         }
-    } else if(isAdmin && (!pMsg->text.compare(STR_BTN_NEW_ORDERS) || !pMsg->text.compare(STR_BTN_ADMIN_PAGE))) {
+    } else if(isAdmin && !pMsg->text.compare(STR_BTN_NEW_ORDERS)) {
         crtStat     = CartStatus::PAYMENT_PENDING;
         pageName    = STR_BTN_NEW_ORDERS;
         iSelPage    = 1;
@@ -204,7 +206,7 @@ void OrderMgmt::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         orders      = getDBHandle()->getOrdersByUser(pUser->m_UserId, fp);
         iNoOfItems  = orders.size();
     } else {
-        orders      = getDBHandle()->getOrderByStatus(crtStat, fp);
+        orders      = getDBHandle()->getOrderByStatus(crtStat, OrderType::PORDER, fp);
         iNoOfItems  = orders.size();
     }
 

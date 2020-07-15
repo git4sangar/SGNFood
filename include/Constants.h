@@ -11,10 +11,10 @@
 #include <map>
 #include <vector>
 
-#define SGN_BOT_VER "1.0.0"
+#define SGN_BOT_VER "1.1.0"
 
-#define MITTALI
-#define _Pi_
+#define MANI_MAMA
+#define _VM_
 
 //------------------------------------Mani Mama------------------------------------
 #ifdef MANI_MAMA
@@ -36,27 +36,6 @@
         #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNFood/mani_mama/"
     #endif
 #endif
-
-#ifdef MITTALI
-    // Rajaveni: Deleted: #define BOT_TOKEN       "1240037726:AAFG227jcLfO_7tTsredLEE29R1SzAdDZ7c"
-    #define BOT_TOKEN  "1086209332:AAEqeUTkyccsPi22wUWKnUU-o7wpS3k9pRk"
-    #define BOT_DB_FILE     "sgn_mittali.db"
-    #define BOT_LOG_FILE    "log_file_mittali.log"
-    #define PAYTM_MOBILE    "98406 25165"
-    #define GPAY_MOBILE     "98406 25165"
-    #define BHIM_UPI        "98406 25165@okaxis"
-
-    #ifdef _VM_
-        #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/MittaliBot"
-        #define BOT_ROOT_PATH       "/home/svaithiy/sgn/projs/SGNFood/mittali/"
-    #endif
-
-    #ifdef _Pi_
-        #define BIN_FILE_PATH     "/home/pi/sgn/projs/SGNFood/bin/MittaliBot"
-        #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNFood/mittali/"
-    #endif
-#endif
-
 
 #define AURA_BOT        "655366902:AAGEaKH0q1xXu0Lwd5C5HBDZsUnPTjn13X4"
 #define THRAYA_BOT      "664320846:AAHffJ_8LG0W8eGCuYsrgkK4fOCj9j2FgTo"
@@ -122,13 +101,15 @@
 #define STR_CASH    "Cash"
 
 //  Commands to process
+#define STR_BTN_ADMIN_PG        "Admin Page"
+#define STR_BTN_MENU_MGMT       "Menu Mgmt"
+
 #define STR_BTN_CNFM_ORDER      "Confirm Order"
 #define STR_BTN_CNCL_ORDER      "Cancel Order"
 #define SRT_BTN_DLVR_ORDER      "Deliver Order"
-#define STR_BTN_PRINT_ORDER     "Print Order"
-#define STR_BTN_EDIT_ORDER      "Edit Order"
+//#define STR_BTN_PRINT_ORDER     "Print Order"
+//#define STR_BTN_EDIT_ORDER      "Edit Order"
 
-#define STR_BTN_MENU_MGMT       "Menu Mgmt"
 #define STR_BTN_ITEM_LIST       "Item List"
 #define STR_BTN_ADD_PROD        "Add Item"
 #define STR_BTN_EDIT_PRICE      "Edit Price"
@@ -142,16 +123,17 @@
 #define STR_BTN_CNF_ORDERS      "Confirmed Orders"
 #define STR_BTN_DLVRD_ORDERS    "Delivered Orders"
 #define STR_BTN_CNCLD_ORDERS    "Cancelled Orders"
-#define STR_BTN_YOUR_ORDERS     "Your Orders"
-#define STR_BTN_MY_WALLET       "My Wallet"
+#define STR_BTN_YOUR_ORDERS     "A/C Stmt"
 
-#define STR_BTN_TOP_UP_WALLET   "Top Up Wallet"
-#define STR_BTN_GPAY_TOP_UP     "Topped Up via GPay"
-#define STR_BTN_BHIM_TOP_UP     "Topped Up via BHIM"
-#define STR_BTN_PAYTM_TOP_UP    "Topped Up via PayTM"
+#define STR_BTN_TOP_UP          "Top Up"
+#define STR_BTN_CNF_CHECKOUT    "Confirm Checkout"
+
+#define STR_BTN_NEW_TOPUPs      "New TopUps"
+#define STR_BTN_CNF_TOPUPs      "Confirmed TopUps"
+#define STR_BTN_CNCLD_TOPUPs    "Cancelled TopUps"
+#define STR_BTN_CNFM_R_CNCL_TOPUP     "Confirm or Cancel TopUp"
 
 #define STR_BTN_SINGLE_ORDER    "Single Order"
-#define STR_BTN_ADMIN_PAGE      "Admin"
 #define STR_BTN_ADD_BY_SN       "Add to Cart by SN"
 #define STR_BTN_CHANGE_ADDRESS  "Change Address"
 #define STR_BTN_ABOUT           "About"

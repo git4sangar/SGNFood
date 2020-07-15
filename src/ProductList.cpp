@@ -87,11 +87,13 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     }
 
     //  Populate the next available row
-    createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
-    if(isAdmin) createKBBtn(STR_BTN_ADMIN_PAGE, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_TOP_UP, row[iRowIndex], lstBaseBtns);
+    iRowIndex++;
+
+    if(isAdmin) createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
     else createKBBtn(STR_BTN_FAQ, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_YOUR_ORDERS, row[iRowIndex], lstBaseBtns);
-    createKBBtn(STR_BTN_MY_WALLET, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
     //  Add all the rows to main menu
@@ -110,7 +112,8 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 
     std::vector<unsigned int>::const_iterator itr;
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
-    unsigned int iLoop = 0;
+    unsigned int iLoop = 0, iOrderNo;
+    std::stringstream ss;
 
     products    = getDBHandle()->getAllActiveProducts(fp);
     iSelPage    = 1;
@@ -146,6 +149,19 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         STR_MSG_DEFF_RELEASE = std::string("Your cart is empty now.\n") + STR_MSG_DEFF_RELEASE;
     }
 
+    if(!pMsg->text.compare(STR_BTN_CNF_CHECKOUT)) {
+        int iTotal;
+
+        std::vector<Cart::Ptr> cartItems = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
+        for(auto &item : cartItems) iTotal += (item->m_Qnty * item->m_Price);
+        getDBHandle()->insertToOrder(pUser, iTotal, CartStatus::PAYMENT_PENDING, STR_WALLET, OrderType::PORDER, fp);
+
+        iOrderNo    = pUser->m_OrderNo;
+        getDBHandle()->updateOrderNo(pUser->m_UserId, fp);
+        ss << pUser->m_Name << " has made an order, " << iOrderNo << ", using " << STR_WALLET;
+        for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
+        STR_MSG_DEFF_RELEASE = "Your order is placed. You will get a confirmation msg in a few hours.";
+    }
     fprintf(fp, "BaseBot %ld: ProductList onClick }\n", time(0)); fflush(fp);
 }
 

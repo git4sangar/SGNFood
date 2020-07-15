@@ -51,9 +51,6 @@ public:
 
     int create_order_items_table(std::shared_ptr<pngwriter> pPNGWriter, int yAxis, int iIndex, int iCurPg, int iMaxPg,  FILE *fp);
 
-    //  Overriding cleanup, otherwise it clears up what is just set in prepareMenu
-    void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}
-
     std::vector<std::string> split_address(std::string strAddress);
     int addAddressToPNG(std::shared_ptr<pngwriter> pPNGWriter, int iPgLn, std::string strAddress, int iOrderNo, std::string strPayGW);
 

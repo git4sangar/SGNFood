@@ -110,9 +110,9 @@ TgBot::GenericReply::Ptr EditMenu::prepareMenu(std::map<std::string, std::shared
     iRowIndex++;
 
     //  Populate the next available row
-    createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
-    createKBBtn(STR_BTN_CNF_ORDERS, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_MENU_MGMT, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
     //  Add all the rows to main menu
@@ -151,8 +151,7 @@ void EditMenu::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             STR_MSG_DEFF_RELEASE = "<b>Tomorrow's menu is empty. Pls create it first.</b>";
         } else {
             std::vector<User::Ptr> users    = getDBHandle()->getAllUsers(fp);
-            for(auto &user : users) { notifyMsgs[user->m_ChatId] = std::string("Hi ") + user->m_Name + ", tomorrow's menu is ready. Pls place your order.";}
-            //notifyMsgs[303802126] = std::string("Hi Shalini, tomorrow's menu is ready. Pls place your order.");
+            for(auto &user : users) { notifyMsgs[user->m_ChatId] = std::string("Hi ") + user->m_Name + ", tomorrow's menu is ready. Pls place your order before it is too late.";}
         }
     }
 

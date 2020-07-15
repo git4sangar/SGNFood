@@ -37,7 +37,7 @@ public:
     TgBot::InputFile::Ptr getMedia(TgBot::Message::Ptr pMsg, FILE *fp);
 
     void create_order_table(std::string file_name, int iPageNo, FILE *fp);
-    UserContext getContextForPageName(std::string strPageName);
+    //UserContext getContextForPageName(std::string strPageName);
 
     //  Overriding cleanup, otherwise it clears up what is just set in prepareMenu
     void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}
@@ -45,7 +45,7 @@ public:
     static std::string STR_MSG_DEFF_RELEASE;
 };
 
-class YourOrder : public BaseButton, public std::enable_shared_from_this<YourOrder> {
+/*class YourOrder : public BaseButton, public std::enable_shared_from_this<YourOrder> {
     std::vector<POrder::Ptr> orders;
     std::string asset_file, pageName;
     unsigned int iNoOfItems, iSelPage;
@@ -74,6 +74,15 @@ public:
 
     static std::string STR_MSG_DEFF_RELEASE;
 };
+
+UserContext OrderMgmt::getContextForPageName(std::string strPageName) {
+    if(!strPageName.compare(STR_BTN_YOUR_ORDERS))    return USER_CTXT_YOUR_ORDER;
+    if(!strPageName.compare(STR_BTN_NEW_ORDERS))     return USER_CTXT_NEW_ORDER;
+    if(!strPageName.compare(STR_BTN_CNF_ORDERS))     return USER_CTXT_CNF_ORDER;
+    return USER_CTXT_NOTA;
+}
+
+*/
 
 
 
