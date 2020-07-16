@@ -145,6 +145,7 @@ TgBot::GenericReply::Ptr ViewCart::prepareMenu(std::map<std::string, std::shared
     }
 
     fprintf(fp, "BaseBot %ld: Finishing ViewCart::prepareMenu }\n", time(0)); fflush(fp);
+    pMainMenu->resizeKeyboard   = true;
     return pMainMenu;
 }
 

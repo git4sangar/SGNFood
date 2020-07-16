@@ -176,6 +176,7 @@ public:
     ~DBInterface();
 
     std::string     getCurTime();
+    std::string     getYstrDate();
     std::string     getTmrwDate();
 
     unsigned int generateOrderNo(OrderType orderType, FILE *fp);
@@ -224,6 +225,8 @@ public:
     POrder::Ptr getOrderForOrderNo(unsigned int iOrderNo, FILE *fp);
     std::vector<POrder::Ptr> getOrderByStatus(CartStatus crtStat, OrderType orderType, FILE *fp);
     std::vector<POrder::Ptr> getOrdersByUser(unsigned int iUserId, FILE *fp);
+    void updateAllDelivered(FILE *fp);
+    int getAllOutstanding(FILE *fp);
 };
 
 

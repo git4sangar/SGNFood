@@ -174,7 +174,6 @@ bool DBInterface::addNewUser(int64_t chatId, std::string fname, FILE *fp) {
         m_hDB->exec(ss.str());
         transaction.commit();
     } else {
-        fprintf(fp, "BaseBot %ld: User %s alreay existing\n", time(0), fname.c_str()); fflush(fp);
         return false;
     }
     return true;
@@ -738,12 +737,20 @@ void DBInterface::updateOrderStatus(int iOrderNo, CartStatus crtStatus, OrderTyp
         }
         m_hDB->exec(ss.str());
 
-        ss.str(std::string());ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(crtStatus)
-                    << " WHERE " << Cart::CART_ORDER_NO << " = " << iOrderNo << ";";
-        m_hDB->exec(ss.str());
+        if(OrderType::PORDER == ordrTyp) {
+            ss.str(std::string());ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(crtStatus)
+                        << " WHERE " << Cart::CART_ORDER_NO << " = " << iOrderNo << ";";
+            m_hDB->exec(ss.str());
+        }
 
         transaction.commit();
     }
+}
+std::string DBInterface::getYstrDate() {
+    time_t t = time(NULL) - SECS_IN_A_DAY;
+    char buffer[64];
+    strftime(buffer, 64, "%Y-%m-%d", localtime(&t));
+    return std::string(buffer);
 }
 
 std::string DBInterface::getTmrwDate() {
@@ -783,10 +790,12 @@ void DBInterface::insertToOrder(User::Ptr pUser, unsigned int uiAmt, CartStatus 
             getIntStatus(crtStatus) << ", \"" << pUser->m_Address << "\" );";
     m_hDB->exec(ss.str());
 
-    ss.str(std::string());
-    ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(CartStatus::PAYMENT_PENDING) << " WHERE "
-            << Cart::CART_ORDER_NO << " = " << pUser->m_OrderNo << ";";
-    m_hDB->exec(ss.str());
+    if(OrderType::PORDER == ordrTyp) {
+        ss.str(std::string());
+        ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(CartStatus::PAYMENT_PENDING) << " WHERE "
+                << Cart::CART_ORDER_NO << " = " << pUser->m_OrderNo << ";";
+        m_hDB->exec(ss.str());
+    }
 
     ss.str(std::string());
     ss << "UPDATE User SET " << User::USER_WBALANCE << " = " << wBal << " WHERE "
@@ -898,6 +907,36 @@ std::vector<POrder::Ptr> DBInterface::getOrderByStatus(CartStatus crtStat, Order
         }
     }
     return pOrders;
+}
+
+void DBInterface::updateAllDelivered(FILE *fp) {
+    std::stringstream ss;
+    SQLite::Transaction transaction(*m_hDB);
+
+    ss.str("");
+    ss << "UPDATE POrder SET "
+            << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::DELIVERED) << ", "
+            << POrder::PORDER_DLVR_TM << " = \"" << getCurTime()
+            << "\" WHERE "
+                << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND "
+                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) = \"" << getYstrDate() << "\";";
+    m_hDB->exec(ss.str());
+
+    transaction.commit();
+}
+
+int DBInterface::getAllOutstanding(FILE *fp) {
+    std::stringstream ss;
+    int iOutstanding = 0;
+
+    ss << "SELECT SUM(" << User::USER_WBALANCE << ") FROM User WHERE 0 > " << User::USER_WBALANCE << ";";
+    SQLite::Statement query(*m_hDB, ss.str());
+
+    if(query.executeStep()) {
+        ss.str(std::string()); ss << "SUM(" << User::USER_WBALANCE << ")";
+        iOutstanding = query.getColumn(ss.str().c_str()).getUInt();
+    }
+    return iOutstanding;
 }
 
 /*

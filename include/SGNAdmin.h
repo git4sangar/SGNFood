@@ -23,7 +23,7 @@ public:
 
     //  This object is not created on every invocation. So clear it before using.
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
-        STR_MSG_DEFF_RELEASE   = "Admin Page";
+        STR_MSG_DEFF_RELEASE.clear();
     }
 
     std::string getParseMode() {return "HTML";}

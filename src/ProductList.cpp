@@ -103,6 +103,7 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     }
 
     fprintf(fp, "BaseBot %ld: Finishing ProductList::prepareMenu }\n", time(0)); fflush(fp);
+    pMainMenu->resizeKeyboard   = true;
     return pMainMenu;
 }
 
@@ -150,14 +151,15 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     }
 
     if(!pMsg->text.compare(STR_BTN_CNF_CHECKOUT)) {
-        int iTotal;
+        int iTotal = 0;
 
         std::vector<Cart::Ptr> cartItems = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
-        for(auto &item : cartItems) iTotal += (item->m_Qnty * item->m_Price);
+        iTotal = 0; for(auto &item : cartItems) iTotal += (item->m_Qnty * item->m_Price);
         getDBHandle()->insertToOrder(pUser, iTotal, CartStatus::PAYMENT_PENDING, STR_WALLET, OrderType::PORDER, fp);
 
         iOrderNo    = pUser->m_OrderNo;
         getDBHandle()->updateOrderNo(pUser->m_UserId, fp);
+
         ss << pUser->m_Name << " has made an order, " << iOrderNo << ", using " << STR_WALLET;
         for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
         STR_MSG_DEFF_RELEASE = "Your order is placed. You will get a confirmation msg in a few hours.";

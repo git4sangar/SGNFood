@@ -122,6 +122,7 @@ TgBot::GenericReply::Ptr EditMenu::prepareMenu(std::map<std::string, std::shared
     }
 
     fprintf(fp, "BaseBot %ld: Finishing EditMenu::prepareMenu }\n", time(0)); fflush(fp);
+    pMainMenu->resizeKeyboard   = true;
     return pMainMenu;
 }
 

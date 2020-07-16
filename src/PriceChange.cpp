@@ -122,6 +122,7 @@ TgBot::GenericReply::Ptr PriceChange::prepareMenu(std::map<std::string, std::sha
     }
 
     fprintf(fp, "BaseBot %ld: Finishing PriceChange::prepareMenu }\n", time(0)); fflush(fp);
+    pMainMenu->resizeKeyboard   = true;
     return pMainMenu;
 }
 

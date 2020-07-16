@@ -144,7 +144,7 @@ void BotMainLoop(FILE *fp) {
 
     fprintf(fp, "Main: %ld: Starting MainLoop\n", time(0)); fflush(fp);
 
-    std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>(THRAYA_BOT);
+    std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>(BOT_TOKEN);
     std::thread recv_thread(&plsWaitThread, pBot, fp);
 
     DBInterface::Ptr hDB       = std::make_shared<DBInterface>(root_path + db_path + db_file, fp);
@@ -196,10 +196,9 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_ADMIN_PG]      = std::make_shared<SGNAdmin>(hDB);
 
     //  Admin Chat Ids
+    //adminChatIds.push_back(303802126);      // Shalini
     adminChatIds.push_back(550919816);      // Myself
-    //adminChatIds.push_back(685954136);    // Sriram
-    //adminChatIds.push_back(1306802994);   // Sudarshan
-    adminChatIds.push_back(1352652258);   // Santosh
+    adminChatIds.push_back(1352652258);     // Santosh
 
     pBot->getEvents().onAnyMessage( [pBot, &listBaseBtns, fp, &startSec](TgBot::Message::Ptr pMsg) {
         petWatchDog(fp);
@@ -307,7 +306,7 @@ int main() {
     std::cout << "SGN" << std::endl;
     std::string root_path   = std::string(BOT_ROOT_PATH);
     std::string log_path    = std::string(BOT_LOG_PATH);
-    std::string file_name   = std::string(BOT_LOG_FILE);
+    std::string file_name   = std::string(BOT_LOG_FILE) + std::string("_") + std::to_string(time(0));
     std::string log_file    = root_path + log_path + file_name;
     FILE *fp = fopen(log_file.c_str(), "w");
     if(NULL == fp) {

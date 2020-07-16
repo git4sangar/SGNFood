@@ -11,15 +11,34 @@
 #include <map>
 #include <vector>
 
-#define SGN_BOT_VER "1.1.0"
+#define SGN_BOT_VER "1.1.1"
 
 #define MANI_MAMA
-#define _VM_
+#define _Pi_
+
+//------------------------------------AurA------------------------------------
+#ifdef AURA
+    #define BOT_TOKEN	    "655366902:AAGEaKH0q1xXu0Lwd5C5HBDZsUnPTjn13X4"
+    #define BOT_DB_FILE     "sgn_aura.db"
+    #define BOT_LOG_FILE    "log_file_aura.log"
+    #define PAYTM_MOBILE    "98406 25165"
+    #define GPAY_MOBILE     "99401 30135"
+    #define BHIM_UPI        "shaliniv16@okicici"
+
+    #ifdef _VM_
+        #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/AuraBot"
+        #define BOT_ROOT_PATH       "/home/svaithiy/sgn/projs/SGNFood/aura/"
+    #endif
+
+    #ifdef _Pi_
+        #define BIN_FILE_PATH     "/home/pi/sgn/projs/SGNFood/bin/AuraBot"
+        #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNFood/aura/"
+    #endif
+#endif
 
 //------------------------------------Mani Mama------------------------------------
 #ifdef MANI_MAMA
-    // Rajaveni: Deleted: #define BOT_TOKEN       "1240037726:AAFG227jcLfO_7tTsredLEE29R1SzAdDZ7c"
-    #define BOT_TOKEN	"1351042610:AAGlnvR26ZsX7ElSyU8l3PwIcJ8GMs48N0Q"
+    #define BOT_TOKEN       "1351042610:AAGlnvR26ZsX7ElSyU8l3PwIcJ8GMs48N0Q"
     #define BOT_DB_FILE     "sgn_mani.db"
     #define BOT_LOG_FILE    "log_file_mani.log"
     #define PAYTM_MOBILE    "98406 25165"
@@ -123,6 +142,7 @@
 #define STR_BTN_CNF_ORDERS      "Confirmed Orders"
 #define STR_BTN_DLVRD_ORDERS    "Delivered Orders"
 #define STR_BTN_CNCLD_ORDERS    "Cancelled Orders"
+#define STR_BTN_ALL_DLVRD       "All Dlvrd"
 #define STR_BTN_YOUR_ORDERS     "A/C Stmt"
 
 #define STR_BTN_TOP_UP          "Top Up"
@@ -131,6 +151,7 @@
 #define STR_BTN_NEW_TOPUPs      "New TopUps"
 #define STR_BTN_CNF_TOPUPs      "Confirmed TopUps"
 #define STR_BTN_CNCLD_TOPUPs    "Cancelled TopUps"
+#define STR_BTN_OUTSTANDING     "Outstanding"
 #define STR_BTN_CNFM_R_CNCL_TOPUP     "Confirm or Cancel TopUp"
 
 #define STR_BTN_SINGLE_ORDER    "Single Order"
