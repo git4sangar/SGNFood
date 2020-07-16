@@ -45,7 +45,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
 
     createKBBtn(STR_BTN_MENU_MGMT, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
-    createKBBtn(STR_BTN_CNCLD_ORDERS, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_ORDR_SUMMRY, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
 
     //  Add all the rows to main menu
@@ -63,6 +63,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SGNAdmin onClick pMsg %s {\n", time(0), pMsg->text.c_str()); fflush(fp);
 
     int iOutstanding = 0;
+    std::stringstream ss;
 
     if(!pMsg->text.compare(STR_BTN_ALL_DLVRD)) {
         getDBHandle()->updateAllDelivered(fp);
@@ -71,6 +72,15 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     if(!pMsg->text.compare(STR_BTN_OUTSTANDING)) {
         iOutstanding = getDBHandle()->getAllOutstanding(fp);
         STR_MSG_DEFF_RELEASE = std::string("Total outstanding : ") + std::to_string(iOutstanding) + std::string("\n");
+    }
+    if(!pMsg->text.compare(STR_BTN_ORDR_SUMMRY)) {
+        std::map<unsigned int, unsigned int>::iterator itr;
+        std::map<unsigned int, unsigned int> ordrSum   = getDBHandle()->getOrderSummary(fp);
+        for(itr =  ordrSum.begin(); itr != ordrSum.end(); itr++) {
+            Product::Ptr pProd  = getDBHandle()->getProductById(itr->first, fp);
+            if(pProd) ss << pProd->m_Name << " : " << itr->second << "\n";
+        }
+        STR_MSG_DEFF_RELEASE = std::string("<b>Order Summary</b>\n") + ss.str();
     }
     fprintf(fp, "BaseBot %ld: SGNAdmin onClick }\n", time(0)); fflush(fp);
 }

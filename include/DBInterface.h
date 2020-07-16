@@ -227,6 +227,7 @@ public:
     std::vector<POrder::Ptr> getOrdersByUser(unsigned int iUserId, FILE *fp);
     void updateAllDelivered(FILE *fp);
     int getAllOutstanding(FILE *fp);
+    std::map<unsigned int, unsigned int> getOrderSummary(FILE *fp);
 };
 
 

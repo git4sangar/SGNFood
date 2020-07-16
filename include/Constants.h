@@ -142,6 +142,7 @@
 #define STR_BTN_CNF_ORDERS      "Confirmed Orders"
 #define STR_BTN_DLVRD_ORDERS    "Delivered Orders"
 #define STR_BTN_CNCLD_ORDERS    "Cancelled Orders"
+#define STR_BTN_ORDR_SUMMRY     "Order Summary"
 #define STR_BTN_ALL_DLVRD       "All Dlvrd"
 #define STR_BTN_YOUR_ORDERS     "A/C Stmt"
 

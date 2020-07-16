@@ -922,6 +922,13 @@ void DBInterface::updateAllDelivered(FILE *fp) {
                 << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) = \"" << getYstrDate() << "\";";
     m_hDB->exec(ss.str());
 
+    ss.str(std::string());
+    ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(CartStatus::DELIVERED) << " WHERE "
+                << Cart::CART_ORDER_NO << " IN (SELECT " << POrder::PORDER_NO << " FROM POrder WHERE "
+                << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND "
+                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) = \"" << getYstrDate() << "\");";
+    m_hDB->exec(ss.str());
+
     transaction.commit();
 }
 
@@ -937,6 +944,21 @@ int DBInterface::getAllOutstanding(FILE *fp) {
         iOutstanding = query.getColumn(ss.str().c_str()).getUInt();
     }
     return iOutstanding;
+}
+
+std::map<unsigned int, unsigned int> DBInterface::getOrderSummary(FILE *fp) {
+    std::map<unsigned int, unsigned int> ordrSmry;
+    Cart::Ptr pCart;
+    std::stringstream ss;
+
+    ss << "SELECT * FROM Cart WHERE " << Cart::CART_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << ";";
+    SQLite::Statement query(*m_hDB, ss.str());
+
+    while(query.executeStep()) {
+        pCart   = getCart(&query);
+        if(pCart) ordrSmry[pCart->m_ProductId] += pCart->m_Qnty;
+    }
+    return ordrSmry;
 }
 
 /*

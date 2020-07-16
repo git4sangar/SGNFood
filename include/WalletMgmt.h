@@ -28,7 +28,7 @@ public:
     //  This object is not created on every invocation. So clear it before using.
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
         orders.clear(); asset_file.clear(); pageName.clear(); iNoOfItems = 0;
-        STR_MSG_DEFF_RELEASE   = "New / Confirmed / Delivered Orders";
+        STR_MSG_DEFF_RELEASE   = "New / Confirmed / Cancelled TopUps";
         notifyMsgs.clear();
     }
     std::string getParseMode() {return "HTML";}
