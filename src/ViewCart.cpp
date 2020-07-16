@@ -193,7 +193,7 @@ void ViewCart::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                 cartItems = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
             }
             else if(0 < (iFound = findAssociatedNumber(pMsg->text, STR_BTN_REMOVE, (MAX_ITEMS_PER_PAGE-1) * MAX_NO_OF_PAGES))) {
-                getDBHandle()->removeItemFromCart(cartItems[iFound-1]->m_ProductId, pUser->m_OrderNo, fp);
+                getDBHandle()->reduceCartQty(cartItems[iFound-1]->m_ProductId, pUser->m_OrderNo, fp);
                 cartItems   = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
                 iCrtSz      = cartItems.size();
                 iMaxPages   = (iCrtSz / (MAX_ITEMS_PER_PAGE-1)) + (0 != (iCrtSz % (MAX_ITEMS_PER_PAGE-1)));
