@@ -59,7 +59,7 @@ std::string Checkout::getTopUpString() {
             "\n\nGPay : " << GPAY_MOBILE << ",\nPayTm : " << PAYTM_MOBILE << ",\nUPI id : " << BHIM_UPI <<
             "\n\n2) Mention <b>\"Transac " << pUser->m_TransacNo << " Top Up ₹\"</b> in desc." <<
             "\nGPay -> \"What is this for\"\nPayTM -> \"Add a Message\""<<
-            "\n\nExample:\nTransac 1002 Top Up 1000\nTransac 1050 Top Up 428\netc...\n" <<
+            "\n\nExample:\nTransac 1002 Top Up 1000\nTransac 1050 Top Up 5000\netc...\n" <<
             "\nAfter transferring, click a \"Topped Up\" button below." <<
             " Your Wallet will be updated after verification.";
     return ss.str();
