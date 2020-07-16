@@ -153,6 +153,7 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
     }
 
     fprintf(fp, "BaseBot %ld: Finishing Checkout::prepareMenu\n", time(0)); fflush(fp);
+    pMainMenu->resizeKeyboard   = true;
     return pMainMenu;
 }
 

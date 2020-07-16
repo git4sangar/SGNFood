@@ -43,6 +43,7 @@ TgBot::GenericReply::Ptr FAQs::prepareMenu(std::map<std::string, std::shared_ptr
     }
 
     fprintf(fp, "BaseBot %ld: FAQs::prepareMenu }\n", time(0)); fflush(fp);
+    pMainMenu->resizeKeyboard   = true;
     return pMainMenu;
 }
 

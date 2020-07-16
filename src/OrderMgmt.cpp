@@ -21,7 +21,7 @@
 std::string OrderMgmt::STR_MSG_DEFF_RELEASE   = "New orders";
 
 void OrderMgmt::create_order_table(std::string file_name, int iPageNo, FILE *fp) {
-    fprintf(fp, "BaseBot %ld: OrderMgmt::create_product_table {\n", time(0)); fflush(fp);
+    fprintf(fp, "BaseBot %ld: OrderMgmt::create_order_table {\n", time(0)); fflush(fp);
 
     pngwriter product_table(320, 320, 1.0, file_name.c_str());
     std::string strName;
@@ -31,7 +31,8 @@ void OrderMgmt::create_order_table(std::string file_name, int iPageNo, FILE *fp)
     std::string strFontFile = std::string(BOT_ROOT_PATH) + std::string(BOT_FONT_PATH) + std::string(BOT_FONT_FILE_BOLD);
     product_table.filledsquare(0, 300, 320, 320, 0.0, 0.5, 0.5);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,     5, 305, 0.0, (char *)"SN", 1.0, 1.0, 1.0);
-    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  35+5, 305, 0.0, (char *)pageName.c_str(), 1.0, 1.0, 1.0);
+    strName = pageName.substr(0, 10);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  35+5, 305, 0.0, (char *)strName.c_str(), 1.0, 1.0, 1.0);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 150+5, 305, 0.0, (char *)"No", 1.0, 1.0, 1.0);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 210+5, 305, 0.0, (char *)"Amt", 1.0, 1.0, 1.0);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 265+5, 305, 0.0, (char *)"Bal", 1.0, 1.0, 1.0);
@@ -127,6 +128,7 @@ TgBot::GenericReply::Ptr OrderMgmt::prepareMenu(std::map<std::string, std::share
     }
 
     fprintf(fp, "BaseBot %ld: Finishing OrderMgmt::prepareMenu }\n", time(0)); fflush(fp);
+    pMainMenu->resizeKeyboard   = true;
     return pMainMenu;
 }
 

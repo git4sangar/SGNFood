@@ -79,6 +79,7 @@ TgBot::GenericReply::Ptr MyAddress::prepareMenu(std::map<std::string, std::share
     }
 
     fprintf(fp, "BaseBot %ld: MyAddress::prepareMenu }\n", time(0)); fflush(fp);
+    pMainMenu->resizeKeyboard   = true;
     return pMainMenu;
 }
 

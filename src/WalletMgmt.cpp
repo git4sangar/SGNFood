@@ -132,6 +132,7 @@ TgBot::GenericReply::Ptr WalletMgmt::prepareMenu(std::map<std::string, std::shar
     if(STR_MSG_DEFF_RELEASE.empty()) STR_MSG_DEFF_RELEASE   = "Wallet Management.";
 
     fprintf(fp, "BaseBot %ld: Finishing WalletMgmt::prepareMenu }\n", time(0)); fflush(fp);
+    pMainMenu->resizeKeyboard   = true;
     return pMainMenu;
 }
 

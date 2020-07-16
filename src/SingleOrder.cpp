@@ -189,6 +189,7 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
     }
 
     fprintf(fp, "BaseBot %ld: Finishing SingleOrder::prepareMenu }\n", time(0)); fflush(fp);
+    pMainMenu->resizeKeyboard   = true;
     return pMainMenu;
 }
 
