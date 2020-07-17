@@ -140,6 +140,11 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         //  Buy TF-01
         strCode = pMsg->text.substr(4);  // yields TF-01
         Product::Ptr pProd  = getDBHandle()->getProductForCode(strCode,fp);
+
+        //  Find page number of this code
+        for(iLoop = 0; iLoop < iNoOfItems; iLoop++) if(products[iLoop]->m_ProductId == pProd->m_ProductId) break;
+        if(iLoop < iNoOfItems) iSelPage = ((iLoop+1) / MAX_ITEMS_PER_PAGE) + (0 != ((iLoop+1) % MAX_ITEMS_PER_PAGE));
+
         int iQty = getDBHandle()->addProductToCart(pProd->m_ProductId, pProd->m_Price, pMsg->chat->id, fp);
         ss << "<b>" << pProd->m_Name << " * " << iQty << "</b> added to Cart. Clicking it again, increases quantity.";
         STR_MSG_DEFF_RELEASE = ss.str();
