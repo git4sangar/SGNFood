@@ -670,17 +670,17 @@ unsigned int DBInterface::addAddressToShipping(unsigned int iUserId, std::string
 }
 
 /*
-+---------+--------------------+-----------------------+
-|         | POrder             | TopUp                 |
-+---------+--------------------+-----------------------+
-| Confirm | Update Order, Cart | Update Order, Cart    |
-|         | Status             | Status                |
-+---------+--------------------+-----------------------+
-| Cancel  | Update Order, Cart | Update Order, Cart    |
-|         | Status             | Status                |
-|         | Increment Wallet   | Decrement Wallet      |
-|         |                    | Decrement all transac |
-+---------+--------------------+-----------------------+
++---------+-----------------------+-----------------------+
+|         | POrder                | TopUp                 |
++---------+-----------------------+-----------------------+
+| Confirm | Update Order, Cart    | Update Order, Cart    |
+|         | Status                | Status                |
++---------+-----------------------+-----------------------+
+| Cancel  | Update Order, Cart    | Update Order, Cart    |
+|         | Status                | Status                |
+|         | Increment Wallet      | Decrement Wallet      |
+|         | Increment all transac | Decrement all transac |
++---------+-----------------------+-----------------------+
 */
 void DBInterface::updateOrderStatus(int iOrderNo, CartStatus crtStatus, OrderType ordrTyp, FILE *fp) {
     std::stringstream ss;
@@ -697,28 +697,23 @@ void DBInterface::updateOrderStatus(int iOrderNo, CartStatus crtStatus, OrderTyp
 
 //--------------- Wallet & transactions update. Only applicable for Cancel request-----------------------------------------------
         if(CartStatus::CANCELLED == crtStatus) {
-            if(OrderType::PORDER == ordrTyp) {
-                ss.str(std::string());
-                ss << "UPDATE User SET " << User::USER_WBALANCE << " = "  << User::USER_WBALANCE << " + " << iNewAmt << " WHERE "
-                        << User::USER_ID << " = " << pOrder->m_UserId << ";";
-                m_hDB->exec(ss.str());
-            }
-            if(OrderType::TOPUP == ordrTyp) {
-                ss.str(std::string());
-                ss << "UPDATE User SET " << User::USER_WBALANCE << " = "  << User::USER_WBALANCE << " - " << iNewAmt << " WHERE "
-                        << User::USER_ID << " = " << pOrder->m_UserId << ";";
-                m_hDB->exec(ss.str());
+            std::string strPlusMinus;
+            strPlusMinus = (OrderType::TOPUP == ordrTyp) ? " - " : " + ";
 
-                //  Decrement all the transactions after that
-                ss.str(std::string());
-                ss << "UPDATE POrder SET " << POrder::PORDER_WBALANCE << " = " << POrder::PORDER_WBALANCE << " - " << iNewAmt
-                        << " WHERE " << POrder::PORDER_ORDR_TM << " > \"" << pOrder->m_OrdrTm << "\" AND "
-                        << POrder::PORDER_USER_ID << " = " << pOrder->m_UserId << ";";
-                m_hDB->exec(ss.str());
+            ss.str(std::string());
+            ss << "UPDATE User SET " << User::USER_WBALANCE << " = "  << User::USER_WBALANCE << strPlusMinus << iNewAmt
+                    << " WHERE " << User::USER_ID << " = " << pOrder->m_UserId << ";";
+            m_hDB->exec(ss.str());
 
-                wBal    = (wBal - iNewAmt);
-                iNewAmt = 0;
-            }
+            //  Increment / Decrement all the transactions after that
+            ss.str(std::string());
+            ss << "UPDATE POrder SET " << POrder::PORDER_WBALANCE << " = " << POrder::PORDER_WBALANCE << strPlusMinus << iNewAmt
+                    << " WHERE " << POrder::PORDER_ORDR_TM << " > \"" << pOrder->m_OrdrTm << "\" AND "
+                    << POrder::PORDER_USER_ID << " = " << pOrder->m_UserId << ";";
+            m_hDB->exec(ss.str());
+
+            wBal    = (OrderType::TOPUP == ordrTyp) ? (wBal - iNewAmt) : (wBal + iNewAmt);
+            iNewAmt = 0;
         }
 
 // ----------------------Update Order / Cart status. Common for all scenarios------------------------------------------------------

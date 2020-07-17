@@ -228,8 +228,6 @@ void BotMainLoop(FILE *fp) {
             pBaseBtn = itrBBtn->second->getSharedPtr();
         } else {
             fprintf(fp, "BaseBot %ld: \"%s\" button missing\n", time(0), pMsg->text.c_str()); fflush(fp);
-//            std::stringstream ss;
-//            ss << "Hi " << pMsg->from->firstName << ", could not recognize what you say, pls use the buttons below.\nRegret the inconvenience caused.";
             pBaseBtn    = listBaseBtns[STR_BTN_MAINMENU];
         }
 

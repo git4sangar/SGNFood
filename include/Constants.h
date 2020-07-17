@@ -11,7 +11,7 @@
 #include <map>
 #include <vector>
 
-#define SGN_BOT_VER "1.1.1"
+#define SGN_BOT_VER "1.1.2"
 
 #define MANI_MAMA
 #define _Pi_
@@ -97,7 +97,7 @@
 #define MAX_ADDRESSES       (3)
 #define MAX_ADD_RMV_BTNS_PER_ROW    (7)
 #define MAX_SINGLE_LINE_WIDTH   (40)
-#define MAX_ADDRESS_LINES   (3)
+#define MAX_ADDRESS_LINES   (4)
 #define MAX_YOUR_ORDERS     (100)
 
 #define USER_CTXT_NOTA          (100)

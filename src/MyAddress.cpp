@@ -19,11 +19,11 @@ std::string MyAddress::STR_MSG_DEFF_RELEASE = "Please enter your address";
 std::string getAddressNotification() {
    return
    std::string("Type address & mobile no in short form & send. <b>MOBILE No IS MUST.</b>") +
-   std::string("\nNote: This screen repeats until you give a 10 digit mobile no.") +
-   std::string("\n\nExample:\nB6 105, SSM Nagar, Perungalathur, 98452 35323") +
-   std::string("\n\n24A 101, Bollineni Hillside, Nookampalayam, 88765 89623") +
-   std::string("\n\nD3F2 Navins Brookfield, Nanmangalam, 91765 66966") +
-   std::string("\n\nM 104 Purva Fountain Square, Marathahalli, 70102 80604");
+   std::string("\n\n(01)Note: This screen repeats until you give a 10 digit mobile no.") +
+   std::string("\n\n(02)<b>Short Form</b>: Bangalore -> Blr, PinCode - 3digits, Road -> Rd, Main -> Mn") +
+   std::string(",  Appartment -> Apt,  Near -> Nr, Extension -> Extn, Stage -> Stg, First -> 1st, Second -> 2nd, Sixth -> 6th.") +
+   std::string("\n\nExample:\n1st Mn, Domlur, HAL 2nd Stg, Blr-8, 98452 35323") +
+   std::string("\n\nB401 Rajni Ashish Apt, MG Rd, Thubarahalli, 70102 80604");
 }
 
 TgBot::GenericReply::Ptr MyAddress::prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, TgBot::Message::Ptr pMsg, FILE *fp) {

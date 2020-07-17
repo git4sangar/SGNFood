@@ -61,6 +61,8 @@ int SingleOrder::addAddressToPNG(std::shared_ptr<pngwriter> pPNGWriter, int iPgL
     std::vector<std::string> lines  = split_address(strAddress);
     std::stringstream ss; ss << "Order No: " << iOrderNo << ", Payment: " << strPayGW;
     lines.insert(lines.begin(), ss.str());
+    ss.str(""); ss << "Ordered : " << pOrder->m_OrdrTm;
+    lines.push_back(ss.str());
 
     std::string strFontFile = std::string(BOT_ROOT_PATH) + std::string(BOT_FONT_PATH) + std::string(BOT_FONT_FILE_BOLD);
     int yAxis = iPgLn - 15, iLoop = 0;
@@ -160,6 +162,8 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
     } else if(USER_CTXT_CNF_ORDER == usrCtxt) {
         strText =   std::string(SRT_BTN_DLVR_ORDER) + std::string(" ") + std::to_string(iOrderNo);
         createKBBtn(strText, row[iRowIndex], lstBaseBtns);
+        strText =   std::string(STR_BTN_CNCL_ORDER) + std::string(" ") + std::to_string(iOrderNo);
+        createKBBtn(strText, row[iRowIndex], lstBaseBtns);
         iRowIndex++;
     }
 
@@ -225,6 +229,32 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     if(!strCmd.empty() && 0 < iOrderNo) {
         pOrder  = getDBHandle()->getOrderForOrderNo(iOrderNo, fp);
         pUser   = getDBHandle()->getUserForUserId(pOrder->m_UserId, fp);
+
+        /*std::string strNtf;
+         CartStatus crtStat  = CartStatus::NOTA;
+        switch(mapCmdToInt[strCmd]) {
+            case INT_CNFM_ORDER:
+                fprintf(fp, "BaseBot %ld: SingleOrder onClick, Confirming Order: %d\n", time(0), iOrderNo); fflush(fp);
+                crtStat = CartStatus::READY_FOR_DELIVERY;
+                strNtf  = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Confirmed.");
+                break;
+            case INT_CNCL_ORDER:
+                fprintf(fp, "BaseBot %ld: SingleOrder onClick, Canceling Order: %d\n", time(0), iOrderNo); fflush(fp);
+                crtStat = CartStatus::CANCELLED;
+                strNtf  = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Cancelled & Wallet updated. Please call the merchant for details");
+                break;
+            case INT_DLVR_ORDER:
+                fprintf(fp, "BaseBot %ld: SingleOrder onClick, Delivered Order: %d\n", time(0), iOrderNo); fflush(fp);
+                crtStat = CartStatus::DELIVERED;
+                strNtf  = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Delivered.");
+                break;
+        }
+        getDBHandle()->updateOrderStatus(iOrderNo, crtStat, OrderType::PORDER, fp);
+        notifyMsgs[pUser->m_ChatId] = strNtf;
+        orders = getDBHandle()->getOrderByStatus(pOrder->m_Status, OrderType::PORDER, fp);
+        iOrderNo = (orders.empty()) ? 0 : orders[0]->m_OrderNo;
+        fprintf(fp, "BaseBot %ld: SingleOrder onClick, Picking next New Order: %d\n", time(0), iOrderNo); fflush(fp);*/
+
         switch(mapCmdToInt[strCmd]) {
             case INT_CNFM_ORDER:
                 getDBHandle()->updateOrderStatus(iOrderNo, CartStatus::READY_FOR_DELIVERY, OrderType::PORDER, fp);
@@ -241,7 +271,7 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                 notifyMsgs[pUser->m_ChatId] = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Cancelled & Wallet updated. Please call the merchant for details");
                 fprintf(fp, "BaseBot %ld: SingleOrder onClick, Canceling Order: %d\n", time(0), iOrderNo); fflush(fp);
 
-                orders = getDBHandle()->getOrderByStatus(CartStatus::PAYMENT_PENDING, OrderType::PORDER, fp);
+                orders = getDBHandle()->getOrderByStatus(pOrder->m_Status, OrderType::PORDER, fp);
                 iOrderNo = (orders.empty()) ? 0 : orders[0]->m_OrderNo;
                 fprintf(fp, "BaseBot %ld: SingleOrder onClick, Picking next New Order: %d\n", time(0), iOrderNo); fflush(fp);
                 break;
