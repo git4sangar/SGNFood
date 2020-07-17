@@ -52,6 +52,8 @@ void FAQs::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     unsigned int iLoop = 0;
 
     iSelPage    = 1;
+    if(!pMsg->text.compare(STR_BTN_ABOUT_US))
+        iSelPage = 4;
     if(std::string::npos != pMsg->text.find(FAQ_PAGE_PREFIX))
         for(iLoop = 1; iLoop <= MAX_NO_OF_PAGES; iLoop++) {
             std::stringstream ssPage;

@@ -16,7 +16,7 @@
 
 #define FAQ_PAGE_PREFIX     "FAQ Page"
 #define MAX_FAQ_FILE_SZ     (50*1024)
-#define MAX_FAQ_PAGES       (3)
+#define MAX_FAQ_PAGES       (4)
 
 class FAQs : public BaseButton, public std::enable_shared_from_this<FAQs> {
     unsigned int iSelPage;

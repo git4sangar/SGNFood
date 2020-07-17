@@ -41,9 +41,9 @@
     #define BOT_TOKEN       "1351042610:AAGlnvR26ZsX7ElSyU8l3PwIcJ8GMs48N0Q"
     #define BOT_DB_FILE     "sgn_mani.db"
     #define BOT_LOG_FILE    "log_file_mani.log"
-    #define PAYTM_MOBILE    "98406 25165"
-    #define GPAY_MOBILE     "98406 25165"
-    #define BHIM_UPI        "98406 25165@okaxis"
+    #define PAYTM_MOBILE    "974198 3633"
+    #define GPAY_MOBILE     "934106 6700"
+    #define BHIM_UPI        "9741983633@upi"
 
     #ifdef _VM_
         #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/ManiBot"
@@ -120,6 +120,7 @@
 #define STR_CASH    "Cash"
 
 //  Commands to process
+#define STR_BTN_ABOUT_US        "About Us"
 #define STR_BTN_ADMIN_PG        "Admin Page"
 #define STR_BTN_MENU_MGMT       "Menu Mgmt"
 

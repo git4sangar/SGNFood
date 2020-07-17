@@ -87,6 +87,7 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     }
 
     //  Populate the next available row
+    createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, listBaseBtns[STR_BTN_FAQ]);
     createKBBtn(STR_BTN_TOP_UP, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
