@@ -485,8 +485,10 @@ Product::Ptr DBInterface::getProduct(SQLite::Statement *pQuery) {
     pProduct->m_PicFile     = pQuery->getColumn(Product::PRODUCT_PIC_FILE.c_str()).getString();
 
     pProduct->m_ProductId   = pQuery->getColumn(Product::PRODUCT_ID.c_str()).getInt();
-    pProduct->m_Price   = pQuery->getColumn(Product::PRODUCT_PRICE.c_str()).getInt();
+    pProduct->m_Price       = pQuery->getColumn(Product::PRODUCT_PRICE.c_str()).getInt();
 
+    //  If Agent, there is a discount
+    pProduct->m_Price       = (isAgent) ? (pProduct->m_Price * (100 - DISCOUNT_PERCENT)) / 100 : pProduct->m_Price;
     return pProduct;
 }
 

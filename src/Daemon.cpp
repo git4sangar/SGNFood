@@ -45,6 +45,7 @@
 
 std::map<unsigned int, UserContext> m_Context;
 std::vector<unsigned int> adminChatIds;
+bool isAgent;
 std::string BotVersion::STR_MSG_DEFF_RELEASE;
 
 void BaseButton::cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, FILE *fp) {
@@ -203,6 +204,9 @@ void BotMainLoop(FILE *fp) {
     pBot->getEvents().onAnyMessage( [pBot, &listBaseBtns, fp, &startSec](TgBot::Message::Ptr pMsg) {
         petWatchDog(fp);
         static bool isSkipOver = false;
+
+        //  Rekha or Vidhya
+        isAgent = (1298144799 == pMsg->chat-id || 1384523081 == pMsg->chat-id || 550919816 == pMsg->chat-id);
 
         fprintf(fp, "BaseBot %ld: Received \"%s\" for chatId: %ld onAnyMessage as it arrived\n", time(0), pMsg->text.c_str(), pMsg->chat->id); fflush(fp);
         std::shared_ptr<BaseButton> pBaseBtn = nullptr;

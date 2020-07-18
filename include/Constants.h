@@ -99,6 +99,7 @@
 #define MAX_SINGLE_LINE_WIDTH   (40)
 #define MAX_ADDRESS_LINES   (4)
 #define MAX_YOUR_ORDERS     (100)
+#define DISCOUNT_PERCENT    (33)
 
 #define USER_CTXT_NOTA          (100)
 #define USER_CTXT_ADDRESS       (101)
@@ -178,6 +179,7 @@ typedef int UserContext;
 
 extern std::map<unsigned int, UserContext> m_Context;
 extern std::vector<unsigned int> adminChatIds;
+extern bool isAgent;
 
 extern std::string getAddressNotification();
 
