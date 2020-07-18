@@ -107,7 +107,7 @@ void plsWaitThread(std::shared_ptr<TgBot::Bot> pBot, FILE *fp) {
             } else itrWait++;
         }
         for(auto &chatId : chatIds)
-            pBot->getApi().sendMessage(chatId, "<b>Delay in response is regretted...</b>", false, 0, nullptr, "HTML");
+            pBot->getApi().sendMessage(chatId, "<b>processing...</b>", false, 0, nullptr, "HTML");
 
         pthread_mutex_unlock(&mtx);
         sleep(1);
@@ -210,7 +210,7 @@ void BotMainLoop(FILE *fp) {
 
         // Skip everything for SKIP_INTERVAL secs
         if(!isSkipOver && (startSec + SKIP_INTERVAL) > time(NULL)) {
-            std::stringstream ss; ss << "<b>Hi " << pMsg->chat->firstName << ", Sorry, I am skipping your last few requests...</b>";
+            std::stringstream ss; ss << "<b>Hi " << pMsg->chat->firstName << ", I was a bit busy, missed your last click. Click again pls..?</b>";
             pBot->getApi().sendMessage(pMsg->chat->id, ss.str(), false, 0, nullptr, "HTML");
             fprintf(fp, "BaseBot %ld: Skipping %s\n", time(0), pMsg->text.c_str()); fflush(fp);
             return;

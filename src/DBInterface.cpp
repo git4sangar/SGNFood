@@ -230,6 +230,16 @@ void DBInterface::setWalletBalance(User::Ptr pUser, int iBal, FILE *fp) {
     transaction.commit();
 }
 
+int DBInterface::getNoOfUsers(FILE *fp) {
+    int iNoOfUsers = 0;
+
+    SQLite::Statement query(*m_hDB, "SELECT COUNT(*) FROM User;");
+    if(query.executeStep()) {
+        iNoOfUsers = query.getColumn("COUNT(*)").getUInt();
+    }
+    return iNoOfUsers;
+}
+
 User::Ptr DBInterface::getUserForUserId(unsigned int iUserId, FILE *fp) {
     std::stringstream ss;
     User::Ptr pUser;
@@ -250,25 +260,6 @@ User::Ptr DBInterface::getUserForChatId(unsigned int iChatId, FILE *fp) {
         pUser   = getUser(&query);
     }
     return pUser;
-}
-
-void DBInterface::addProductsForCodeToCart(std::string strCode, unsigned int chatId, FILE *fp) {
-    std::vector<unsigned int> iProdId, iPrice;
-    unsigned int iLoop = 0, iNoOfItems = 0;
-
-    //  Get all the products for that code
-    std::stringstream ss;
-    ss << "SELECT * FROM Product WHERE " << Product::PRODUCT_CODE << " = \"" << strCode << "\";";
-    SQLite::Statement query(*m_hDB, ss.str());
-    while(query.executeStep()) {
-        iProdId.push_back(query.getColumn(Product::PRODUCT_ID.c_str()).getInt());
-        iPrice.push_back(query.getColumn(Product::PRODUCT_PRICE.c_str()).getInt());
-    }
-
-    iNoOfItems = iProdId.size();
-    for(iLoop = 0; iLoop < iNoOfItems; iLoop++) {
-        addProductToCart(iProdId[iLoop], iPrice[iLoop], chatId, fp);
-    }
 }
 
 int DBInterface::addProductToCart(unsigned int iProdId, unsigned int iPrice, unsigned int chatId, FILE *fp) {
@@ -842,6 +833,16 @@ void DBInterface::confirmTopUpAmount(unsigned int iOrderNo, unsigned int iAmount
     }
 }
 
+bool DBInterface::isAnyPendingOrders(FILE *fp) {
+    std::stringstream ss;
+
+    ss << "SELECT * FROM POrder WHERE "
+            << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::PAYMENT_PENDING) << " OR "
+            << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << ";";
+    SQLite::Statement query(*m_hDB, ss.str());
+    return query.executeStep();
+}
+
 //  Do not discrimiate if the order type is POrder or TopUp. Coz, user is going to see all
 POrder::Ptr DBInterface::getOrderForOrderNo(unsigned int iOrderNo, FILE *fp) {
     POrder::Ptr pOrder = nullptr;
@@ -908,15 +909,6 @@ void DBInterface::updateAllDelivered(FILE *fp) {
     std::stringstream ss;
     SQLite::Transaction transaction(*m_hDB);
 
-    ss.str("");
-    ss << "UPDATE POrder SET "
-            << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::DELIVERED) << ", "
-            << POrder::PORDER_DLVR_TM << " = \"" << getCurTime()
-            << "\" WHERE "
-                << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND "
-                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) = \"" << getYstrDate() << "\";";
-    m_hDB->exec(ss.str());
-
     ss.str(std::string());
     ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(CartStatus::DELIVERED) << " WHERE "
                 << Cart::CART_ORDER_NO << " IN (SELECT " << POrder::PORDER_NO << " FROM POrder WHERE "
@@ -924,6 +916,14 @@ void DBInterface::updateAllDelivered(FILE *fp) {
                 << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) = \"" << getYstrDate() << "\");";
     m_hDB->exec(ss.str());
 
+    ss.str(std::string());
+    ss << "UPDATE POrder SET "
+            << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::DELIVERED) << ", "
+            << POrder::PORDER_DLVR_TM << " = \"" << getCurTime()
+            << "\" WHERE "
+                << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND "
+                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) = \"" << getYstrDate() << "\";";
+    m_hDB->exec(ss.str());
     transaction.commit();
 }
 

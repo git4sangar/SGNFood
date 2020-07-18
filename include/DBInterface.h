@@ -186,6 +186,7 @@ public:
     std::vector<User::Ptr> getAllUsers(FILE *fp);
     User::Ptr getUserForChatId(unsigned int iChatId, FILE *fp);
     User::Ptr getUserForUserId(unsigned int iUserId, FILE *fp);
+    int getNoOfUsers(FILE *fp);
     int getIntStatus(CartStatus stat);
     int getWalletBalance(unsigned int iUserId, FILE *fp);
     void setWalletBalance(User::Ptr pUser, int iBal, FILE *fp);
@@ -209,7 +210,6 @@ public:
     std::vector<Product::Ptr> getOneProductForName(std::string strName, FILE *fp);
     bool updateProductPrice(std::string strPriceId, std::string strPrice, FILE *fp);
 
-    void addProductsForCodeToCart(std::string strCode, unsigned int chatId, FILE *fp);
     int addProductToCart(unsigned int iProdId, unsigned int iPrice, unsigned int chatId, FILE *fp);
     bool reduceCartQty(int iProdId, unsigned int iOrderNo, FILE *fp);
     bool removeItemFromCart(int iProdId, unsigned int iOrderNo, FILE *fp);
@@ -222,6 +222,7 @@ public:
     void updateOrderStatus(int iOrderNo, CartStatus crtStatus, OrderType ordrTyp, FILE *fp);
 
     void confirmTopUpAmount(unsigned int iOrderNo, unsigned int iAmount, FILE *fp);
+    bool isAnyPendingOrders(FILE *fp);
     POrder::Ptr getOrderForOrderNo(unsigned int iOrderNo, FILE *fp);
     std::vector<POrder::Ptr> getOrderByStatus(CartStatus crtStat, OrderType orderType, FILE *fp);
     std::vector<POrder::Ptr> getOrdersByUser(unsigned int iUserId, FILE *fp);

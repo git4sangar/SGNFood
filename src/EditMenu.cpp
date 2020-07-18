@@ -150,6 +150,10 @@ void EditMenu::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     if(!pMsg->text.compare(STR_BTN_DONE_MENU)) {
         if(actvProds.empty()) {
             STR_MSG_DEFF_RELEASE = "<b>Tomorrow's menu is empty. Pls create it first.</b>";
+        } else if(getDBHandle()->isAnyPendingOrders(fp)) {
+            std::stringstream ssWarn;
+            ssWarn << "Forgot to click \"" << STR_BTN_ALL_DLVRD << "\"?\nThere are pending New/Confirmed orders.\nPls mark it Delivered or Cancelled, before creating new menu for tomorrow.";
+            STR_MSG_DEFF_RELEASE = ssWarn.str();
         } else {
             std::vector<User::Ptr> users    = getDBHandle()->getAllUsers(fp);
             for(auto &user : users) { notifyMsgs[user->m_ChatId] = std::string("Hi ") + user->m_Name + ", tomorrow's menu is ready. Pls place your order before it is too late.";}

@@ -74,13 +74,16 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         STR_MSG_DEFF_RELEASE = std::string("Total outstanding : ") + std::to_string(iOutstanding) + std::string("\n");
     }
     if(!pMsg->text.compare(STR_BTN_ORDR_SUMMRY)) {
+        ss << "<b>No Of Users: </b>" << getDBHandle()->getNoOfUsers(fp) << ".\n\n";
+
         std::map<unsigned int, unsigned int>::iterator itr;
         std::map<unsigned int, unsigned int> ordrSum   = getDBHandle()->getOrderSummary(fp);
+        ss << "<b>Order Summary</b>\n";
         for(itr =  ordrSum.begin(); itr != ordrSum.end(); itr++) {
             Product::Ptr pProd  = getDBHandle()->getProductById(itr->first, fp);
             if(pProd) ss << pProd->m_Name << " : " << itr->second << "\n";
         }
-        STR_MSG_DEFF_RELEASE = std::string("<b>Order Summary</b>\n") + ss.str();
+        STR_MSG_DEFF_RELEASE = ss.str();
     }
     fprintf(fp, "BaseBot %ld: SGNAdmin onClick }\n", time(0)); fflush(fp);
 }
