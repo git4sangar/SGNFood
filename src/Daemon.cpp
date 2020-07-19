@@ -197,16 +197,22 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_ADMIN_PG]      = std::make_shared<SGNAdmin>(hDB);
 
     //  Admin Chat Ids
-    //adminChatIds.push_back(303802126);      // Shalini
+#ifdef AURA
+    adminChatIds.push_back(303802126);      // Shalini
+#endif
     adminChatIds.push_back(550919816);      // Myself
+#ifdef MANI_MAMA
     adminChatIds.push_back(1352652258);     // Santosh
+#endif
 
     pBot->getEvents().onAnyMessage( [pBot, &listBaseBtns, fp, &startSec](TgBot::Message::Ptr pMsg) {
         petWatchDog(fp);
         static bool isSkipOver = false;
 
-        //  Rekha or Vidhya or Myself
-        isAgent = (1298144799 == pMsg->chat->id || 1384523081 == pMsg->chat->id || 550919816 == pMsg->chat->id);
+#ifdef AURA
+        //  Rekha or Vidhya
+        isAgent = (1298144799 == pMsg->chat->id || 1384523081 == pMsg->chat->id);
+#endif
 
         fprintf(fp, "BaseBot %ld: Received \"%s\" for chatId: %ld onAnyMessage as it arrived\n", time(0), pMsg->text.c_str(), pMsg->chat->id); fflush(fp);
         std::shared_ptr<BaseButton> pBaseBtn = nullptr;
