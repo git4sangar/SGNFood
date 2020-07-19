@@ -178,6 +178,7 @@ public:
     std::string     getCurTime();
     std::string     getYstrDate();
     std::string     getTmrwDate();
+    std::string     getTmrwDtTmSecsMilli();
 
     unsigned int generateOrderNo(OrderType orderType, FILE *fp);
     void updateOrderNo(unsigned int iUserId, FILE *fp);
@@ -227,6 +228,7 @@ public:
     std::vector<POrder::Ptr> getOrderByStatus(CartStatus crtStat, OrderType orderType, FILE *fp);
     std::vector<POrder::Ptr> getOrdersByUser(unsigned int iUserId, FILE *fp);
     void updateAllDelivered(FILE *fp);
+    void clearAllCartedItems(FILE *fp);
     int getAllOutstanding(FILE *fp);
     std::map<unsigned int, unsigned int> getOrderSummary(FILE *fp);
 };

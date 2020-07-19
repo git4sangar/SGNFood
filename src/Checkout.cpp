@@ -90,6 +90,7 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
     int iRowIndex   = 0, iLoop = 0;
     pMainMenu   = std::make_shared<TgBot::ReplyKeyboardMarkup>();
 
+    pUser       = getDBHandle()->getUserForChatId(pMsg->chat->id, fp);
     iRowIndex   = 0;
     if(std::string::npos    != pMsg->text.find(STR_BTN_TOP_UP)) {
         std::string strAmt  = pMsg->text.substr(std::string(STR_BTN_TOP_UP).length());
@@ -97,7 +98,11 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
         //  Is this req coming from OrderMgmt page? then strAmt will be empty
         if(strAmt.empty()) {
             STR_MSG_DEFF_RELEASE  = "Pls choose an amount to Top Up.";
-            strBtn = std::string(STR_BTN_TOP_UP) + " 1000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+
+            if(0 > pUser->m_WBalance) strBtn = std::string(STR_BTN_TOP_UP) + std::string(" ") + std::to_string(std::abs(pUser->m_WBalance));
+            else strBtn = std::string(STR_BTN_TOP_UP) + " 1000";
+            createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+
             strBtn = std::string(STR_BTN_TOP_UP) + " 2000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
             strBtn = std::string(STR_BTN_TOP_UP) + " 5000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
         } else {
@@ -131,7 +136,11 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
 
     else if(!pMsg->text.compare(STR_BTN_CHECKOUT)) {
         STR_MSG_DEFF_RELEASE  = getPaymentString(pUser->m_OrderNo, pMsg->from->firstName, pUser->m_Address, iTotal, fp);
-        strBtn = std::string(STR_BTN_TOP_UP) + " 1000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+
+        if(0 > pUser->m_WBalance) std::string(STR_BTN_TOP_UP) + std::string(" ") + std::to_string(std::abs(pUser->m_WBalance));
+        else strBtn = std::string(STR_BTN_TOP_UP) + " 1000";
+        createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+
         strBtn = std::string(STR_BTN_TOP_UP) + " 2000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
         strBtn = std::string(STR_BTN_TOP_UP) + " 5000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
         iRowIndex++;

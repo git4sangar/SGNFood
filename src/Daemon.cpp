@@ -205,8 +205,8 @@ void BotMainLoop(FILE *fp) {
         petWatchDog(fp);
         static bool isSkipOver = false;
 
-        //  Rekha or Vidhya
-        isAgent = (1298144799 == pMsg->chat-id || 1384523081 == pMsg->chat-id || 550919816 == pMsg->chat-id);
+        //  Rekha or Vidhya or Myself
+        isAgent = (1298144799 == pMsg->chat->id || 1384523081 == pMsg->chat->id || 550919816 == pMsg->chat->id);
 
         fprintf(fp, "BaseBot %ld: Received \"%s\" for chatId: %ld onAnyMessage as it arrived\n", time(0), pMsg->text.c_str(), pMsg->chat->id); fflush(fp);
         std::shared_ptr<BaseButton> pBaseBtn = nullptr;

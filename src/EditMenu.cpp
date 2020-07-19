@@ -155,6 +155,7 @@ void EditMenu::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             ssWarn << "Forgot to click \"" << STR_BTN_ALL_DLVRD << "\"?\nThere are pending New/Confirmed orders.\nPls mark it Delivered or Cancelled, before creating new menu for tomorrow.";
             STR_MSG_DEFF_RELEASE = ssWarn.str();
         } else {
+            getDBHandle()->clearAllCartedItems(fp); // Clear all user's carted items. They are no more valid.
             std::vector<User::Ptr> users    = getDBHandle()->getAllUsers(fp);
             for(auto &user : users) { notifyMsgs[user->m_ChatId] = std::string("Hi ") + user->m_Name + ", tomorrow's menu is ready. Pls place your order before it is too late.";}
         }

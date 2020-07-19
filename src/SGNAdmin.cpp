@@ -30,7 +30,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
     iRowIndex = 0;
     createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_CNF_ORDERS, row[iRowIndex], lstBaseBtns);
-    createKBBtn(STR_BTN_DLVRD_ORDERS, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_CNCLD_ORDERS, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
     createKBBtn(STR_BTN_NEW_TOPUPs, row[iRowIndex], lstBaseBtns);

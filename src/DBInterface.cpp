@@ -538,7 +538,7 @@ bool DBInterface::insertNewProduct(std::string strCat, std::string strName, std:
                 Product::PRODUCT_PACK<< ", " <<
                 Product::PRODUCT_DESC << ", " <<
                 Product::PRODUCT_DATE << ") VALUES (\"" << strCat << "\", \"" << strName << "\", \"file\", "
-                << iPrice << ", \"1pk\", \"-\", \"-\");";
+                << iPrice << ", \"1pk\", \"-\", \"1970-01-01 00:00:00:000\");";
     m_hDB->exec(ss.str());
     transaction.commit();
     return true;
@@ -549,7 +549,7 @@ std::vector<Product::Ptr> DBInterface::getAllActiveProducts(FILE *fp) {
     Product::Ptr pProduct;
     std::string strDate = getCurTime();
 
-    ss << "SELECT * FROM Product WHERE " << Product::PRODUCT_DATE << " = \"" << getTmrwDate() << "\";";
+    ss << "SELECT * FROM Product WHERE SUBSTR(" << Product::PRODUCT_DATE << ", 1, 10) = \"" << getTmrwDate() << "\" ORDER BY " << Product::PRODUCT_DATE << " ASC;";
     SQLite::Statement query(*m_hDB, ss.str());
     while(query.executeStep()) {
         pProduct    = getProduct(&query);
@@ -560,7 +560,7 @@ std::vector<Product::Ptr> DBInterface::getAllActiveProducts(FILE *fp) {
 
 void DBInterface::activateProductForTomorrow(unsigned int iProdId, FILE *fp) {
     std::stringstream ss;
-    ss << "UPDATE Product SET " << Product::PRODUCT_DATE <<  " = \"" << getTmrwDate() << "\" WHERE "
+    ss << "UPDATE Product SET " << Product::PRODUCT_DATE <<  " = \"" << getTmrwDtTmSecsMilli() << "\" WHERE "
             << Product::PRODUCT_ID << " = " << iProdId << ";";
     SQLite::Transaction transaction(*m_hDB);
     m_hDB->exec(ss.str());
@@ -569,7 +569,7 @@ void DBInterface::activateProductForTomorrow(unsigned int iProdId, FILE *fp) {
 
 void DBInterface::removeProductFromTomorrow(unsigned int iProdId, FILE *fp) {
     std::stringstream ss;
-    ss << "UPDATE Product SET " << Product::PRODUCT_DATE <<  " = \"1970-01-01\" WHERE "
+    ss << "UPDATE Product SET " << Product::PRODUCT_DATE <<  " = \"1970-01-01 00:00:00:000\" WHERE "
             << Product::PRODUCT_ID << " = " << iProdId << ";";
     SQLite::Transaction transaction(*m_hDB);
     m_hDB->exec(ss.str());
@@ -741,6 +741,25 @@ std::string DBInterface::getYstrDate() {
     return std::string(buffer);
 }
 
+std::string DBInterface::getTmrwDtTmSecsMilli() {
+    std::stringstream ss;
+    char buffer[64];
+    struct timeval st;
+    time_t t;
+
+    //  Get date time with secs
+    t = time(NULL) + SECS_IN_A_DAY;
+    strftime(buffer, 64, "%Y-%m-%d %T", localtime(&t));
+
+    //  Get millis
+    gettimeofday(&st,NULL);
+    unsigned long msecs = st.tv_usec / 1000;
+
+    //  Append millis
+    ss << buffer << ":" << msecs;
+    return ss.str();
+}
+
 std::string DBInterface::getTmrwDate() {
     time_t t = time(NULL) + SECS_IN_A_DAY;
     char buffer[64];
@@ -905,6 +924,18 @@ std::vector<POrder::Ptr> DBInterface::getOrderByStatus(CartStatus crtStat, Order
         }
     }
     return pOrders;
+}
+
+void DBInterface::clearAllCartedItems(FILE *fp) {
+    std::stringstream ss;
+    SQLite::Transaction transaction(*m_hDB);
+
+    //  Clear all carted items. We are done for the day.
+    ss.str(std::string());
+    ss << "DELETE FROM Cart WHERE " << Cart::CART_STATUS << " = " << getIntStatus(CartStatus::CARTED) << ";";
+    m_hDB->exec(ss.str());
+
+    transaction.commit();
 }
 
 void DBInterface::updateAllDelivered(FILE *fp) {
