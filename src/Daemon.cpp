@@ -200,18 +200,18 @@ void BotMainLoop(FILE *fp) {
 #ifdef AURA
     adminChatIds.push_back(303802126);      // Shalini
 #endif
-    adminChatIds.push_back(550919816);      // Myself
 #ifdef MANI_MAMA
+    adminChatIds.push_back(550919816);      // Myself
     adminChatIds.push_back(1352652258);     // Santosh
 #endif
 
     pBot->getEvents().onAnyMessage( [pBot, &listBaseBtns, fp, &startSec](TgBot::Message::Ptr pMsg) {
         petWatchDog(fp);
         static bool isSkipOver = false;
-
+	isAgent = false;
 #ifdef AURA
-        //  Rekha or Vidhya
-        isAgent = (1298144799 == pMsg->chat->id || 1384523081 == pMsg->chat->id);
+        //  Rekha or Vidhya or Myself
+        isAgent = (1298144799 == pMsg->chat->id || 1384523081 == pMsg->chat->id || 550919816 == pMsg->chat->id);
 #endif
 
         fprintf(fp, "BaseBot %ld: Received \"%s\" for chatId: %ld onAnyMessage as it arrived\n", time(0), pMsg->text.c_str(), pMsg->chat->id); fflush(fp);
@@ -288,8 +288,16 @@ void BotMainLoop(FILE *fp) {
         //  Now broadcast notifications if any
         std::map<unsigned int, std::string>::iterator itrNtfy;
         std::map<unsigned int, std::string> ntfyMsgs    = pBaseBtn->getNotifyMsgs(pMsg, fp);
-        for(itrNtfy = ntfyMsgs.begin(); ntfyMsgs.end() != itrNtfy; itrNtfy++)
-            pBot->getApi().sendMessage(itrNtfy->first, itrNtfy->second, false, 0, nullptr, pBaseBtn->getParseMode());
+        for(iLoop = 1, itrNtfy = ntfyMsgs.begin(); ntfyMsgs.end() != itrNtfy; itrNtfy++, iLoop++) {
+		petWatchDog(fp);
+		try {
+	            if(!(iLoop % 10))pBot->getApi().sendMessage(pMsg->chat->id, "Pls wait, sending notifications...", false, 0, nullptr, pBaseBtn->getParseMode());
+	            pBot->getApi().sendMessage(itrNtfy->first, itrNtfy->second, false, 0, nullptr, pBaseBtn->getParseMode());
+		} catch(std::exception &e) {
+	            fprintf(fp, "Exception : %s, while sending notification to user.\n", e.what(), itrNtfy->first); fflush(fp);
+		}
+	}
+	if(10 < iLoop) pBot->getApi().sendMessage(pMsg->chat->id, "Sent notifications to all users.", false, 0, nullptr, "HTML");
 
         pBaseBtn->cleanup(pMsg, listBaseBtns, fp);
         fprintf(fp, "BaseBot %ld: Done responding back\n", time(0)); fflush(fp);

@@ -857,10 +857,11 @@ void DBInterface::confirmTopUpAmount(unsigned int iOrderNo, unsigned int iAmount
 bool DBInterface::isAnyPendingOrders(FILE *fp) {
     std::stringstream ss;
 
-    ss << "SELECT * FROM POrder WHERE "
+    ss << "SELECT * FROM POrder WHERE ("
             << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::PAYMENT_PENDING) << " OR "
-            << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << ";";
-    SQLite::Statement query(*m_hDB, ss.str());
+            << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << ") AND ("
+            << POrder::PORDER_NO << " % 2) != 0;";
+	    SQLite::Statement query(*m_hDB, ss.str());
     return query.executeStep();
 }
 
@@ -945,7 +946,8 @@ void DBInterface::updateAllDelivered(FILE *fp) {
     ss.str(std::string());
     ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(CartStatus::DELIVERED) << " WHERE "
                 << Cart::CART_ORDER_NO << " IN (SELECT " << POrder::PORDER_NO << " FROM POrder WHERE "
-                << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND "
+                << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND ("
+                << POrder::PORDER_NO << " % 2) != 0 AND "
                 << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) = \"" << getYstrDate() << "\");";
     m_hDB->exec(ss.str());
 
@@ -954,7 +956,8 @@ void DBInterface::updateAllDelivered(FILE *fp) {
             << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::DELIVERED) << ", "
             << POrder::PORDER_DLVR_TM << " = \"" << getCurTime()
             << "\" WHERE "
-                << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND "
+                << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND ("
+                << POrder::PORDER_NO << " % 2) != 0 AND "
                 << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) = \"" << getYstrDate() << "\";";
     m_hDB->exec(ss.str());
     transaction.commit();
