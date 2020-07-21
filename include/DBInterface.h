@@ -217,6 +217,7 @@ public:
     bool incrementItemQty(int iProdId, unsigned int iOrderNo, FILE *fp);
     std::vector<Cart::Ptr> getCartItemsForOrderNo(unsigned int iOrderNo, FILE *fp);
     bool emptyCartForUser(unsigned int iOrderNo, FILE *fp);
+    std::vector<User::Ptr> getCartedUsers(FILE *fp);
 
     unsigned int addAddressToShipping(unsigned int iUserId, std::string strAddress, FILE *fp);
     void insertToOrder(User::Ptr pUser, unsigned int iAmt, CartStatus crtStatus, std::string strGW, OrderType ordrTyp, FILE *fp);

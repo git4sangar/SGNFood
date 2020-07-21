@@ -40,7 +40,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
 
     createKBBtn(STR_BTN_EDIT_MENU, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_ALL_DLVRD, row[iRowIndex], lstBaseBtns, getSharedPtr());
-    createKBBtn(STR_BTN_OUTSTANDING, row[iRowIndex], lstBaseBtns, getSharedPtr());
+    createKBBtn(STR_BTN_REMIND_CHKOUT, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
 
     createKBBtn(STR_BTN_MENU_MGMT, row[iRowIndex], lstBaseBtns);
@@ -62,6 +62,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
 void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SGNAdmin onClick pMsg %s {\n", time(0), pMsg->text.c_str()); fflush(fp);
 
+    User::Ptr pUser = nullptr;
     int iOutstanding = 0;
     std::stringstream ss;
 
@@ -69,11 +70,20 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         getDBHandle()->updateAllDelivered(fp);
         STR_MSG_DEFF_RELEASE = "All \"Confirmed-Yesterday's Order\" are marked as \"Delivered\".\n";
     }
-    if(!pMsg->text.compare(STR_BTN_OUTSTANDING)) {
-        iOutstanding = getDBHandle()->getAllOutstanding(fp);
-        STR_MSG_DEFF_RELEASE = std::string("Total outstanding : ") + std::to_string(iOutstanding) + std::string("\n");
+    if(!pMsg->text.compare(STR_BTN_REMIND_CHKOUT)) {
+        std::vector<User::Ptr> users = getDBHandle()->getCartedUsers(fp);
+        for(auto &user : users) {
+            notifyMsgs[user->m_ChatId] = user->m_Name + std::string(", Your Cart contains items. Forgot to click \"Confirm Checkout\"?\n") +
+                                            std::string("\nClick buttons as follows to place order.\nMain Menu -> Checkout -> Confirm Checkout.");
+        }
+        STR_MSG_DEFF_RELEASE = std::string("Reminding all users, who has items in Cart, to Confirm Checkout\n");
+        if(10 < users.size()) STR_MSG_DEFF_RELEASE += std::string("It will take some time. Pls wait..");
     }
     if(!pMsg->text.compare(STR_BTN_ORDR_SUMMRY)) {
+        ss.str(std::string(""));
+
+        ss << "<b>Total outstanding : </b>" << std::to_string(std::abs(getDBHandle()->getAllOutstanding(fp))) << ".\n\n";
+
         ss << "<b>No Of Users: </b>" << getDBHandle()->getNoOfUsers(fp) << ".\n\n";
 
         std::map<unsigned int, unsigned int>::iterator itr;

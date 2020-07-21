@@ -294,7 +294,7 @@ void BotMainLoop(FILE *fp) {
 	            if(!(iLoop % 10))pBot->getApi().sendMessage(pMsg->chat->id, "Pls wait, sending notifications...", false, 0, nullptr, pBaseBtn->getParseMode());
 	            pBot->getApi().sendMessage(itrNtfy->first, itrNtfy->second, false, 0, nullptr, pBaseBtn->getParseMode());
 		} catch(std::exception &e) {
-	            fprintf(fp, "Exception : %s, while sending notification to user.\n", e.what(), itrNtfy->first); fflush(fp);
+	            fprintf(fp, "Exception : %s, while sending notification to user.\n", e.what()); fflush(fp);
 		}
 	}
 	if(10 < iLoop) pBot->getApi().sendMessage(pMsg->chat->id, "Sent notifications to all users.", false, 0, nullptr, "HTML");

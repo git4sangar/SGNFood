@@ -154,7 +154,7 @@
 #define STR_BTN_NEW_TOPUPs      "New TopUps"
 #define STR_BTN_CNF_TOPUPs      "Confirmed TopUps"
 #define STR_BTN_CNCLD_TOPUPs    "Cancelled TopUps"
-#define STR_BTN_OUTSTANDING     "Outstanding"
+#define STR_BTN_REMIND_CHKOUT   "Remind Checkout"
 #define STR_BTN_CNFM_R_CNCL_TOPUP     "Confirm or Cancel TopUp"
 
 #define STR_BTN_SINGLE_ORDER    "Single Order"

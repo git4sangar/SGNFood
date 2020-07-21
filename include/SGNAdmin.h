@@ -16,9 +16,11 @@
 #include "BaseButton.h"
 
 class SGNAdmin : public BaseButton, public std::enable_shared_from_this<SGNAdmin> {
-
+    std::map<unsigned int, std::string> notifyMsgs;
 public:
-    SGNAdmin(DBInterface::Ptr hDB) : BaseButton(hDB) {}
+    SGNAdmin(DBInterface::Ptr hDB) : BaseButton(hDB) {
+        notifyMsgs.clear();
+    }
     virtual ~SGNAdmin() {}
 
     //  This object is not created on every invocation. So clear it before using.
@@ -33,6 +35,7 @@ public:
     TgBot::GenericReply::Ptr prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& listKBBtns, TgBot::Message::Ptr pMsg, FILE *fp);
     void onClick(TgBot::Message::Ptr pMessage, FILE *fp);
 
+    std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
 
     static std::string STR_MSG_DEFF_RELEASE;
 };

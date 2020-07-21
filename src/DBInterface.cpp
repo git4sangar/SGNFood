@@ -416,6 +416,23 @@ bool DBInterface::emptyCartForUser(unsigned int iOrderNo, FILE *fp) {
     return true;
 }
 
+std::vector<User::Ptr> DBInterface::getCartedUsers(FILE *fp) {
+    std::vector<User::Ptr> users;
+    User::Ptr pUser;
+    std::stringstream ss;
+
+    ss << "SELECT * FROM User WHERE " << User::USER_ID << " IN( SELECT " << Cart::CART_USER_ID << " FROM Cart WHERE "
+            << Cart::CART_STATUS << " = " << getIntStatus(CartStatus::CARTED) << " );";
+
+    SQLite::Statement query(*m_hDB, ss.str());
+
+    while(query.executeStep()) {
+        pUser   = getUser(&query);
+        users.push_back(pUser);
+    }
+    return users;
+}
+
 Category::Ptr DBInterface::getCategory(SQLite::Statement *pQuery) {
     Category::Ptr pCategory = std::make_shared<Category>();
     pCategory->m_CategoryId = pQuery->getColumn(Category::CATEGORY_ID.c_str()).getInt();
