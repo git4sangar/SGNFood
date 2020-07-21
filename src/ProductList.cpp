@@ -160,6 +160,7 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         int iTotal = 0;
 
         std::vector<Cart::Ptr> cartItems = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
+        if(!cartItems.empty()) {
         iTotal = 0; for(auto &item : cartItems) iTotal += (item->m_Qnty * item->m_Price);
         getDBHandle()->insertToOrder(pUser, iTotal, CartStatus::PAYMENT_PENDING, STR_WALLET, OrderType::PORDER, fp);
 
@@ -169,6 +170,7 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         ss << pUser->m_Name << " has made an order, " << iOrderNo << ", using " << STR_WALLET;
         for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
         STR_MSG_DEFF_RELEASE = "Your order is placed. You will get a confirmation msg in a few hours.";
+	}
     }
     fprintf(fp, "BaseBot %ld: ProductList onClick }\n", time(0)); fflush(fp);
 }

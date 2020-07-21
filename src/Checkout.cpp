@@ -186,12 +186,16 @@ void Checkout::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 
         //  Update database
         try{iAmt = std::stoi(strAmt);} catch(std::exception &e) {iAmt = 0;}
-        getDBHandle()->insertToOrder(pUser, iAmt, CartStatus::PAYMENT_PENDING, strPGw, OrderType::TOPUP, fp);
-        getDBHandle()->updateTransacNo(pUser->m_UserId, fp);
+	if(0 < iAmt) {
+        	getDBHandle()->insertToOrder(pUser, iAmt, CartStatus::PAYMENT_PENDING, strPGw, OrderType::TOPUP, fp);
+	        getDBHandle()->updateTransacNo(pUser->m_UserId, fp);
 
-        //  Notify admin
-        ss << pUser->m_Name << " topped up Wallet using " << strPGw << ". Pls verify payment. His transac no is " << pUser->m_TransacNo;
-        for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
+        	//  Notify admin
+	        ss << pUser->m_Name << " topped up Wallet using " << strPGw << ". Pls verify payment. His transac no is " << pUser->m_TransacNo;
+        	for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
+	} else {
+        	STR_MSG_DEFF_RELEASE  = strAmt + " is not a valid amount.";
+	}
     }
 
     cartItems = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
