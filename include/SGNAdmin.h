@@ -19,13 +19,13 @@ class SGNAdmin : public BaseButton, public std::enable_shared_from_this<SGNAdmin
     std::map<unsigned int, std::string> notifyMsgs;
 public:
     SGNAdmin(DBInterface::Ptr hDB) : BaseButton(hDB) {
-        notifyMsgs.clear();
     }
     virtual ~SGNAdmin() {}
 
     //  This object is not created on every invocation. So clear it before using.
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
         STR_MSG_DEFF_RELEASE.clear();
+        notifyMsgs.clear();
     }
 
     std::string getParseMode() {return "HTML";}
