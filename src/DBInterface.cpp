@@ -567,6 +567,9 @@ std::vector<Product::Ptr> DBInterface::getAllActiveProducts(FILE *fp) {
     std::string strDate = getCurTime();
 
     ss << "SELECT * FROM Product WHERE SUBSTR(" << Product::PRODUCT_DATE << ", 1, 10) = \"" << getTmrwDate() << "\" ORDER BY " << Product::PRODUCT_DATE << " ASC;";
+#ifdef AURA
+    ss.str(""); ss << "SELECT * FROM Product;";
+#endif
     SQLite::Statement query(*m_hDB, ss.str());
     while(query.executeStep()) {
         pProduct    = getProduct(&query);
@@ -576,21 +579,25 @@ std::vector<Product::Ptr> DBInterface::getAllActiveProducts(FILE *fp) {
 }
 
 void DBInterface::activateProductForTomorrow(unsigned int iProdId, FILE *fp) {
+#ifndef AURA
     std::stringstream ss;
     ss << "UPDATE Product SET " << Product::PRODUCT_DATE <<  " = \"" << getTmrwDtTmSecsMilli() << "\" WHERE "
             << Product::PRODUCT_ID << " = " << iProdId << ";";
     SQLite::Transaction transaction(*m_hDB);
     m_hDB->exec(ss.str());
     transaction.commit();
+#endif
 }
 
 void DBInterface::removeProductFromTomorrow(unsigned int iProdId, FILE *fp) {
+#ifndef AURA
     std::stringstream ss;
     ss << "UPDATE Product SET " << Product::PRODUCT_DATE <<  " = \"1970-01-01 00:00:00:000\" WHERE "
             << Product::PRODUCT_ID << " = " << iProdId << ";";
     SQLite::Transaction transaction(*m_hDB);
     m_hDB->exec(ss.str());
     transaction.commit();
+#endif
 }
 
 Product::Ptr DBInterface::getProductForCode(std::string strCode, FILE *fp) {

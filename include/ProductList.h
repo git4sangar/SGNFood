@@ -14,7 +14,11 @@
 #include "DBInterface.h"
 #include "BaseButton.h"
 
-#define PAGE_SUFFIX     "Menu Page"
+#ifdef AURA
+    #define PAGE_SUFFIX     "Product Page"
+#else
+    #define PAGE_SUFFIX     "Menu Page"
+#endif
 
 class ProductList : public BaseButton, public std::enable_shared_from_this<ProductList> {
     std::vector<Product::Ptr> products;
