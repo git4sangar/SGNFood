@@ -137,7 +137,7 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
     else if(!pMsg->text.compare(STR_BTN_CHECKOUT)) {
         STR_MSG_DEFF_RELEASE  = getPaymentString(pUser->m_OrderNo, pMsg->from->firstName, pUser->m_Address, iTotal, fp);
 
-        if(0 > pUser->m_WBalance) std::string(STR_BTN_TOP_UP) + std::string(" ") + std::to_string(std::abs(pUser->m_WBalance));
+        if(0 > pUser->m_WBalance) strBtn = std::string(STR_BTN_TOP_UP) + std::string(" ") + std::to_string(std::abs(pUser->m_WBalance));
         else strBtn = std::string(STR_BTN_TOP_UP) + " 1000";
         createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
 

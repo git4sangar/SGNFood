@@ -267,7 +267,7 @@ void BotMainLoop(FILE *fp) {
         while(iRetry <= MAX_PIC_SEND_RETRIES) {
             try {
                 if(pFile)   pBot->getApi().sendPhoto(pMsg->chat->id, pFile);
-                else while(iLoop < pFiles.size()) {petWatchDog(fp); pBot->getApi().sendPhoto(pMsg->chat->id, pFiles[iLoop++]);}
+                else while(iLoop < pFiles.size()) {petWatchDog(fp); pBot->getApi().sendPhoto(pMsg->chat->id, pFiles[iLoop]); iLoop++;}
                 break;
             } catch(std::exception &e) {
                 fprintf(fp, "Exception : %s, while sending pic. So retrying...\n", e.what()); fflush(fp);
