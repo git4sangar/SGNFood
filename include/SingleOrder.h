@@ -52,7 +52,7 @@ public:
     int create_order_items_table(std::shared_ptr<pngwriter> pPNGWriter, int yAxis, int iIndex, int iCurPg, int iMaxPg,  FILE *fp);
 
     std::vector<std::string> split_address(std::string strAddress);
-    int addAddressToPNG(std::shared_ptr<pngwriter> pPNGWriter, int iPgLn, std::string strAddress, int iOrderNo, std::string strPayGW);
+    int addAddressToPNG(std::shared_ptr<pngwriter> pPNGWriter, int iPgLn, std::string strAddress, int iOrderNo, std::string strUserId);
 
     std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     static std::string STR_MSG_DEFF_RELEASE;

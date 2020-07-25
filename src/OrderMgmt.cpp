@@ -48,7 +48,7 @@ void OrderMgmt::create_order_table(std::string file_name, int iPageNo, FILE *fp)
             //  Who or When ordered it
             strName = orders[iIndex]->m_Name.substr(0,10);
             if(!pageName.compare(STR_BTN_YOUR_ORDERS))  strName = orders[iIndex]->m_OrdrTm.substr(5,5);
-            else if(!pageName.compare(STR_BTN_DLVRD_ORDERS)) strName = orders[iIndex]->m_DlvrdTm.substr(5,5);
+            else if(!pageName.compare(STR_BTN_DLVRD_ORDERS)) strName = orders[iIndex]->m_DlvrdTm.substr(8,2) + std::string("-") + strName;
             if(0 == (orders[iIndex]->m_OrderNo % 2))    strName = std::string("TopUp ") + strName;
             strName = strName.substr(0,12);
 

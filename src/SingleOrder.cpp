@@ -55,11 +55,11 @@ std::vector<std::string> SingleOrder::split_address(std::string strAddress) {
     return words;
 }
 
-int SingleOrder::addAddressToPNG(std::shared_ptr<pngwriter> pPNGWriter, int iPgLn, std::string strAddress, int iOrderNo, std::string strPayGW) {
+int SingleOrder::addAddressToPNG(std::shared_ptr<pngwriter> pPNGWriter, int iPgLn, std::string strAddress, int iOrderNo, std::string strUserId) {
     if(!pPNGWriter) return 0;
 
     std::vector<std::string> lines  = split_address(strAddress);
-    std::stringstream ss; ss << "Order No: " << iOrderNo << ", Payment: " << strPayGW;
+    std::stringstream ss; ss << "Order No: " << iOrderNo << ", User Id: " << strUserId;
     lines.insert(lines.begin(), ss.str());
     ss.str(""); ss << "Ordered : " << pOrder->m_OrdrTm;
     lines.push_back(ss.str());
@@ -359,7 +359,7 @@ std::vector<TgBot::InputFile::Ptr> SingleOrder::getMedias(TgBot::Message::Ptr pM
         //  First add the address to PNG
         asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) + std::string("order_items_page_1.png");
         std::shared_ptr<pngwriter> pPNGWriter   = std::make_shared<pngwriter>(320, yAxis, 1.0, asset_file.c_str());
-        yAxis   = addAddressToPNG(pPNGWriter, yAxis, pOrder->m_Address, iOrderNo, pOrder->m_PayGW);
+        yAxis   = addAddressToPNG(pPNGWriter, yAxis, pOrder->m_Address, iOrderNo, std::to_string(pOrder->m_UserId));
 
         //  Now iteratively append all the items at the end of address
         for(iIndex  = 0, iLoop = 1; iLoop <= iNoOfPages; iLoop++, yAxis = 320) {

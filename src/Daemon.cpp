@@ -204,6 +204,10 @@ void BotMainLoop(FILE *fp) {
     adminChatIds.push_back(550919816);      // Myself
     adminChatIds.push_back(1352652258);     // Santosh
 #endif
+#ifdef VIVA
+    adminChatIds.push_back(550919816);      // Myself
+    adminChatIds.push_back(1121498608);     // SDS
+#endif
 
     pBot->getEvents().onAnyMessage( [pBot, &listBaseBtns, fp, &startSec](TgBot::Message::Ptr pMsg) {
         petWatchDog(fp);

@@ -13,7 +13,7 @@
 
 #define SGN_BOT_VER "1.1.2"
 
-#define MANI_MAMA
+#define VIVA
 #define _Pi_
 
 //------------------------------------AurA------------------------------------
@@ -53,6 +53,27 @@
     #ifdef _Pi_
         #define BIN_FILE_PATH     "/home/pi/sgn/projs/SGNFood/bin/ManiBot"
         #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNFood/mani_mama/"
+    #endif
+#endif
+
+//------------------------------------Viva------------------------------------
+#ifdef VIVA
+    #define BOT_TOKEN       "1086015816:AAFxXSxbTIufcGPh2shGg1mzESUUVxOxA_s"
+//    #define BOT_TOKEN       "664320846:AAHffJ_8LG0W8eGCuYsrgkK4fOCj9j2FgTo"
+    #define BOT_DB_FILE     "sgn_viva.db"
+    #define BOT_LOG_FILE    "log_file_viva.log"
+    #define PAYTM_MOBILE    "91462425"
+    #define GPAY_MOBILE     "99401 30135"
+    #define BHIM_UPI        "Posb 198353612"
+
+    #ifdef _VM_
+        #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/VivaBot"
+        #define BOT_ROOT_PATH       "/home/svaithiy/sgn/projs/SGNFood/viva/"
+    #endif
+
+    #ifdef _Pi_
+        #define BIN_FILE_PATH     "/home/pi/sgn/projs/SGNFood/bin/VivaBot"
+        #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNFood/viva/"
     #endif
 #endif
 
@@ -155,6 +176,7 @@
 #define STR_BTN_CNF_TOPUPs      "Confirmed TopUps"
 #define STR_BTN_CNCLD_TOPUPs    "Cancelled TopUps"
 #define STR_BTN_REMIND_CHKOUT   "Remind Checkout"
+#define STR_BTN_FORCE_WALLET    "Force Wallet"
 #define STR_BTN_CNFM_R_CNCL_TOPUP     "Confirm or Cancel TopUp"
 
 #define STR_BTN_SINGLE_ORDER    "Single Order"
