@@ -190,7 +190,7 @@ public:
     int getNoOfUsers(FILE *fp);
     int getIntStatus(CartStatus stat);
     int getWalletBalance(unsigned int iUserId, FILE *fp);
-    void setWalletBalance(User::Ptr pUser, int iBal, FILE *fp);
+    User::Ptr forceWalletBalance(std::string strUserId, std::string strAmt, FILE *fp);
 //    std::vector<std::string> getAddressesForUser(unsigned int iUserId, FILE *fp);
 
     std::vector<Category::Ptr> getCategories(FILE *fp);

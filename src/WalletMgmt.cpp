@@ -44,13 +44,7 @@ void WalletMgmt::create_order_table(std::string file_name, int iPageNo, FILE *fp
         if((iNoOfItems > iIndex) && (iIndex < (iPageNo * MAX_ITEMS_PER_PAGE))) {
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,     5, iLoop-20, 0.0, (char *)std::to_string(iIndex+1).c_str(), 0, 0, 0);
 
-            //  Who or When ordered it
-            strName = orders[iIndex]->m_Name.substr(0,10);
-            if(!pageName.compare(STR_BTN_YOUR_ORDERS))  strName = orders[iIndex]->m_OrdrTm.substr(5,5);
-            else if(!pageName.compare(STR_BTN_DLVRD_ORDERS)) strName = orders[iIndex]->m_DlvrdTm.substr(5,5);
-            if(0 == (orders[iIndex]->m_OrderNo % 2))    strName = std::string("TopUp ") + strName;
-            strName = strName.substr(0,12);
-
+            strName = orders[iIndex]->m_Name.substr(0,12);
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,  35+5, iLoop-20, 0.0, (char *)strName.c_str(), 0, 0, 0);
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 150+5, iLoop-20, 0.0, (char *)std::to_string(orders[iIndex]->m_OrderNo).c_str(), 0, 0, 0);
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 210+5, iLoop-20, 0.0, (char *)std::to_string(orders[iIndex]->m_Amt).c_str(), 0, 0, 0);
@@ -82,17 +76,26 @@ TgBot::GenericReply::Ptr WalletMgmt::prepareMenu(std::map<std::string, std::shar
 
     std::string strChatId   = std::to_string(pMsg->chat->id);
     if(!pMsg->text.compare(STR_BTN_CNFM_R_CNCL_TOPUP)) {
-        m_Context[pMsg->chat->id]   = USER_CTXT_ADDRESS;
+        m_Context[pMsg->chat->id]   = USER_CTXT_CNFM_CNCL;
         lstBaseBtns[strChatId]      = getSharedPtr();
         STR_MSG_DEFF_RELEASE        = std::string("Is above said amount credited ?") +
                                         std::string("\nIf yes, confirm it or else cancel it as follows and send.") +
                                         std::string("\nExample:\n\tConfirm 1020\n\tCancel 1075");
         return std::make_shared<TgBot::ReplyKeyboardRemove>();
     }
+    if(!pMsg->text.compare(STR_BTN_FORCE_WALLET)) {
+        m_Context[pMsg->chat->id]   = USER_CTXT_FORCE_WALLET;
+        lstBaseBtns[strChatId]      = getSharedPtr();
+        STR_MSG_DEFF_RELEASE        = std::string("You have the User-Id to force? FYI: User-Id available in all Order Details.") +
+                                        std::string("\nIf yes, type <b>User-Id : Amount</b> (amount -9999 to 9999 acceptable) and send.") +
+                                        std::string("\nExample:\n\t21 : 1000\n\t114 : -2000");
+        return std::make_shared<TgBot::ReplyKeyboardRemove>();
+    }
 
     iRowIndex = 0;
     if(0 < iNoOfItems) {
         createKBBtn(STR_BTN_CNFM_R_CNCL_TOPUP, row[iRowIndex], lstBaseBtns, getSharedPtr());
+        createKBBtn(STR_BTN_FORCE_WALLET, row[iRowIndex], lstBaseBtns, getSharedPtr());
         iRowIndex++;
 
         if(MAX_ITEMS_PER_PAGE < iNoOfItems) {
@@ -158,27 +161,47 @@ void WalletMgmt::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         //  Convert whatever into lower case
         std::for_each(strMsg.begin(), strMsg.end(), [](char & c){if(std::isalpha(c)) c = ::tolower(c);});
 
-        //  Parse OrderNo first
-        if(std::string::npos != strMsg.find("confirm")) {
-            try { iOrderNo  = std::stoi(myTrim(strMsg.substr(7))); } catch(std::exception &e) {iOrderNo = 0;}
-            crtStat = CartStatus::READY_FOR_DELIVERY;
-            strMsg  = "confirmed";
-        }
-        if(std::string::npos != strMsg.find("cancel")) {
-            try { iOrderNo = std::stoi(myTrim(strMsg.substr(6))); } catch(std::exception &e) {iOrderNo = 0;}
-            crtStat = CartStatus::CANCELLED;
-            strMsg  = "cancelled";
+        if(USER_CTXT_CNFM_CNCL == m_Context[pMsg->chat->id]) {
+            //  Parse OrderNo first
+            if(std::string::npos != strMsg.find("confirm")) {
+                try { iOrderNo  = std::stoi(myTrim(strMsg.substr(7))); } catch(std::exception &e) {iOrderNo = 0;}
+                crtStat = CartStatus::READY_FOR_DELIVERY;
+                strMsg  = "confirmed";
+            }
+            if(std::string::npos != strMsg.find("cancel")) {
+                try { iOrderNo = std::stoi(myTrim(strMsg.substr(6))); } catch(std::exception &e) {iOrderNo = 0;}
+                crtStat = CartStatus::CANCELLED;
+                strMsg  = "cancelled";
+            }
+
+            pOrder  = getDBHandle()->getOrderForOrderNo(iOrderNo, fp);
+            if(pOrder) {
+                std::stringstream ss;
+                getDBHandle()->updateOrderStatus(iOrderNo, crtStat, OrderType::TOPUP, fp);
+                pUser    = getDBHandle()->getUserForUserId(pOrder->m_UserId, fp);
+                ss << "Your TopUp req no " << iOrderNo << ", for amount ₹ " << pOrder->m_Amt << ", is " << strMsg;
+                notifyMsgs[pUser->m_ChatId] = ss.str();
+            } else {
+                STR_MSG_DEFF_RELEASE   = "Invalid input.";
+            }
         }
 
-        pOrder  = getDBHandle()->getOrderForOrderNo(iOrderNo, fp);
-        if(pOrder) {
-            std::stringstream ss;
-            getDBHandle()->updateOrderStatus(iOrderNo, crtStat, OrderType::TOPUP, fp);
-            pUser    = getDBHandle()->getUserForUserId(pOrder->m_UserId, fp);
-            ss << "Your TopUp req no " << iOrderNo << ", for amount ₹ " << pOrder->m_Amt << ", is " << strMsg;
-            notifyMsgs[pUser->m_ChatId] = ss.str();
-        } else {
-            STR_MSG_DEFF_RELEASE   = "Invalid input.";
+        std::stringstream ssMsg; ssMsg.str(strMsg);
+        pUser    = nullptr;
+        if(USER_CTXT_FORCE_WALLET == m_Context[pMsg->chat->id]) {
+            std::vector<std::string> tokens;
+            std::string token;
+            while(std::getline(ssMsg, token, ':')) {
+                tokens.push_back(myTrim(token));
+            }
+            if(FORCE_TOKENS == tokens.size()) {
+                pUser = getDBHandle()->forceWalletBalance(tokens[TOKEN_USER_ID], tokens[TOKEN_AMOUNT], fp);
+            }
+            if(!pUser) { STR_MSG_DEFF_RELEASE = "Invalid Format or User-Id or Amount. Not forced."; }
+            else  {
+                STR_MSG_DEFF_RELEASE = pUser->m_Name + std::string("'s wallet balance is forced to ") + tokens[1];
+                notifyMsgs[pUser->m_ChatId] = std::string("Your wallet balance is forced to ") + tokens[1] + std::string(" by merchant.");
+            }
         }
     }
 

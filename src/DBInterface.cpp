@@ -220,14 +220,51 @@ int DBInterface::getWalletBalance(unsigned int iUserId, FILE *fp) {
     return iBal;
 }
 
-void DBInterface::setWalletBalance(User::Ptr pUser, int iBal, FILE *fp) {
+User::Ptr DBInterface::forceWalletBalance(std::string strUserId, std::string strWBal, FILE *fp) {
     std::stringstream ss;
+    unsigned int iUserId = 0;
+    int wBal = 0;   // can be -ve
+    User::Ptr pUser = nullptr;
     SQLite::Transaction transaction(*m_hDB);
 
-    ss << "UPDATE User SET " << User::USER_WBALANCE << " = " << iBal << " WHERE "
-                << User::USER_ID << " = " << pUser->m_UserId << ";";
-    m_hDB->exec(ss.str());
-    transaction.commit();
+    //  string to int conversion
+    try { iUserId = std::stoi(strUserId); wBal = std::stoi(strWBal); }
+    catch(std::exception &e) {iUserId = 0; wBal = 0;}
+
+    pUser = nullptr;
+    if(0 < iUserId && MAX_FORCE_AMOUNT > std::abs(wBal)) {
+        pUser   = getUserForUserId(iUserId, fp);
+        if(nullptr == pUser) return nullptr;
+
+        ss.str("");
+        ss << "UPDATE User SET " << User::USER_WBALANCE << " = " << wBal << " WHERE "
+                    << User::USER_ID << " = " << pUser->m_UserId << ";";
+        m_hDB->exec(ss.str());
+
+        ss.str("");
+        ss << "INSERT INTO POrder (" <<
+            POrder::PORDER_NO << ", " <<
+            POrder::PORDER_USER_ID << ", " <<
+            POrder::PORDER_AMOUNT << ", " <<
+            POrder::PORDER_WBALANCE << ", " <<
+            POrder::PORDER_USER_NAME << ", " <<
+            POrder::PORDER_ORDR_TM << ", " <<
+            POrder::PORDER_DLVR_TM << ", " <<
+            POrder::PORDER_PAY_GW << ", " <<
+            POrder::PORDER_STATUS << ", " <<
+            POrder::PORDER_ADDRESS << ") VALUES (" <<
+            pUser->m_TransacNo << ", " << pUser->m_UserId << ", 0, " << wBal << ", \"" << pUser->m_Name
+            << "\", \"" << getCurTime() << "\", \"-\", \"Force\", " <<
+            getIntStatus(CartStatus::READY_FOR_DELIVERY) << ", \"" << pUser->m_Address << "\" );";
+        m_hDB->exec(ss.str());
+        transaction.commit();
+
+        updateTransacNo(pUser->m_UserId, fp);
+
+        //  Get latest transac no, in case
+        pUser   = getUserForUserId(pUser->m_UserId, fp);
+    }
+    return pUser;
 }
 
 int DBInterface::getNoOfUsers(FILE *fp) {

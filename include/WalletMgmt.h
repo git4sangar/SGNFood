@@ -15,6 +15,10 @@
 #include "DBInterface.h"
 #include "BaseButton.h"
 
+#define TOKEN_USER_ID   (0)
+#define TOKEN_AMOUNT    (1)
+#define FORCE_TOKENS    (2)
+
 class WalletMgmt : public BaseButton, public std::enable_shared_from_this<WalletMgmt> {
     std::vector<POrder::Ptr> orders;
     std::string asset_file, pageName;

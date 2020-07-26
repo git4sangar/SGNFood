@@ -13,7 +13,7 @@
 
 #define SGN_BOT_VER "1.1.2"
 
-#define VIVA
+#define MANI_MAMA
 #define _Pi_
 
 //------------------------------------AurA------------------------------------
@@ -95,6 +95,7 @@
 #define MAX_ITEMS_PER_PAGE  (10)
 #define MAX_NO_OF_PAGES     (10)
 
+#define MAX_FORCE_AMOUNT    (10000)
 #define MAX_ITEM_LENGTH     (20)
 
 #define MAX_PIC_SEND_RETRIES    (3)
@@ -134,6 +135,8 @@
 #define USER_CTXT_CNCLD_ORDER   (109)
 #define USER_CTXT_REVIEW        (110)
 #define USER_CTXT_SHOW_PRICE    (111)
+#define USER_CTXT_CNFM_CNCL     (112)
+#define USER_CTXT_FORCE_WALLET  (113)
 
 #define STR_GPAY    "GPay"
 #define STR_PAYTM   "PayTM"
@@ -177,7 +180,7 @@
 #define STR_BTN_CNCLD_TOPUPs    "Cancelled TopUps"
 #define STR_BTN_REMIND_CHKOUT   "Remind Checkout"
 #define STR_BTN_FORCE_WALLET    "Force Wallet"
-#define STR_BTN_CNFM_R_CNCL_TOPUP     "Confirm or Cancel TopUp"
+#define STR_BTN_CNFM_R_CNCL_TOPUP     "Cnfm / Cncl TopUp"
 
 #define STR_BTN_SINGLE_ORDER    "Single Order"
 #define STR_BTN_ADD_BY_SN       "Add to Cart by SN"
