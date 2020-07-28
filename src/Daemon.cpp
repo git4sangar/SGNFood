@@ -38,6 +38,7 @@
 #include "PriceChange.h"
 #include "WalletMgmt.h"
 #include "SGNAdmin.h"
+#include "SGNParser.h"
 #include "MyAddress.h"
 #include "Constants.h"
 
@@ -195,6 +196,7 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_CNCLD_TOPUPs]  = listBaseBtns[STR_BTN_NEW_TOPUPs];
 
     listBaseBtns[STR_BTN_ADMIN_PG]      = std::make_shared<SGNAdmin>(hDB);
+    listBaseBtns[STR_BTN_PARSER]        = std::make_shared<SGNParser>(hDB);
 
     //  Admin Chat Ids
 #ifdef AURA
@@ -233,8 +235,10 @@ void BotMainLoop(FILE *fp) {
 
         fprintf(fp, "BaseBot %ld: BaseBtnList Size %ld \n", time(0),  listBaseBtns.size()); fflush(fp);
 
+        listBaseBtns[STR_BTN_PARSER]->init(pMsg, fp);
         std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator itrBBtn;
-        if( listBaseBtns.end() != (itrBBtn = listBaseBtns.find(strCmd)) ||
+        if( listBaseBtns.end() != (itrBBtn = listBaseBtns[STR_BTN_PARSER]->parse(pMsg->text, listBaseBtns, pMsg->chat->id, fp)) ||
+            listBaseBtns.end() != (itrBBtn = listBaseBtns.find(strCmd)) ||
             listBaseBtns.end() != (itrBBtn = listBaseBtns.find(std::to_string(pMsg->chat->id))) ||
             listBaseBtns.end() != (itrBBtn = isEditMenu(listBaseBtns, strCmd)) ||
             listBaseBtns.end() != (itrBBtn = isSingleOrder(listBaseBtns, strCmd))) {

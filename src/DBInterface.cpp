@@ -299,7 +299,7 @@ User::Ptr DBInterface::getUserForChatId(unsigned int iChatId, FILE *fp) {
     return pUser;
 }
 
-int DBInterface::addProductToCart(unsigned int iProdId, unsigned int iPrice, unsigned int chatId, FILE *fp) {
+int DBInterface::addProductToCart(unsigned int iProdId, unsigned qty, unsigned int iPrice, unsigned int chatId, FILE *fp) {
     std::stringstream ss;
     int iQty = 0;
     User::Ptr pUser = getUserForChatId(chatId, fp);
@@ -327,11 +327,12 @@ int DBInterface::addProductToCart(unsigned int iProdId, unsigned int iPrice, uns
                 Cart::CART_QNTY << ", " <<
                 Cart::CART_STATUS << ", " <<
                 Cart::CART_ORDER_NO << ") VALUES (" <<
-                iProdId << "," << iPrice << "," << pUser->m_UserId << ", 1, " <<
-                getIntStatus(CartStatus::CARTED) << "," << pUser->m_OrderNo << ");";
+                iProdId << "," << iPrice << "," << pUser->m_UserId << ", " << qty << ", " <<
+                getIntStatus(CartStatus::CARTED) << ", " << pUser->m_OrderNo << ");";
         m_hDB->exec(ss.str());
         transaction.commit();
     }
+
     return iQty+1;
 }
 

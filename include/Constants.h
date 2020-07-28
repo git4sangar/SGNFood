@@ -148,6 +148,7 @@
 #define STR_BTN_ABOUT_US        "About Us"
 #define STR_BTN_ADMIN_PG        "Admin Page"
 #define STR_BTN_MENU_MGMT       "Menu Mgmt"
+#define STR_BTN_PARSER          "Parser"
 
 #define STR_BTN_CNFM_ORDER      "Confirm Order"
 #define STR_BTN_CNCL_ORDER      "Cancel Order"

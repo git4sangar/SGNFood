@@ -31,6 +31,7 @@ add_executable(BaseBot
     src/ViewCart.cpp
     src/WalletMgmt.cpp
     src/SGNAdmin.cpp
+    src/SGNParser.cpp
 	)
 
 target_link_libraries(BaseBot TgBot sqlite3 SQLiteCpp ssl crypto curl pthread PNGwriter png freetype ${CMAKE_THREAD_LIBS_INIT} ${BOOST_THREAD} ${BOOST_SYSTEM} ${BOOST_CHRONO})

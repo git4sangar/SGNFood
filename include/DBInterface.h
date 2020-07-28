@@ -211,7 +211,7 @@ public:
     std::vector<Product::Ptr> getOneProductForName(std::string strName, FILE *fp);
     bool updateProductPrice(std::string strPriceId, std::string strPrice, FILE *fp);
 
-    int addProductToCart(unsigned int iProdId, unsigned int iPrice, unsigned int chatId, FILE *fp);
+    int addProductToCart(unsigned int iProdId, unsigned qty, unsigned int iPrice, unsigned int chatId, FILE *fp);
     bool reduceCartQty(int iProdId, unsigned int iOrderNo, FILE *fp);
     bool removeItemFromCart(int iProdId, unsigned int iOrderNo, FILE *fp);
     bool incrementItemQty(int iProdId, unsigned int iOrderNo, FILE *fp);
