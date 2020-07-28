@@ -146,7 +146,7 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         for(iLoop = 0; iLoop < iNoOfItems; iLoop++) if(products[iLoop]->m_ProductId == pProd->m_ProductId) break;
         if(iLoop < iNoOfItems) iSelPage = ((iLoop+1) / MAX_ITEMS_PER_PAGE) + (0 != ((iLoop+1) % MAX_ITEMS_PER_PAGE));
 
-        int iQty = getDBHandle()->addProductToCart(pProd->m_ProductId, pProd->m_Price, pMsg->chat->id, fp);
+        int iQty = getDBHandle()->addProductToCart(pProd->m_ProductId, 1, pProd->m_Price, pMsg->chat->id, fp);
         ss << "<b>" << pProd->m_Name << " * " << iQty << "</b> added to Cart. Clicking it again, increases quantity.";
         STR_MSG_DEFF_RELEASE = ss.str();
     }

@@ -63,6 +63,10 @@ public:
     virtual std::string getMsg() = 0;
     virtual std::shared_ptr<BaseButton> getSharedPtr() = 0;
     virtual void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp);
+    virtual std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator
+        parse(std::string strOrder, std::map<std::string, std::shared_ptr<BaseButton>>& listKBBtns, unsigned int iChatId, FILE *fp) {
+        return std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator();
+    }
 
     std::string myTrim(std::string str) {
         str = std::regex_replace(str, std::regex("^\\s+"), std::string(""));
