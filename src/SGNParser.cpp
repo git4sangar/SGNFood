@@ -51,7 +51,6 @@ void SGNParser::initDepot() {
     depot.insert({"morkuzhambhu", item::sambar});
     depot.insert({"morkuzhambu", item::sambar});
     depot.insert({"mrkuzhambu", item::sambar});
-    depot.insert({"mor", item::sambar});
     depot.insert({"kuzhambu", item::sambar});
     depot.insert({"vathakuzhambu", item::sambar});
     depot.insert({"vathalkuzhambu", item::sambar});
@@ -223,11 +222,12 @@ std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator
     std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator retItr;
 
     //  Convert all input to lowercase
+    strOrder = strOrder + std::string(".");
     std::for_each(strOrder.begin(), strOrder.end(), [](char & c){if(std::isalpha(c)) c = ::tolower(c);});
 
     //  Parse all tokens
     while ((pos1 = strOrder.find_first_of(delimiter)) != std::string::npos) {
-        if(0 == pos1) {strOrder    = strOrder.substr(pos1+1);continue;}
+        if(0 == pos1) {if(1 == strOrder.length()) break; strOrder    = strOrder.substr(pos1+1);continue;}
         token = strOrder.substr(0, pos1);
         //std::cout << "token " << token << std::endl;
 
@@ -252,9 +252,8 @@ std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator
         }
 
         tokens.push_back(token);
-        strOrder    = strOrder.substr(pos1+1);
+        strOrder    = strOrder.substr(pos1);
     }
-    if(!strOrder.empty()) tokens.push_back(strOrder);
 
     std::pair<item, int> ordr;
     std::map<std::string, item>::iterator itrDp;
