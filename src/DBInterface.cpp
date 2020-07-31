@@ -313,7 +313,7 @@ int DBInterface::addProductToCart(unsigned int iProdId, unsigned qty, unsigned i
         iQty    = query.getColumn(Cart::CART_QNTY.c_str()).getInt();
         SQLite::Transaction transaction(*m_hDB);
         ss.str(std::string());
-        ss << "UPDATE Cart SET " << Cart::CART_QNTY << " = " << Cart::CART_QNTY << " + 1 WHERE "
+        ss << "UPDATE Cart SET " << Cart::CART_QNTY << " = " << Cart::CART_QNTY << " + " << qty << " WHERE "
                 << Cart::CART_PRODUCT_ID << " = " << iProdId << " AND " << Cart::CART_ORDER_NO << " = " << pUser->m_OrderNo << ";";
         m_hDB->exec(ss.str());
         transaction.commit();

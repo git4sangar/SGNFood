@@ -137,6 +137,7 @@
 #define USER_CTXT_SHOW_PRICE    (111)
 #define USER_CTXT_CNFM_CNCL     (112)
 #define USER_CTXT_FORCE_WALLET  (113)
+#define USER_CTXT_SEND_MSG      (114)
 
 #define STR_GPAY    "GPay"
 #define STR_PAYTM   "PayTM"
@@ -163,6 +164,7 @@
 #define STR_BTN_SHOW_MENU       "Show Menu"
 #define STR_BTN_DONE_MENU       "Menu Done"
 #define STR_BTN_ORDERS          "Orders"
+#define STR_BTN_SEND_MSG        "Send Msg"
 
 //  Category of orders
 #define STR_BTN_NEW_ORDERS      "New Orders"

@@ -196,6 +196,7 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_CNCLD_TOPUPs]  = listBaseBtns[STR_BTN_NEW_TOPUPs];
 
     listBaseBtns[STR_BTN_ADMIN_PG]      = std::make_shared<SGNAdmin>(hDB);
+    listBaseBtns[STR_BTN_SEND_MSG]      = listBaseBtns[STR_BTN_ADMIN_PG];
     listBaseBtns[STR_BTN_PARSER]        = std::make_shared<SGNParser>(hDB);
 
     //  Admin Chat Ids

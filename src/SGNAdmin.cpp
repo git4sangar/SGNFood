@@ -23,9 +23,25 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
     std::string strText;
     std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
     unsigned int iLoop = 0, iRowIndex = 0;
+    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
 
     if(STR_MSG_DEFF_RELEASE.empty()) STR_MSG_DEFF_RELEASE   = "Navigate to different Admin Pages.";
+
+    std::string strChatId   = std::to_string(pMsg->chat->id);
+    if(!pMsg->text.compare(STR_BTN_SEND_MSG)) {
+        m_Context[pMsg->chat->id]   = USER_CTXT_SEND_MSG;
+        lstBaseBtns[strChatId]      = getSharedPtr();
+        STR_MSG_DEFF_RELEASE        = std::string("Send message to a particular user as follows.\n User-Id : Message") +
+                                        std::string("\n\nExample:\nSending message to User-Id 2\n2 : Sri Gurubhyo Namaha.") +
+                                        std::string("\nSending message to User-Id 12342\n12342 : Could you please pay the balance soon?");
+        return std::make_shared<TgBot::ReplyKeyboardRemove>();
+    }
+    if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
+        m_Context.erase(itrCntxt);
+        if(lstBaseBtns.end() != (itrBtn = lstBaseBtns.find(strChatId))) lstBaseBtns.erase(itrBtn);
+    }
 
     iRowIndex = 0;
     createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
@@ -38,7 +54,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
     createKBBtn(STR_BTN_CNCLD_TOPUPs, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
-    createKBBtn(STR_BTN_EDIT_MENU, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_SEND_MSG, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_ALL_DLVRD, row[iRowIndex], lstBaseBtns, getSharedPtr());
     createKBBtn(STR_BTN_REMIND_CHKOUT, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
@@ -62,10 +78,20 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
 void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SGNAdmin onClick pMsg %s {\n", time(0), pMsg->text.c_str()); fflush(fp);
 
+    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
     User::Ptr pUser = nullptr;
     int iOutstanding = 0;
     std::stringstream ss;
 
+    if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) && USER_CTXT_SEND_MSG == itrCntxt->second) {
+        std::string strMsg = pMsg->text;
+        int iPos = 0, iUserId = 0;
+        if(std::string::npos != (iPos = strMsg.find_first_of(":")) && (0 < iPos) && (strMsg.length() > (iPos+1))) {
+            try { iUserId = std::stoi(myTrim(strMsg.substr(0,iPos)));} catch(std::exception &e) { iUserId = 0; }
+            if( (0 < iUserId) && (pUser = getDBHandle()->getUserForUserId(iUserId, fp)) ) { notifyMsgs[pUser->m_ChatId] = myTrim(strMsg.substr(iPos+1)); }
+            STR_MSG_DEFF_RELEASE = (notifyMsgs.empty()) ? "Failed sending msg." : std::string("Sent above message to ") + pUser->m_Name;
+        } else STR_MSG_DEFF_RELEASE = "Invalid Format";
+    }
     if(!pMsg->text.compare(STR_BTN_ALL_DLVRD)) {
         getDBHandle()->updateAllDelivered(fp);
         STR_MSG_DEFF_RELEASE = "All \"Confirmed-Yesterday's Order\" are marked as \"Delivered\".\n";
@@ -95,5 +121,6 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         }
         STR_MSG_DEFF_RELEASE = ss.str();
     }
+
     fprintf(fp, "BaseBot %ld: SGNAdmin onClick }\n", time(0)); fflush(fp);
 }
