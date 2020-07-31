@@ -35,7 +35,8 @@ public:
     //  This object is not created on every invocation. So clear it before using.
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
         products.clear(); asset_file.clear(); iSelPage = 0; iNoOfItems = 0;
-        STR_MSG_DEFF_RELEASE   = "\"Buy\" adds an item to Cart. Refer \"Code\" above. Click again to increase qty.";
+//        STR_MSG_DEFF_RELEASE   = "\"Buy\" adds an item to Cart. Refer \"Code\" above. Click again to increase qty.";
+STR_MSG_DEFF_RELEASE   = "<b>Type & send</b> your orders like how you do in WhatsApp. While typing use these words <b>breakfast, bisibelebath, lunch, sambar, kuzhambu, rasam, curry, kootu, rice</b>";
         isAdmin = false; notifyMsgs.clear();
     }
     std::string getMsg() { return STR_MSG_DEFF_RELEASE;}
