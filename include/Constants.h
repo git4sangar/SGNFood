@@ -101,6 +101,7 @@
 #define MAX_PIC_SEND_RETRIES    (3)
 #define SKIP_INTERVAL       (5)
 #define MAX_BUTTON_ROWS     (5)
+#define MAX_USERS           (200000)
 
 #define PNG_HDR_FONT_SZ     (12)
 #define PNG_CNT_FONT_SZ     (10)
@@ -174,6 +175,7 @@
 #define STR_BTN_DLVRD_ORDERS    "Delivered Orders"
 #define STR_BTN_CNCLD_ORDERS    "Cancelled Orders"
 #define STR_BTN_ORDR_SUMMRY     "Order Summary"
+#define STR_BTN_DLVRY_LIST      "Delivery List"
 #define STR_BTN_ALL_DLVRD       "All Dlvrd"
 #define STR_BTN_YOUR_ORDERS     "A/C Stmt"
 

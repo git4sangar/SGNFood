@@ -17,6 +17,30 @@
 
 std::string SGNAdmin::STR_MSG_DEFF_RELEASE   = " ";
 
+std::vector<std::string> SGNAdmin::split_address(std::string strAddress) {
+    std::vector<std::string> words;
+    std::string strsub, strLine;
+    std::string::size_type curPos;
+    unsigned int len = 0;
+
+    strAddress += ".";  //  To get the final word too
+    while(std::string::npos != (curPos  = strAddress.find_first_of("\n\t ,."))) {
+        if(curPos) {
+            len += (curPos+1);  //  now len is size of string after concatenation
+            if(MAX_SINGLE_LINE_WIDTH <= len) {words.push_back(strLine); strLine.clear();}
+
+            strsub = strAddress.substr(0, curPos) + " ";
+            strLine += strsub;
+
+            if(MAX_SINGLE_LINE_WIDTH <= len) len = strsub.length();
+        }
+        strAddress  = strAddress.substr(curPos + 1);
+    }
+    if(!strLine.empty()) words.push_back(strLine);
+
+    return words;
+}
+
 std::vector<unsigned int> SGNAdmin::getUserIds(std::string strMsg, char delimiter = ',') {
     std::vector<unsigned int> iUserIds;
     unsigned int iUserId = 0;
@@ -65,7 +89,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
 
     iRowIndex = 0;
     createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
-    createKBBtn(STR_BTN_USER_ORDERS, row[iRowIndex], lstBaseBtns, getSharedPtr());
+    createKBBtn(STR_BTN_CNF_ORDERS, row[iRowIndex], lstBaseBtns, getSharedPtr());
     createKBBtn(STR_BTN_CNCLD_ORDERS, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
@@ -84,6 +108,10 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
     createKBBtn(STR_BTN_ORDR_SUMMRY, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
 
+    createKBBtn(STR_BTN_USER_ORDERS, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_DLVRY_LIST, row[iRowIndex], lstBaseBtns, getSharedPtr());
+    iRowIndex++;
+
     //  Add all the rows to main menu
     pMainMenu   = std::make_shared<TgBot::ReplyKeyboardMarkup>();
     for(iLoop = 0; iLoop < iRowIndex; iLoop++) {
@@ -100,12 +128,12 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 
     std::map<unsigned int, UserContext>::const_iterator itrCntxt;
     User::Ptr pUser = nullptr;
-    int iOutstanding = 0;
+    int iOutstanding = 0, iLoop = 0;
     std::stringstream ss;
 
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
         std::string strMsg = pMsg->text;
-        int iPos = 0, iUserId = 0, iLoop = 0;
+        int iPos = 0, iUserId = 0;
         std::vector<unsigned int> iUserIds;
         std::vector<POrder::Ptr> orders;
 
@@ -115,7 +143,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             for(iLoop = 0; (iLoop < iUserIds.size()) && (0 < iUserIds[iLoop]) && (pUser = getDBHandle()->getUserForUserId(iUserIds[iLoop], fp)); iLoop++) {
                 notifyMsgs[pUser->m_ChatId] = myTrim(strMsg.substr(iPos+1));
             }
-            STR_MSG_DEFF_RELEASE = (notifyMsgs.empty()) ? "Failed sending msg." : std::string("Sent above message to ") + std::to_strng(iLoop) + " user(s).";
+            STR_MSG_DEFF_RELEASE = (notifyMsgs.empty()) ? "Failed sending msg." : std::string("Sent above message to ") + std::to_string(iLoop) + " user(s).";
         } else if(USER_CTXT_USER_AC == itrCntxt->second) {
             iUserIds    = getUserIds(myTrim(strMsg));
             pUser       = getDBHandle()->getUserForUserId(iUserIds[0], fp);
@@ -137,6 +165,27 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     if(!pMsg->text.compare(STR_BTN_ALL_DLVRD)) {
         getDBHandle()->updateAllDelivered(fp);
         STR_MSG_DEFF_RELEASE = "All \"Confirmed-Yesterday's Order\" are marked as \"Delivered\".\n";
+    }
+	if(!pMsg->text.compare(STR_BTN_DLVRY_LIST)) {
+        std::vector<POrder::Ptr> orders = getDBHandle()->getOrderByStatus(CartStatus::READY_FOR_DELIVERY, OrderType::PORDER, fp);
+        for(iLoop = 0; iLoop < orders.size(); iLoop++) {
+            std::stringstream ssMsg;
+            ssMsg << orders[iLoop]->m_OrderNo << ", " << orders[iLoop]->m_Name.substr(0,10)
+                    << ", Id: "<< orders[iLoop]->m_UserId << ", <b>₹ " << orders[iLoop]->m_Amt << "</b>";
+
+            std::vector<std::string> lines  = split_address(orders[iLoop]->m_Address);
+            for(auto &line : lines) ssMsg << "\n" << line;
+            ssMsg  << "\n";
+
+            std::vector<Cart::Ptr> cartItems    = getDBHandle()->getCartItemsForOrderNo(orders[iLoop]->m_OrderNo, fp);
+            for(auto &cart: cartItems) {
+                Product::Ptr pProd  = getDBHandle()->getProductById(cart->m_ProductId, fp);
+                ssMsg << "\n₹ "
+                        << std::setfill('0') << std::setw(4) << (pProd->m_Price * cart->m_Qnty) << " -:- "
+                        << std::setfill('0') << std::setw(2) << cart->m_Qnty << " x " << pProd->m_Name;
+            }
+            notifyMsgs[iLoop] = ssMsg.str();
+        }
     }
     if(!pMsg->text.compare(STR_BTN_REMIND_CHKOUT)) {
         std::vector<User::Ptr> users = getDBHandle()->getCartedUsers(fp);
