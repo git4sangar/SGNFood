@@ -238,11 +238,11 @@ void BotMainLoop(FILE *fp) {
 
         listBaseBtns[STR_BTN_PARSER]->init(pMsg, fp);
         std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator itrBBtn;
-        if( listBaseBtns.end() != (itrBBtn = listBaseBtns[STR_BTN_PARSER]->parse(pMsg->text, listBaseBtns, pMsg->chat->id, fp)) ||
+        if( listBaseBtns.end() != (itrBBtn = listBaseBtns.find(std::to_string(pMsg->chat->id))) ||
             listBaseBtns.end() != (itrBBtn = listBaseBtns.find(strCmd)) ||
-            listBaseBtns.end() != (itrBBtn = listBaseBtns.find(std::to_string(pMsg->chat->id))) ||
             listBaseBtns.end() != (itrBBtn = isEditMenu(listBaseBtns, strCmd)) ||
-            listBaseBtns.end() != (itrBBtn = isSingleOrder(listBaseBtns, strCmd))) {
+            listBaseBtns.end() != (itrBBtn = isSingleOrder(listBaseBtns, strCmd)) ||
+            listBaseBtns.end() != (itrBBtn = listBaseBtns[STR_BTN_PARSER]->parse(pMsg->text, listBaseBtns, pMsg->chat->id, fp))) {
             fprintf(fp, "BaseBot %ld: Found \"%s\" button\n", time(0), pMsg->text.c_str()); fflush(fp);
             pBaseBtn = itrBBtn->second->getSharedPtr();
         } else {
@@ -300,10 +300,10 @@ void BotMainLoop(FILE *fp) {
         for(iLoop = 1, itrNtfy = ntfyMsgs.begin(); ntfyMsgs.end() != itrNtfy; itrNtfy++, iLoop++) {
 		petWatchDog(fp);
 		try {
-	            if(!(iLoop % 10))pBot->getApi().sendMessage(pMsg->chat->id, "Pls wait, sending notifications...", false, 0, nullptr, pBaseBtn->getParseMode());
-	            pBot->getApi().sendMessage(itrNtfy->first, itrNtfy->second, false, 0, nullptr, pBaseBtn->getParseMode());
+            if(!(iLoop % 10))pBot->getApi().sendMessage(pMsg->chat->id, "Pls wait, sending notifications...", false, 0, nullptr, pBaseBtn->getParseMode());
+            pBot->getApi().sendMessage(itrNtfy->first, itrNtfy->second, false, 0, nullptr, pBaseBtn->getParseMode());
 		} catch(std::exception &e) {
-	            fprintf(fp, "Exception : %s, while sending notification to user.\n", e.what()); fflush(fp);
+            fprintf(fp, "Exception : %s, while sending notification to user.\n", e.what()); fflush(fp);
 		}
 	}
 	if(10 < iLoop) pBot->getApi().sendMessage(pMsg->chat->id, "Sent notifications to all users.", false, 0, nullptr, "HTML");

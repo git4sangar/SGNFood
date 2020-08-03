@@ -60,6 +60,7 @@ TgBot::GenericReply::Ptr MyAddress::prepareMenu(std::map<std::string, std::share
         fprintf(fp, "BaseBot %ld: Processing typed address\n", time(0)); fflush(fp);
         std::stringstream ss;
         ss << "Thanks. Your shipping address:\n<b>" << pMsg->text << "</b> is noted.";
+        if(!isCartEmpty) ss <<"\n<b>Pls Click Checkout & Confirm Checkout</b> to confirm your order.";
         STR_MSG_DEFF_RELEASE  = ss.str();
 
         m_Context.erase(itrCntxt);

@@ -138,6 +138,7 @@
 #define USER_CTXT_CNFM_CNCL     (112)
 #define USER_CTXT_FORCE_WALLET  (113)
 #define USER_CTXT_SEND_MSG      (114)
+#define USER_CTXT_USER_AC       (115)
 
 #define STR_GPAY    "GPay"
 #define STR_PAYTM   "PayTM"
@@ -168,6 +169,7 @@
 
 //  Category of orders
 #define STR_BTN_NEW_ORDERS      "New Orders"
+#define STR_BTN_USER_ORDERS     "User Orders"
 #define STR_BTN_CNF_ORDERS      "Confirmed Orders"
 #define STR_BTN_DLVRD_ORDERS    "Delivered Orders"
 #define STR_BTN_CNCLD_ORDERS    "Cancelled Orders"

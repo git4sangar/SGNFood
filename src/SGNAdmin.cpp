@@ -17,6 +17,20 @@
 
 std::string SGNAdmin::STR_MSG_DEFF_RELEASE   = " ";
 
+std::vector<unsigned int> SGNAdmin::getUserIds(std::string strMsg, char delimiter = ',') {
+    std::vector<unsigned int> iUserIds;
+    unsigned int iUserId = 0;
+    std::string token;
+    std::stringstream ssMsg;
+
+    ssMsg.str(strMsg);
+    while(std::getline(ssMsg, token, delimiter)) {
+        try { iUserId = std::stoi(myTrim(token)); } catch(std::exception &e) {iUserId = 0;}
+        iUserIds.push_back(iUserId);
+    }
+    return iUserIds;
+}
+
 TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SGNAdmin::prepareMenu {\n", time(0)); fflush(fp);
 
@@ -38,6 +52,12 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
                                         std::string("\nSending message to User-Id 12342\n12342 : Could you please pay the balance soon?");
         return std::make_shared<TgBot::ReplyKeyboardRemove>();
     }
+    if(!pMsg->text.compare(STR_BTN_USER_ORDERS)) {
+        m_Context[pMsg->chat->id]   = USER_CTXT_USER_AC;
+        lstBaseBtns[strChatId]      = getSharedPtr();
+        STR_MSG_DEFF_RELEASE        = std::string("To see a user's stmt, type his/her userid & send");
+        return std::make_shared<TgBot::ReplyKeyboardRemove>();
+    }
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
         m_Context.erase(itrCntxt);
         if(lstBaseBtns.end() != (itrBtn = lstBaseBtns.find(strChatId))) lstBaseBtns.erase(itrBtn);
@@ -45,7 +65,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
 
     iRowIndex = 0;
     createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
-    createKBBtn(STR_BTN_CNF_ORDERS, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_USER_ORDERS, row[iRowIndex], lstBaseBtns, getSharedPtr());
     createKBBtn(STR_BTN_CNCLD_ORDERS, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
@@ -83,13 +103,35 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     int iOutstanding = 0;
     std::stringstream ss;
 
-    if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) && USER_CTXT_SEND_MSG == itrCntxt->second) {
+    if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
         std::string strMsg = pMsg->text;
-        int iPos = 0, iUserId = 0;
-        if(std::string::npos != (iPos = strMsg.find_first_of(":")) && (0 < iPos) && (strMsg.length() > (iPos+1))) {
-            try { iUserId = std::stoi(myTrim(strMsg.substr(0,iPos)));} catch(std::exception &e) { iUserId = 0; }
-            if( (0 < iUserId) && (pUser = getDBHandle()->getUserForUserId(iUserId, fp)) ) { notifyMsgs[pUser->m_ChatId] = myTrim(strMsg.substr(iPos+1)); }
-            STR_MSG_DEFF_RELEASE = (notifyMsgs.empty()) ? "Failed sending msg." : std::string("Sent above message to ") + pUser->m_Name;
+        int iPos = 0, iUserId = 0, iLoop = 0;
+        std::vector<unsigned int> iUserIds;
+        std::vector<POrder::Ptr> orders;
+
+        if(USER_CTXT_SEND_MSG == itrCntxt->second && std::string::npos != (iPos = strMsg.find_first_of(":")) && (0 < iPos) && (strMsg.length() > (iPos+1))) {
+            iUserIds = getUserIds(myTrim(strMsg.substr(0,iPos)), ',');
+
+            for(iLoop = 0; (iLoop < iUserIds.size()) && (0 < iUserIds[iLoop]) && (pUser = getDBHandle()->getUserForUserId(iUserIds[iLoop], fp)); iLoop++) {
+                notifyMsgs[pUser->m_ChatId] = myTrim(strMsg.substr(iPos+1));
+            }
+            STR_MSG_DEFF_RELEASE = (notifyMsgs.empty()) ? "Failed sending msg." : std::string("Sent above message to ") + std::to_strng(iLoop) + " user(s).";
+        } else if(USER_CTXT_USER_AC == itrCntxt->second) {
+            iUserIds    = getUserIds(myTrim(strMsg));
+            pUser       = getDBHandle()->getUserForUserId(iUserIds[0], fp);
+            if(pUser) orders      = getDBHandle()->getOrdersByUser(pUser->m_UserId, fp);
+            if(!orders.empty()) {
+                ss << "<b>" << pUser->m_Name << ", Id: " << pUser->m_UserId << "\n";
+                ss  << std::setfill(' ') << std::setw(5) << "Date" << "    "
+                    << std::setfill(' ') << std::setw(5) << "Ord" << "    "
+                    << std::setfill(' ') << std::setw(5) << "Amt" << "    "
+                    << std::setfill(' ') << std::setw(5) << "Bal" << "</b>\n";
+                for(auto &order : orders) ss << std::setfill(' ') << std::setw(5) << order->m_OrdrTm.substr(5,5) << "    "
+                                             << std::setfill(' ') << std::setw(5) << order->m_OrderNo << "    "
+                                             << std::setfill(' ') << std::setw(5) << order->m_Amt << "    "
+                                             << std::setfill(' ') << std::setw(5) << order->m_WBalance << "\n";
+                notifyMsgs[pMsg->chat->id] = ss.str();
+            }
         } else STR_MSG_DEFF_RELEASE = "Invalid Format";
     }
     if(!pMsg->text.compare(STR_BTN_ALL_DLVRD)) {
