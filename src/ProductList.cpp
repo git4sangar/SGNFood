@@ -89,6 +89,7 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     //  Populate the next available row
     createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
     createKBBtn(STR_BTN_TOP_UP, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_FUND_ME, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
 
     if(isAdmin) createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
@@ -116,6 +117,19 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
     unsigned int iLoop = 0, iOrderNo;
     std::stringstream ss;
+
+    if(!pMsg->text.compare(STR_BTN_FUND_ME)) {
+        ss << "Dear valueable customers,\n"
+            << "    Mani Iyer's Carrier Services is looking for funds to serve you better.\n\n"
+            << "        Flat <b>22% interest / annum (monthly 1.8%)</b>\n\n"
+            << "You can customize your interest: monthly, quarterly or half-yearly."
+            << " I will credit the interest to your a/c or I pay out in cash.\n\n"
+            << "        <b>I'm ready to execute a promissory note.</b>\n\n"
+            << "Pls call / msg me if you are interested.\n"
+            << "-Santhosh Subramanian\nPh: 97419 83633, 93437 71700";
+        STR_MSG_DEFF_RELEASE = ss.str();
+        return;
+    }
 
     products    = getDBHandle()->getAllActiveProducts(fp);
     iSelPage    = 1;
@@ -161,16 +175,16 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 
         std::vector<Cart::Ptr> cartItems = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
         if(!cartItems.empty()) {
-        iTotal = 0; for(auto &item : cartItems) iTotal += (item->m_Qnty * item->m_Price);
-        getDBHandle()->insertToOrder(pUser, iTotal, CartStatus::PAYMENT_PENDING, STR_WALLET, OrderType::PORDER, fp);
+            iTotal = 0; for(auto &item : cartItems) iTotal += (item->m_Qnty * item->m_Price);
+            getDBHandle()->insertToOrder(pUser, iTotal, CartStatus::PAYMENT_PENDING, STR_WALLET, OrderType::PORDER, fp);
 
-        iOrderNo    = pUser->m_OrderNo;
-        getDBHandle()->updateOrderNo(pUser->m_UserId, fp);
+            iOrderNo    = pUser->m_OrderNo;
+            getDBHandle()->updateOrderNo(pUser->m_UserId, fp);
 
-        ss << pUser->m_Name << " has made an order, " << iOrderNo << ", using " << STR_WALLET;
-        for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
-        STR_MSG_DEFF_RELEASE = "Your order is placed. You will get a confirmation msg in a few hours.";
-	}
+            ss << pUser->m_Name << " has made an order, " << iOrderNo << ", using " << STR_WALLET;
+            for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
+            STR_MSG_DEFF_RELEASE = "Your order is placed. You will get a confirmation msg in a few hours.";
+        }
     }
     fprintf(fp, "BaseBot %ld: ProductList onClick }\n", time(0)); fflush(fp);
 }
@@ -179,13 +193,14 @@ TgBot::InputFile::Ptr ProductList::getMedia(TgBot::Message::Ptr pMsg, FILE *fp) 
     fprintf(fp, "BaseBot %ld: ProductList getMedia {\n", time(0)); fflush(fp);
     TgBot::InputFile::Ptr pFile = nullptr;
 
-    asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) +
-                    std::string("active_product_list_") + std::to_string(iSelPage) + std::string(".png");
-    create_product_table(asset_file, fp);
+    if(0 < iNoOfItems) {
+        asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) +
+                        std::string("active_product_list_") + std::to_string(iSelPage) + std::string(".png");
+        create_product_table(asset_file, fp);
 
-    if(isFileExists(asset_file)) pFile = TgBot::InputFile::fromFile(asset_file, "image/png");
-    else { fprintf(fp, "Fatal Error: ProductList::getMedia asset file, %s, missing\n", asset_file.c_str()); fflush(fp); }
-
+        if(isFileExists(asset_file)) pFile = TgBot::InputFile::fromFile(asset_file, "image/png");
+        else { fprintf(fp, "Fatal Error: ProductList::getMedia asset file, %s, missing\n", asset_file.c_str()); fflush(fp); }
+    }
     fprintf(fp, "BaseBot %ld: ProductList getMedia }\n", time(0)); fflush(fp);
     return pFile;
 }

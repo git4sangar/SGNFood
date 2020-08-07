@@ -56,11 +56,10 @@ std::string Checkout::getPaymentString(unsigned int iOrderNo, std::string strNam
 std::string Checkout::getTopUpString() {
     std::stringstream ss;
     ss << "\n\n1) Transfer Top Up amount via GPay / PayTM apps or BHIM." <<
-            "\n\nGPay : " << GPAY_MOBILE << ",\nPayTm : " << PAYTM_MOBILE << ",\nUPI id : " << BHIM_UPI <<
-            "\n\n2) Mention <b>\"Transac " << pUser->m_TransacNo << " Top Up ₹\"</b> in desc." <<
-            "\nGPay -> \"What is this for\"\nPayTM -> \"Add a Message\""<<
-            "\n\nExample:\nTransac 1002 Top Up 1000\nTransac 1050 Top Up 5000\netc...\n" <<
-            "\nAfter transferring, click a \"Topped Up\" button below." <<
+            "\n        GPay : " << GPAY_MOBILE << ",\n        PayTm : " << PAYTM_MOBILE << ",\n        UPI id : " << BHIM_UPI <<
+            "\n2) Mention <b>" << pUser->m_TransacNo << "</b> in desc." <<
+            "\n<b>3) WhatsApp Screen-Shot to "<< PAYTM_MOBILE <<
+            "</b>\n\nAfter transferring, click a \"Topped Up\" button below." <<
             " Your Wallet will be updated after verification.";
     return ss.str();
 }

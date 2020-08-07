@@ -89,7 +89,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
 
     iRowIndex = 0;
     createKBBtn(STR_BTN_NEW_ORDERS, row[iRowIndex], lstBaseBtns);
-    createKBBtn(STR_BTN_CNF_ORDERS, row[iRowIndex], lstBaseBtns, getSharedPtr());
+    createKBBtn(STR_BTN_CNF_ORDERS, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_CNCLD_ORDERS, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
@@ -108,7 +108,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
     createKBBtn(STR_BTN_ORDR_SUMMRY, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
 
-    createKBBtn(STR_BTN_USER_ORDERS, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_USER_ORDERS, row[iRowIndex], lstBaseBtns, getSharedPtr());
     createKBBtn(STR_BTN_DLVRY_LIST, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
 

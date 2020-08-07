@@ -299,7 +299,7 @@ void BotMainLoop(FILE *fp) {
         std::map<unsigned int, std::string> ntfyMsgs    = pBaseBtn->getNotifyMsgs(pMsg, fp);
         for(iLoop = 1, itrNtfy = ntfyMsgs.begin(); ntfyMsgs.end() != itrNtfy; itrNtfy++, iLoop++) {
 		petWatchDog(fp);
-		unsigned int iChatId = (MAX_USERS > itrNtfy->first) ? adminChatIds[1] : itrNtfy->first;
+		unsigned int iChatId = (MAX_USERS > itrNtfy->first) ? pMsg->chat->id : itrNtfy->first;
 		try {
             if(!(iLoop % 10))pBot->getApi().sendMessage(pMsg->chat->id, "Pls wait, sending notifications...", false, 0, nullptr, pBaseBtn->getParseMode());
             pBot->getApi().sendMessage(iChatId, itrNtfy->second, false, 0, nullptr, pBaseBtn->getParseMode());
