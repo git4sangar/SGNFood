@@ -189,6 +189,7 @@ public:
     User::Ptr getUserForUserId(unsigned int iUserId, FILE *fp);
     int getNoOfUsers(FILE *fp);
     int getIntStatus(CartStatus stat);
+    void updateSurveyResp(unsigned int chat_id, int iOpt, FILE *fp);
     int getWalletBalance(unsigned int iUserId, FILE *fp);
     User::Ptr forceWalletBalance(std::string strUserId, std::string strAmt, FILE *fp);
 //    std::vector<std::string> getAddressesForUser(unsigned int iUserId, FILE *fp);
