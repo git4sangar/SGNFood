@@ -143,6 +143,7 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         ss.str(""); ss << "Msg from " << pUser->m_Name << ", " << pUser->m_UserId << ", " << pUser->m_Address << "\n\n" << pMsg->text;
         for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++)
             notifyMsgs[*itr] = ss.str();
+        STR_MSG_DEFF_RELEASE = std::string("Your msg is sent to Admin.\n") + STR_MSG_DEFF_RELEASE;
     }
 
     if(!pMsg->text.compare(STR_BTN_FUND_ME)) {
