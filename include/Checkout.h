@@ -49,6 +49,8 @@ public:
     void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}
 
     std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
+    TgBot::InputFile::Ptr getMedia(TgBot::Message::Ptr pMsg, FILE *fp);
+
     static std::string STR_MSG_DEFF_RELEASE;
     static std::string STR_BTN_GPAY_TOP_UP, STR_BTN_PAYTM_TOP_UP, STR_BTN_BHIM_TOP_UP, STR_BTN_CASH_TOP_UP;
 };

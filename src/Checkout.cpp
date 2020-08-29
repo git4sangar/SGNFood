@@ -177,16 +177,16 @@ void Checkout::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 
         //  Update database
         try{iAmt = std::stoi(strAmt);} catch(std::exception &e) {iAmt = 0;}
-	if(0 < iAmt) {
-        	getDBHandle()->insertToOrder(pUser, iAmt, CartStatus::PAYMENT_PENDING, strPGw, OrderType::TOPUP, fp);
-	        getDBHandle()->updateTransacNo(pUser->m_UserId, fp);
+        if(0 < iAmt) {
+            getDBHandle()->insertToOrder(pUser, iAmt, CartStatus::PAYMENT_PENDING, strPGw, OrderType::TOPUP, fp);
+            getDBHandle()->updateTransacNo(pUser->m_UserId, fp);
 
-        	//  Notify admin
-	        ss << pUser->m_Name << " topped up Wallet using " << strPGw << ". Pls verify payment. His transac no is " << pUser->m_TransacNo;
-        	for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
-	} else {
-        	STR_MSG_DEFF_RELEASE  = strAmt + " is not a valid amount.";
-	}
+            //  Notify admin
+            ss << pUser->m_Name << " topped up Wallet using " << strPGw << ". Pls verify payment. His transac no is " << pUser->m_TransacNo;
+            for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
+        } else {
+            STR_MSG_DEFF_RELEASE  = strAmt + " is not a valid amount.";
+        }
     }
 
     cartItems = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
@@ -195,4 +195,16 @@ void Checkout::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         iTotal += static_cast<int>(cartItems[iLoop]->m_Qnty * cartItems[iLoop]->m_Price);
     }
     fprintf(fp, "BaseBot %ld: Checkout onClick }\n", time(0)); fflush(fp);
+}
+
+TgBot::InputFile::Ptr Checkout::getMedia(TgBot::Message::Ptr pMsg, FILE *fp) {
+    fprintf(fp, "BaseBot %ld: Checkout getMedia {\n", time(0)); fflush(fp);
+    TgBot::InputFile::Ptr pFile = nullptr;
+
+    if(std::string::npos != pMsg->text.find(STR_BTN_TOP_UP) && std::string(STR_BTN_TOP_UP).length() < pMsg->text.length()) {
+        std::string asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) + std::string("qr_code_mani_iyer_02.png");
+        if(isFileExists(asset_file)) pFile = TgBot::InputFile::fromFile(asset_file, "image/png");
+    }
+    fprintf(fp, "BaseBot %ld: Checkout getMedia }\n", time(0)); fflush(fp);
+    return pFile;
 }
