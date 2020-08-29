@@ -29,9 +29,9 @@ void WalletMgmt::create_order_table(std::string file_name, int iPageNo, FILE *fp
     //  Headers
     std::string strFontFile = std::string(BOT_ROOT_PATH) + std::string(BOT_FONT_PATH) + std::string(BOT_FONT_FILE_BOLD);
     product_table.filledsquare(0, 300, 320, 320, 0.0, 0.5, 0.5);
-    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,     5, 305, 0.0, (char *)"SN", 1.0, 1.0, 1.0);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,     5, 305, 0.0, (char *)"Id", 1.0, 1.0, 1.0);
     strName = pageName.substr(0, 10);
-    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  35+5, 305, 0.0, (char *)strName.c_str(), 1.0, 1.0, 1.0);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  45+5, 305, 0.0, (char *)strName.c_str(), 1.0, 1.0, 1.0);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 150+5, 305, 0.0, (char *)"No", 1.0, 1.0, 1.0);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 210+5, 305, 0.0, (char *)"Amt", 1.0, 1.0, 1.0);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 265+5, 305, 0.0, (char *)"PG", 1.0, 1.0, 1.0);
@@ -42,10 +42,11 @@ void WalletMgmt::create_order_table(std::string file_name, int iPageNo, FILE *fp
     for(iLoop = 300; iLoop > 0; iLoop -= 30, toggle = 1 - toggle) {
         if(0 == toggle) product_table.filledsquare(0, iLoop, 320, iLoop-30, 0.9, 0.9, 0.9);
         if((iNoOfItems > iIndex) && (iIndex < (iPageNo * MAX_ITEMS_PER_PAGE))) {
-            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,     5, iLoop-20, 0.0, (char *)std::to_string(iIndex+1).c_str(), 0, 0, 0);
+            //product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,     5, iLoop-20, 0.0, (char *)std::to_string(iIndex+1).c_str(), 0, 0, 0);
+            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,     5, iLoop-20, 0.0, (char *)std::to_string(orders[iIndex]->m_UserId).c_str(), 0, 0, 0);
 
             strName = orders[iIndex]->m_Name.substr(0,12);
-            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,  35+5, iLoop-20, 0.0, (char *)strName.c_str(), 0, 0, 0);
+            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,  45+5, iLoop-20, 0.0, (char *)strName.c_str(), 0, 0, 0);
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 150+5, iLoop-20, 0.0, (char *)std::to_string(orders[iIndex]->m_OrderNo).c_str(), 0, 0, 0);
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 210+5, iLoop-20, 0.0, (char *)std::to_string(orders[iIndex]->m_Amt).c_str(), 0, 0, 0);
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 265+5, iLoop-20, 0.0, (char *)orders[iIndex]->m_PayGW.c_str(), 0, 0, 0);
@@ -54,7 +55,7 @@ void WalletMgmt::create_order_table(std::string file_name, int iPageNo, FILE *fp
     }
 
     //  Vertical lines
-    product_table.line( 35, 300,  35, 0, 0, 0, 0);
+    product_table.line( 45, 300,  45, 0, 0, 0, 0);
     product_table.line(150, 300, 150, 0, 0, 0, 0);
     product_table.line(210, 300, 210, 0, 0, 0, 0);
     product_table.line(265, 300, 265, 0, 0, 0, 0);

@@ -1054,14 +1054,6 @@ std::map<unsigned int, unsigned int> DBInterface::getOrderSummary(FILE *fp) {
     return ordrSmry;
 }
 
-void DBInterface::updateSurveyResp(unsigned int chat_id, int iOpt, FILE *fp) {
-    std::stringstream ss;
-    SQLite::Transaction transaction(*m_hDB);
-
-    ss << "UPDATE User SET mobile = " << iOpt << " WHERE " << User::USER_CHAT_ID << " = " << chat_id << ";";
-    m_hDB->exec(ss.str());
-    transaction.commit();
-}
 /*
  *         static std::string PORDER_ID;
     static std::string PORDER_NO;

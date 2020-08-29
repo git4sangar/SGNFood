@@ -30,28 +30,20 @@ class ProductList : public BaseButton, public std::enable_shared_from_this<Produ
     std::vector<Product::Ptr> products;
     std::string asset_file;
     unsigned int iSelPage, iNoOfItems;
-    std::vector<std::string> survey_resp;
     std::map<unsigned int, std::string> notifyMsgs;
-    bool isAdmin, isSurvey;
+    bool isAdmin;
 
 public:
-    ProductList(DBInterface::Ptr hDB) : BaseButton(hDB), iSelPage(0), iNoOfItems(0), isAdmin(false), isSurvey(false) {}
+    ProductList(DBInterface::Ptr hDB) : BaseButton(hDB), iSelPage(0), iNoOfItems(0), isAdmin(false) {}
     virtual ~ProductList() {}
 
     std::string getParseMode() {return "HTML";}
     //  This object is not created on every invocation. So clear it before using.
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
-        //  Add it in the same order as MACROs above
-        survey_resp.clear();
-        survey_resp.push_back(SGN_OPTION_01);
-        survey_resp.push_back(SGN_OPTION_02);
-        survey_resp.push_back(SGN_OPTION_03);
-        survey_resp.push_back(SGN_OPTION_04);
-        survey_resp.push_back(SGN_OPTION_05);
         products.clear(); asset_file.clear(); iSelPage = 0; iNoOfItems = 0;
         STR_MSG_DEFF_RELEASE   = "\"Buy\" adds an item to Cart. Refer \"Code\" above. Click again to increase qty.";
 //STR_MSG_DEFF_RELEASE   = "<b>Type & send</b> your orders like how you do in WhatsApp. While typing use these words <b>breakfast, bisibelebath, lunch, sambar, kuzhambu, rasam, curry, kootu, rice</b>";
-        isAdmin = false; isSurvey = false; notifyMsgs.clear();
+        isAdmin = false; notifyMsgs.clear();
     }
     std::string getMsg() { return STR_MSG_DEFF_RELEASE;}
     TgBot::GenericReply::Ptr prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& listKBBtns, TgBot::Message::Ptr pMsg, FILE *fp);

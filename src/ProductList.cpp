@@ -67,50 +67,38 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
 
     iRowIndex = 0;
-    if(!isSurvey) {
-        for(iToggle = 0, iLoop = (iSelPage - 1) * MAX_ITEMS_PER_PAGE; (iNoOfItems > iLoop) && (iLoop < (iSelPage * MAX_ITEMS_PER_PAGE)); iLoop++, iToggle = (1-iToggle)) {
-            createKBBtn(std::string("Buy ") + products[iLoop]->m_Code, row[iToggle], lstBaseBtns, getSharedPtr());
-            iRowIndex   = (iRowIndex < (iToggle+1)) ? (iToggle+1) : iRowIndex;
-        }
-
-        //  Populate pages in next available row if no. of items more than MAX_ITEMS_PER_PAGE
-        if(MAX_ITEMS_PER_PAGE < iNoOfItems) {
-            iPrev       = (iSelPage == 1) ? 1 : (iSelPage - 1);
-            strText     = std::string(PAGE_SUFFIX) + std::string(" ") + std::to_string(iPrev);
-            createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
-
-            iNext       = (iNoOfItems > (iSelPage * MAX_ITEMS_PER_PAGE)) ? (iSelPage + 1) : iSelPage;
-            strText     = std::string(PAGE_SUFFIX) + std::string(" ") + std::to_string(iNext);
-            createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
-
-            //  Pick the next available rowa
-            iRowIndex++;
-        }
-
-        //  Populate the next available row
-        createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
-        createKBBtn(STR_BTN_TOP_UP, row[iRowIndex], lstBaseBtns);
-        createKBBtn(STR_BTN_FUND_ME, row[iRowIndex], lstBaseBtns, getSharedPtr());
-        iRowIndex++;
-
-        if(isAdmin) createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
-        else createKBBtn(STR_BTN_FAQ, row[iRowIndex], lstBaseBtns);
-        if(!pMsg->text.compare(STR_BTN_FUND_ME)) createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
-        else createKBBtn(STR_BTN_YOUR_ORDERS, row[iRowIndex], lstBaseBtns);
-        createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
-        iRowIndex++;
-    } else {
-        iLoop = 0; iRowIndex = 0;
-        STR_MSG_DEFF_RELEASE = std::string("Dear Customer,\nVery soon we are launching <b>Home Made Organic Soaps.</b> Will you buy?\n\n") +
-                                std::string("      <b>Cost : ₹65</b>, Weight : above 75g.\n\n") +
-                                std::string("Could you pls respond by clicking a button below..?");
-        for(auto &resp : survey_resp) {
-            createKBBtn(resp, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_MAINMENU]);
-            iLoop++;
-            if(0 == (iLoop%2)) iRowIndex++;
-        }
-        if(!row[iRowIndex].empty()) iRowIndex++;
+    for(iToggle = 0, iLoop = (iSelPage - 1) * MAX_ITEMS_PER_PAGE; (iNoOfItems > iLoop) && (iLoop < (iSelPage * MAX_ITEMS_PER_PAGE)); iLoop++, iToggle = (1-iToggle)) {
+        createKBBtn(std::string("Buy ") + products[iLoop]->m_Code, row[iToggle], lstBaseBtns, getSharedPtr());
+        iRowIndex   = (iRowIndex < (iToggle+1)) ? (iToggle+1) : iRowIndex;
     }
+
+    //  Populate pages in next available row if no. of items more than MAX_ITEMS_PER_PAGE
+    if(MAX_ITEMS_PER_PAGE < iNoOfItems) {
+        iPrev       = (iSelPage == 1) ? 1 : (iSelPage - 1);
+        strText     = std::string(PAGE_SUFFIX) + std::string(" ") + std::to_string(iPrev);
+        createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
+
+        iNext       = (iNoOfItems > (iSelPage * MAX_ITEMS_PER_PAGE)) ? (iSelPage + 1) : iSelPage;
+        strText     = std::string(PAGE_SUFFIX) + std::string(" ") + std::to_string(iNext);
+        createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
+
+        //  Pick the next available row
+        iRowIndex++;
+    }
+
+    //  Populate the next available row
+    createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
+    createKBBtn(STR_BTN_TOP_UP, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_FUND_ME, row[iRowIndex], lstBaseBtns, getSharedPtr());
+    iRowIndex++;
+
+    if(isAdmin) createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
+    else createKBBtn(STR_BTN_FAQ, row[iRowIndex], lstBaseBtns);
+    if(!pMsg->text.compare(STR_BTN_FUND_ME)) createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
+    else createKBBtn(STR_BTN_YOUR_ORDERS, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
+    iRowIndex++;
+
 
     //  Add all the rows to main menu
     pMainMenu   = std::make_shared<TgBot::ReplyKeyboardMarkup>();
@@ -150,15 +138,6 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     iNoOfItems  = products.size();
 
     User::Ptr pUser = getDBHandle()->getUserForChatId(pMsg->chat->id, fp);
-
-    for(iLoop = 0; iLoop < survey_resp.size(); iLoop++)
-        if(!survey_resp[iLoop].compare(pMsg->text)) {
-            getDBHandle()->updateSurveyResp(pMsg->chat->id, (iLoop+1), fp);
-            pUser->m_Mobile = (iLoop+1);
-            STR_MSG_DEFF_RELEASE = "Noted. Thank you very much.";
-            break;
-        }
-    if(!pUser->m_Mobile) {isSurvey = true; return;}
 
     //  Check if reached here through Category Paging Button
     if(std::string::npos != pMsg->text.find(PAGE_SUFFIX))
