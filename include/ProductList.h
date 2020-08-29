@@ -51,6 +51,7 @@ public:
     std::shared_ptr<BaseButton> getSharedPtr() {return shared_from_this();}
     TgBot::InputFile::Ptr getMedia(TgBot::Message::Ptr pMsg, FILE *fp);
 
+    void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}
     std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     void create_product_table(std::string file_name ,FILE *fp);
 

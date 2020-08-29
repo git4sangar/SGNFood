@@ -39,7 +39,7 @@ public:
     std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
 
     std::vector<std::string> split_address(std::string strAddress);
-    std::vector<unsigned int> getUserIds(std::string strMsg, char delimiter);
+    std::vector<unsigned int> getUserIds(std::string strMsg, FILE *fp, char delimiter);
     static std::string STR_MSG_DEFF_RELEASE;
 };
 

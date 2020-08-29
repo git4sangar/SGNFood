@@ -65,6 +65,21 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
     unsigned int iLoop = 0, iPrev = 0, iNext = 0, iToggle = 0, iRowIndex = 0;
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
+    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
+
+    std::string strChatId   = std::to_string(pMsg->chat->id);
+    if(!pMsg->text.compare(STR_BTN_MSG_ADMIN)) {
+        m_Context[pMsg->chat->id]   = USER_CTXT_ADMING_MSG;
+        lstBaseBtns[strChatId]      = getSharedPtr();
+        STR_MSG_DEFF_RELEASE        = "Pls type whatever you want to convey \"Mani Iyer's Kitchen\" & send. He will respond back.";
+        return std::make_shared<TgBot::ReplyKeyboardRemove>();
+    }
+
+    if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
+        m_Context.erase(itrCntxt);
+        if(lstBaseBtns.end() != (itrBtn = lstBaseBtns.find(strChatId))) lstBaseBtns.erase(itrBtn);
+    }
 
     iRowIndex = 0;
     for(iToggle = 0, iLoop = (iSelPage - 1) * MAX_ITEMS_PER_PAGE; (iNoOfItems > iLoop) && (iLoop < (iSelPage * MAX_ITEMS_PER_PAGE)); iLoop++, iToggle = (1-iToggle)) {
@@ -89,7 +104,7 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     //  Populate the next available row
     createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
     createKBBtn(STR_BTN_TOP_UP, row[iRowIndex], lstBaseBtns);
-    createKBBtn(STR_BTN_FUND_ME, row[iRowIndex], lstBaseBtns, getSharedPtr());
+    createKBBtn(STR_BTN_MSG_ADMIN, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
 
     if(isAdmin) createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
@@ -116,9 +131,19 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     getDBHandle()->addNewUser(pMsg->chat->id, pMsg->from->firstName, fp);
 
     std::vector<unsigned int>::const_iterator itr;
+    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
     unsigned int iLoop = 0, iOrderNo;
     std::stringstream ss;
+
+    if(!pMsg->text.compare(STR_BTN_MSG_ADMIN)) return;
+
+    User::Ptr pUser = getDBHandle()->getUserForChatId(pMsg->chat->id, fp);
+    if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) && USER_CTXT_ADMING_MSG == itrCntxt->second) {
+        ss.str(""); ss << "Msg from " << pUser->m_Name << ", " << pUser->m_UserId << ", " << pUser->m_Address << "\n\n" << pMsg->text;
+        for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++)
+            notifyMsgs[*itr] = ss.str();
+    }
 
     if(!pMsg->text.compare(STR_BTN_FUND_ME)) {
         ss << "Dear valueable customers,\n"
@@ -136,8 +161,6 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     products    = getDBHandle()->getAllActiveProducts(fp);
     iSelPage    = 1;
     iNoOfItems  = products.size();
-
-    User::Ptr pUser = getDBHandle()->getUserForChatId(pMsg->chat->id, fp);
 
     //  Check if reached here through Category Paging Button
     if(std::string::npos != pMsg->text.find(PAGE_SUFFIX))

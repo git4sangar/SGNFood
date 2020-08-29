@@ -10,6 +10,7 @@
 #include <boost/algorithm/string.hpp>
 #include <ProductList.h>
 #include <memory>
+#include <algorithm>
 
 #include "BaseButton.h"
 #include "Constants.h"
@@ -41,16 +42,23 @@ std::vector<std::string> SGNAdmin::split_address(std::string strAddress) {
     return words;
 }
 
-std::vector<unsigned int> SGNAdmin::getUserIds(std::string strMsg, char delimiter = ',') {
+std::vector<unsigned int> SGNAdmin::getUserIds(std::string strMsg, FILE *fp, char delimiter = ',') {
     std::vector<unsigned int> iUserIds;
     unsigned int iUserId = 0;
     std::string token;
     std::stringstream ssMsg;
 
-    ssMsg.str(strMsg);
-    while(std::getline(ssMsg, token, delimiter)) {
-        try { iUserId = std::stoi(myTrim(token)); } catch(std::exception &e) {iUserId = 0;}
-        iUserIds.push_back(iUserId);
+    strMsg = myTrim(strMsg);
+    std::transform(strMsg.begin(), strMsg.end(), strMsg.begin(), ::tolower);
+    if(!strMsg.compare("all")) {
+        std::vector<User::Ptr> users = getDBHandle()->getAllUsers(fp);
+        for(auto &user : users) iUserIds.push_back(user->m_UserId);
+    } else {
+        ssMsg.str(strMsg);
+        while(std::getline(ssMsg, token, delimiter)) {
+            try { iUserId = std::stoi(myTrim(token)); } catch(std::exception &e) {iUserId = 0;}
+            iUserIds.push_back(iUserId);
+        }
     }
     return iUserIds;
 }
@@ -71,9 +79,9 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
     if(!pMsg->text.compare(STR_BTN_SEND_MSG)) {
         m_Context[pMsg->chat->id]   = USER_CTXT_SEND_MSG;
         lstBaseBtns[strChatId]      = getSharedPtr();
-        STR_MSG_DEFF_RELEASE        = std::string("Send message to a particular user as follows.\n User-Id : Message") +
-                                        std::string("\n\nExample:\nSending message to User-Id 2\n2 : Sri Gurubhyo Namaha.") +
-                                        std::string("\nSending message to User-Id 12342\n12342 : Could you please pay the balance soon?");
+        STR_MSG_DEFF_RELEASE        = std::string("Send message to all or a list of users as follows.\n user-id1, user-id2 : Message") +
+                                        std::string("\n\nExample:\nSending message to User-Id 2, 5\n2, 5 : Sri Gurubhyo Namaha.") +
+                                        std::string("\nSending message to all uses\nall : Dear Customer, Sunday we don't server food.");
         return std::make_shared<TgBot::ReplyKeyboardRemove>();
     }
     if(!pMsg->text.compare(STR_BTN_USER_ORDERS)) {
@@ -138,14 +146,14 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         std::vector<POrder::Ptr> orders;
 
         if(USER_CTXT_SEND_MSG == itrCntxt->second && std::string::npos != (iPos = strMsg.find_first_of(":")) && (0 < iPos) && (strMsg.length() > (iPos+1))) {
-            iUserIds = getUserIds(myTrim(strMsg.substr(0,iPos)), ',');
+            iUserIds = getUserIds(myTrim(strMsg.substr(0,iPos)), fp, ',');
 
             for(iLoop = 0; (iLoop < iUserIds.size()) && (0 < iUserIds[iLoop]) && (pUser = getDBHandle()->getUserForUserId(iUserIds[iLoop], fp)); iLoop++) {
                 notifyMsgs[pUser->m_ChatId] = myTrim(strMsg.substr(iPos+1));
             }
             STR_MSG_DEFF_RELEASE = (notifyMsgs.empty()) ? "Failed sending msg." : std::string("Sent above message to ") + std::to_string(iLoop) + " user(s).";
         } else if(USER_CTXT_USER_AC == itrCntxt->second) {
-            iUserIds    = getUserIds(myTrim(strMsg));
+            iUserIds    = getUserIds(myTrim(strMsg), fp);
             pUser       = getDBHandle()->getUserForUserId(iUserIds[0], fp);
             if(pUser) orders      = getDBHandle()->getOrdersByUser(pUser->m_UserId, fp);
             if(!orders.empty()) {

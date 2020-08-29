@@ -56,27 +56,6 @@
     #endif
 #endif
 
-//------------------------------------Viva------------------------------------
-#ifdef VIVA
-    #define BOT_TOKEN       "1086015816:AAFxXSxbTIufcGPh2shGg1mzESUUVxOxA_s"
-//    #define BOT_TOKEN       "664320846:AAHffJ_8LG0W8eGCuYsrgkK4fOCj9j2FgTo"
-    #define BOT_DB_FILE     "sgn_viva.db"
-    #define BOT_LOG_FILE    "log_file_viva.log"
-    #define PAYTM_MOBILE    "91462425"
-    #define GPAY_MOBILE     "99401 30135"
-    #define BHIM_UPI        "Posb 198353612"
-
-    #ifdef _VM_
-        #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/VivaBot"
-        #define BOT_ROOT_PATH       "/home/svaithiy/sgn/projs/SGNFood/viva/"
-    #endif
-
-    #ifdef _Pi_
-        #define BIN_FILE_PATH     "/home/pi/sgn/projs/SGNFood/bin/VivaBot"
-        #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNFood/viva/"
-    #endif
-#endif
-
 #define AURA_BOT        "655366902:AAGEaKH0q1xXu0Lwd5C5HBDZsUnPTjn13X4"
 #define THRAYA_BOT      "664320846:AAHffJ_8LG0W8eGCuYsrgkK4fOCj9j2FgTo"
 
@@ -140,6 +119,7 @@
 #define USER_CTXT_FORCE_WALLET  (113)
 #define USER_CTXT_SEND_MSG      (114)
 #define USER_CTXT_USER_AC       (115)
+#define USER_CTXT_ADMING_MSG    (118)
 
 #define STR_GPAY    "GPay"
 #define STR_PAYTM   "PayTM"
@@ -153,6 +133,7 @@
 #define STR_BTN_MENU_MGMT       "Menu Mgmt"
 #define STR_BTN_PARSER          "Parser"
 #define STR_BTN_FUND_ME         "Fund Me?"
+#define STR_BTN_MSG_ADMIN       "Contact Admin"
 
 #define STR_BTN_CNFM_ORDER      "Confirm Order"
 #define STR_BTN_CNCL_ORDER      "Cancel Order"
