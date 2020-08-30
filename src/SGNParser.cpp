@@ -18,7 +18,11 @@
 void SGNParser::initDepot() {
     if(isDepotIntialized) return;
     depot.insert({"tiffin", item::breakfast});
+    depot.insert({"tiffins", item::breakfast});
+    depot.insert({"tiffen", item::breakfast});
+    depot.insert({"tiffens", item::breakfast});
     depot.insert({"breakfast", item::breakfast});
+    depot.insert({"breakfasts", item::breakfast});
     depot.insert({"bf", item::breakfast});
     depot.insert({"b/f", item::breakfast});
     depot.insert({"b/fs", item::breakfast});
@@ -42,6 +46,8 @@ void SGNParser::initDepot() {
     depot.insert({"lunch", item::lunch});           // ignore full
     depot.insert({"fulllunch", item::lunch});
     depot.insert({"fullunch", item::lunch});
+    depot.insert({"meal", item::lunch});
+    depot.insert({"meals", item::lunch});
     depot.insert({"sambar", item::sambar});
     depot.insert({"sambaar", item::sambar});
     depot.insert({"saambar", item::sambar});
@@ -73,27 +79,6 @@ void SGNParser::initDepot() {
     depot.insert({"8", item::quantity});
     depot.insert({"9", item::quantity});
     depot.insert({"1", item::quantity});
-/*    depot.insert({"10x", item::quantity});
-    depot.insert({"2x", item::quantity});
-    depot.insert({"3x", item::quantity});
-    depot.insert({"4x", item::quantity});
-    depot.insert({"5x", item::quantity});
-    depot.insert({"6x", item::quantity});
-    depot.insert({"7x", item::quantity});
-    depot.insert({"8x", item::quantity});
-    depot.insert({"9x", item::quantity});
-    depot.insert({"1x", item::quantity});
-    depot.insert({"10nos", item::quantity});
-    depot.insert({"2nos", item::quantity});
-    depot.insert({"3nos", item::quantity});
-    depot.insert({"4nos", item::quantity});
-    depot.insert({"5nos", item::quantity});
-    depot.insert({"6nos", item::quantity});
-    depot.insert({"7nos", item::quantity});
-    depot.insert({"8nos", item::quantity});
-    depot.insert({"9nos", item::quantity});
-    depot.insert({"1nos", item::quantity});
-    depot.insert({"1no", item::quantity});*/
     depot.insert({"one", item::quantity});
     depot.insert({"two", item::quantity});
     depot.insert({"three", item::quantity});
@@ -124,16 +109,6 @@ void SGNParser::initQty() {
     qty.insert({"1", 1});
     qty.insert({"i", 1});
     qty.insert({"l", 1});
-/*    qty.insert({"1x", 1});
-    qty.insert({"2x", 2});
-    qty.insert({"3x", 3});
-    qty.insert({"4x", 4});
-    qty.insert({"5x", 5});
-    qty.insert({"6x", 6});
-    qty.insert({"7x", 7});
-    qty.insert({"8x", 8});
-    qty.insert({"9x", 9});
-    qty.insert({"10x", 10});*/
     qty.insert({"one", 1});
     qty.insert({"two", 2});
     qty.insert({"three", 3});
@@ -144,17 +119,6 @@ void SGNParser::initQty() {
     qty.insert({"eight", 8});
     qty.insert({"nine", 9});
     qty.insert({"ten", 10});
-/*    qty.insert({"10nos", 10});
-    qty.insert({"2nos", 2});
-    qty.insert({"3nos", 3});
-    qty.insert({"4nos", 4});
-    qty.insert({"5nos", 5});
-    qty.insert({"6nos", 6});
-    qty.insert({"7nos", 7});
-    qty.insert({"8nos", 8});
-    qty.insert({"9nos", 9});
-    qty.insert({"1nos", 1});
-    qty.insert({"1no", 1});*/
 
     isQtyInitialized =  true;
 }
@@ -189,7 +153,7 @@ Product::Ptr SGNParser::getProduct(item itm, FILE *fp) {
             strPrfix = "TF";
             break;
         case item::lunch:
-            strPrfix = "LN-01";
+            strPrfix = "LN-03";
             break;
         case item::curry:
             strPrfix = "CR";
