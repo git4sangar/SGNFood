@@ -19,8 +19,7 @@
 std::string Checkout::STR_MSG_DEFF_RELEASE  = "";
 std::string Checkout::STR_BTN_GPAY_TOP_UP   = "Topped Up GPay";
 std::string Checkout::STR_BTN_PAYTM_TOP_UP  = "Topped Up PayTM";
-std::string Checkout::STR_BTN_BHIM_TOP_UP   = "Topped Up BHIM";
-std::string Checkout::STR_BTN_CASH_TOP_UP   = "Topped Up Cash";
+std::string Checkout::STR_BTN_PHONEPE_TOP_UP= "Topped Up PhonePe";
 
 /*std::string Checkout::getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, unsigned int iTotal, FILE *fp) {
     std::stringstream ss;
@@ -55,8 +54,8 @@ std::string Checkout::getPaymentString(unsigned int iOrderNo, std::string strNam
 
 std::string Checkout::getTopUpString() {
     std::stringstream ss;
-    ss << "\n\n1) Transfer Top Up amount via GPay / PayTM apps or BHIM." <<
-            "\n        GPay : " << GPAY_MOBILE << ",\n        PayTm : " << PAYTM_MOBILE << ",\n        UPI id : " << BHIM_UPI <<
+    ss << "\n\n1) Transfer Topup amount via GPay / PayTM / PhonePe using above QR Code." <<
+            "\n        GPay : " << GPAY_MOBILE << ",\n        PayTm : " << PAYTM_MOBILE << ",\n        PhonePe : " << PHONE_PE_NO <<
             "\n2) Mention <b>" << pUser->m_TransacNo << "</b> in desc." <<
             "\n<b>3) WhatsApp Screen-Shot to "<< PAYTM_MOBILE <<
             "</b>\n\nAfter transferring, click a \"Topped Up\" button below." <<
@@ -108,8 +107,7 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
             STR_MSG_DEFF_RELEASE  = getTopUpString();
             strBtn = STR_BTN_GPAY_TOP_UP + strAmt;  createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
             strBtn = STR_BTN_PAYTM_TOP_UP + strAmt; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
-            strBtn = STR_BTN_BHIM_TOP_UP + strAmt;  createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
-            strBtn = STR_BTN_CASH_TOP_UP + strAmt;  createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+            strBtn = STR_BTN_PHONEPE_TOP_UP + strAmt;  createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
         }
         iRowIndex++;
     }
@@ -172,8 +170,7 @@ void Checkout::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         std::string strAmt;
         if(std::string::npos != pMsg->text.find("GPay"))    {strPGw  = "GPay"; strAmt = pMsg->text.substr(STR_BTN_GPAY_TOP_UP.length()+1);}
         if(std::string::npos != pMsg->text.find("PayTM"))   {strPGw  = "PayTM";strAmt = pMsg->text.substr(STR_BTN_PAYTM_TOP_UP.length()+1);}
-        if(std::string::npos != pMsg->text.find("BHIM"))    {strPGw  = "BHIM"; strAmt = pMsg->text.substr(STR_BTN_BHIM_TOP_UP.length()+1);}
-        if(std::string::npos != pMsg->text.find("Cash"))    {strPGw  = "CASH"; strAmt = pMsg->text.substr(STR_BTN_CASH_TOP_UP.length()+1);}
+        if(std::string::npos != pMsg->text.find("PhonePe")) {strPGw  = "PhonePe"; strAmt = pMsg->text.substr(STR_BTN_PHONEPE_TOP_UP.length()+1);}
 
         //  Update database
         try{iAmt = std::stoi(strAmt);} catch(std::exception &e) {iAmt = 0;}

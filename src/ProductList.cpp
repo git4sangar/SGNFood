@@ -207,7 +207,7 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             iOrderNo    = pUser->m_OrderNo;
             getDBHandle()->updateOrderNo(pUser->m_UserId, fp);
 
-            ss << pUser->m_Name << " has made an order, " << iOrderNo << ", using " << STR_WALLET;
+            ss << pUser->m_Name << " has made an order, " << iOrderNo;
             for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
             STR_MSG_DEFF_RELEASE = "Your order is placed. You will get a confirmation msg in a few hours.";
         }

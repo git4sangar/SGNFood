@@ -41,9 +41,9 @@
     #define BOT_TOKEN       "1351042610:AAGlnvR26ZsX7ElSyU8l3PwIcJ8GMs48N0Q"
     #define BOT_DB_FILE     "sgn_mani.db"
     #define BOT_LOG_FILE    "log_file_mani.log"
-    #define PAYTM_MOBILE    "97419 83633"
+    #define PAYTM_MOBILE    "93410 66700"
     #define GPAY_MOBILE     "93410 66700"
-    #define BHIM_UPI        "9741983633@upi"
+    #define PHONE_PE_NO     "93410 66700"
 
     #ifdef _VM_
         #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/ManiBot"
@@ -121,11 +121,7 @@
 #define USER_CTXT_USER_AC       (115)
 #define USER_CTXT_ADMING_MSG    (118)
 
-#define STR_GPAY    "GPay"
-#define STR_PAYTM   "PayTM"
-#define STR_BHIM    "BHIM"
 #define STR_WALLET  "Wallet"
-#define STR_CASH    "Cash"
 
 //  Commands to process
 #define STR_BTN_ABOUT_US        "About Us"
@@ -133,7 +129,7 @@
 #define STR_BTN_MENU_MGMT       "Menu Mgmt"
 #define STR_BTN_PARSER          "Parser"
 #define STR_BTN_FUND_ME         "Fund Me?"
-#define STR_BTN_MSG_ADMIN       "Contact Admin"
+#define STR_BTN_MSG_ADMIN       "Msg Admin"
 
 #define STR_BTN_CNFM_ORDER      "Confirm Order"
 #define STR_BTN_CNCL_ORDER      "Cancel Order"

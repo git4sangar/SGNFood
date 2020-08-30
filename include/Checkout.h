@@ -52,7 +52,7 @@ public:
     TgBot::InputFile::Ptr getMedia(TgBot::Message::Ptr pMsg, FILE *fp);
 
     static std::string STR_MSG_DEFF_RELEASE;
-    static std::string STR_BTN_GPAY_TOP_UP, STR_BTN_PAYTM_TOP_UP, STR_BTN_BHIM_TOP_UP, STR_BTN_CASH_TOP_UP;
+    static std::string STR_BTN_GPAY_TOP_UP, STR_BTN_PAYTM_TOP_UP, STR_BTN_PHONEPE_TOP_UP;
 };
 
 
