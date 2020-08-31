@@ -23,6 +23,7 @@
 #include <netdb.h>
 
 #include <tgbot/tgbot.h>
+#include "fifo_map.h"
 
 #include "BaseButton.h"
 #include "FAQs.h"
@@ -92,7 +93,7 @@ void petWatchDog(FILE *fp) {
 pthread_mutex_t mtx_01, mtx_02;
 std::vector< std::tuple<unsigned int, unsigned int> > inTm;
 std::map<unsigned int, unsigned int> inMsgTmStamps;
-std::map<unsigned int, std::string> gNtfyMsgs;
+nlohmann::fifo_map<unsigned int, std::string> gNtfyMsgs;
 
 void plsWaitThread(std::shared_ptr<TgBot::Bot> pBot, FILE *fp) {
     time_t curTm;
@@ -117,9 +118,10 @@ void plsWaitThread(std::shared_ptr<TgBot::Bot> pBot, FILE *fp) {
     }
 }
 
-void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot,FILE *fp) {
-    std::map<unsigned int, std::string>::iterator itrNtfy;
-    std::map<unsigned int, std::string> notifyMsgs;
+void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot, DBInterface::Ptr hDB, FILE *fp) {
+    nlohmann::fifo_map<unsigned int, std::string>::iterator itrNtfy;
+    nlohmann::fifo_map<unsigned int, std::string> notifyMsgs;
+    unsigned int iLoop = 0;
 
     fprintf(fp, "Starting Notification Thread\n"); fflush(fp);
     while(1) {
@@ -132,17 +134,24 @@ void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot,FILE *fp) {
         }
         pthread_mutex_unlock(&mtx_02);
 
-        //  Send one by one
-        for(itrNtfy = notifyMsgs.begin(); notifyMsgs.end() != itrNtfy; itrNtfy++) {
-            try {
-                pBot->getApi().sendMessage(itrNtfy->first, itrNtfy->second, false, 0, nullptr, "HTML");
-            } catch(std::exception &e) {
-                fprintf(fp, "Exception : %s, while sending notification to user.\n", e.what()); fflush(fp);
-            }
-        }
-
-        //  clear it off
         if(!notifyMsgs.empty()) {
+            //  first element of notifyMsgs points to chat-id of user who made the req
+            unsigned int iWho = notifyMsgs.begin()->first;
+            fprintf(fp, "Who %d, What %s\n", iWho, notifyMsgs.begin()->second.c_str()); fflush(fp);
+
+            for(iLoop = 0, itrNtfy = notifyMsgs.begin(); notifyMsgs.end() != itrNtfy; itrNtfy++, iLoop++) {
+                unsigned int iChatId = (MAX_USERS > itrNtfy->first) ? iWho : itrNtfy->first;
+                try {
+                    pBot->getApi().sendMessage(iChatId, itrNtfy->second, false, 0, nullptr, "HTML");
+                    if( !(iLoop%10) ) pBot->getApi().sendMessage(iWho, "Pls wait sending notifications.", false, 0, nullptr, "HTML");
+                } catch(std::exception &e) {
+                    std::string strExcept = e.what();
+                    if(std::string::npos != strExcept.find("blocked") || std::string::npos != strExcept.find("not found")) hDB->updateLeftUser(iChatId, fp);
+                    fprintf(fp, "Exception : %s, while sending notification to user.\n", strExcept.c_str()); fflush(fp);
+                }
+            }
+            pBot->getApi().sendMessage(iWho, "Sent all notifications.", false, 0, nullptr, "HTML");
+
             notifyMsgs.clear();
             fprintf(fp, "Sent all notifs.\n"); fflush(fp);
         }
@@ -182,10 +191,11 @@ void BotMainLoop(FILE *fp) {
 
     std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>(BOT_TOKEN);
     std::thread recv_thread(&plsWaitThread, pBot, fp);
-    std::thread notf_thread(&sendNotifyThread, pBot, fp);
 
     DBInterface::Ptr hDB       = std::make_shared<DBInterface>(root_path + db_path + db_file, fp);
     std::map<std::string, std::shared_ptr<BaseButton>> listBaseBtns;
+
+    std::thread notf_thread(&sendNotifyThread, pBot, hDB, fp);
 
     listBaseBtns["version"]             = std::make_shared<BotVersion>(hDB);
     listBaseBtns["Version"]             = listBaseBtns["version"];
@@ -195,6 +205,7 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns["/start"]              = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns["start"]               = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns[STR_BTN_EMPTY_CART]    = listBaseBtns[STR_BTN_MAINMENU];
+    listBaseBtns[STR_BTN_ORG_SOAPS]     = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns[STR_BTN_FAQ]           = std::make_shared<FAQs>(hDB);
 
     listBaseBtns[STR_BTN_VIEW_CART]     = std::make_shared<ViewCart>(hDB);
@@ -332,9 +343,12 @@ void BotMainLoop(FILE *fp) {
         //  Now broadcast notifications if any
         std::map<unsigned int, std::string>::iterator itrNtfy;
         std::map<unsigned int, std::string> ntfyMsgs    = pBaseBtn->getNotifyMsgs(pMsg, fp);
-        pthread_mutex_lock(&mtx_02);
-        gNtfyMsgs.insert(ntfyMsgs.begin(), ntfyMsgs.end());
-        pthread_mutex_unlock(&mtx_02);
+        if(!ntfyMsgs.empty()) {
+            pthread_mutex_lock(&mtx_02);
+            gNtfyMsgs.insert(std::pair<unsigned int, std::string>(pMsg->chat->id, std::string("Your Req: ") + pMsg->text));
+            gNtfyMsgs.insert(ntfyMsgs.begin(), ntfyMsgs.end());
+            pthread_mutex_unlock(&mtx_02);
+        }
 
         pBaseBtn->cleanup(pMsg, listBaseBtns, fp);
         fprintf(fp, "BaseBot %ld: Done responding back\n", time(0)); fflush(fp);

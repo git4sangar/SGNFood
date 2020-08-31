@@ -184,6 +184,8 @@
 #define STR_BTN_PRODUCT_LIST    "Product List"
 #define SRT_BTN_SINGLE_ITEM     "Single Item"
 
+#define STR_BTN_ORG_SOAPS       "Organic Soaps"
+
 //enum class UserContext {ADDRESS, CLEANUP, PRICE_CHANGE, NEW_ORDER, CNF_ORDER, YOUR_ORDER, REVIEW, NOTA};
 typedef int UserContext;
 

@@ -18,7 +18,7 @@
 
 std::string ProductList::STR_MSG_DEFF_RELEASE   = " ";
 
-void ProductList::create_product_table(std::string file_name, FILE *fp) {
+void ProductList::create_product_table(std::string file_name, std::string strHdr, FILE *fp) {
     fprintf(fp, "BaseBot %ld: ProductList::create_product_table {\n", time(0)); fflush(fp);
 
     pngwriter product_table(320, 320, 1.0, file_name.c_str());
@@ -28,7 +28,6 @@ void ProductList::create_product_table(std::string file_name, FILE *fp) {
     std::string strFontFile = std::string(BOT_ROOT_PATH) + std::string(BOT_FONT_PATH) + std::string(BOT_FONT_FILE_BOLD);
     product_table.filledsquare(0, 300, 320, 320, 0.0, 0.5, 0.5);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,     5, 305, 0.0, (char *)"SN", 1.0, 1.0, 1.0);
-    std::string strHdr  = std::string("Tmrw: ") + getDBHandle()->getTmrwDate();
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  30+5, 305, 0.0, (char *)strHdr.c_str(), 1.0, 1.0, 1.0);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 190+5, 305, 0.0, (char *)"Code", 1.0, 1.0, 1.0);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 245+5, 305, 0.0, (char *)"Price", 1.0, 1.0, 1.0);
@@ -61,7 +60,6 @@ void ProductList::create_product_table(std::string file_name, FILE *fp) {
 TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: ProductList::prepareMenu {\n", time(0)); fflush(fp);
 
-    std::string strText;
     std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
     unsigned int iLoop = 0, iPrev = 0, iNext = 0, iToggle = 0, iRowIndex = 0;
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
@@ -88,6 +86,8 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     }
 
     //  Populate pages in next available row if no. of items more than MAX_ITEMS_PER_PAGE
+    bool isInc = false;
+    std::string strText;
     if(MAX_ITEMS_PER_PAGE < iNoOfItems) {
         iPrev       = (iSelPage == 1) ? 1 : (iSelPage - 1);
         strText     = std::string(PAGE_SUFFIX) + std::string(" ") + std::to_string(iPrev);
@@ -96,10 +96,13 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
         iNext       = (iNoOfItems > (iSelPage * MAX_ITEMS_PER_PAGE)) ? (iSelPage + 1) : iSelPage;
         strText     = std::string(PAGE_SUFFIX) + std::string(" ") + std::to_string(iNext);
         createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
-
-        //  Pick the next available row
-        iRowIndex++;
+        isInc = true;
     }
+    /*if(pMsg->text.compare(STR_BTN_ORG_SOAPS) && std::string::npos == pMsg->text.find("Buy OR-")) {
+        createKBBtn(STR_BTN_ORG_SOAPS, row[iRowIndex], lstBaseBtns, getSharedPtr());
+        isInc = true;
+    }*/
+    if(isInc) iRowIndex++;
 
     //  Populate the next available row
     createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
@@ -109,11 +112,11 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
 
     if(isAdmin) createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
     else createKBBtn(STR_BTN_FAQ, row[iRowIndex], lstBaseBtns);
-    if(!pMsg->text.compare(STR_BTN_FUND_ME)) createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
+    if(!pMsg->text.compare(STR_BTN_ORG_SOAPS) || std::string::npos != pMsg->text.find("Buy OR-"))
+        createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
     else createKBBtn(STR_BTN_YOUR_ORDERS, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
-
 
     //  Add all the rows to main menu
     pMainMenu   = std::make_shared<TgBot::ReplyKeyboardMarkup>();
@@ -160,6 +163,8 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     }
 
     products    = getDBHandle()->getAllActiveProducts(fp);
+    if(!pMsg->text.compare(STR_BTN_ORG_SOAPS) || std::string::npos != pMsg->text.find("Buy OR-"))
+        products = getDBHandle()->getAllSoaps(fp);
     iSelPage    = 1;
     iNoOfItems  = products.size();
 
@@ -182,13 +187,25 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         strCode = pMsg->text.substr(4);  // yields TF-01
         Product::Ptr pProd  = getDBHandle()->getProductForCode(strCode,fp);
 
-        //  Find page number of this code
-        for(iLoop = 0; iLoop < iNoOfItems; iLoop++) if(products[iLoop]->m_ProductId == pProd->m_ProductId) break;
-        if(iLoop < iNoOfItems) iSelPage = ((iLoop+1) / MAX_ITEMS_PER_PAGE) + (0 != ((iLoop+1) % MAX_ITEMS_PER_PAGE));
+        bool isBuyable = true;
+        if(std::string::npos != pMsg->text.find("Buy OR-")) {
+            int iStock = 0;
+            try {iStock = std::stoi(pProd->m_Desc);} catch(std::exception &e) {iStock = 0;}
+            if(0 == iStock) isBuyable = false;
+            else getDBHandle()->updateStock(pProd->m_ProductId, std::to_string(iStock-1), fp);
+        }
+        if(isBuyable) {
+            //  Find page number of this code
+            for(iLoop = 0; iLoop < iNoOfItems; iLoop++) if(products[iLoop]->m_ProductId == pProd->m_ProductId) break;
+            if(iLoop < iNoOfItems) iSelPage = ((iLoop+1) / MAX_ITEMS_PER_PAGE) + (0 != ((iLoop+1) % MAX_ITEMS_PER_PAGE));
 
-        int iQty = getDBHandle()->addProductToCart(pProd->m_ProductId, 1, pProd->m_Price, pMsg->chat->id, fp);
-        ss << "<b>" << pProd->m_Name << " * " << iQty << "</b> added to Cart. Clicking it again, increases quantity.";
-        STR_MSG_DEFF_RELEASE = ss.str();
+            int iQty = getDBHandle()->addProductToCart(pProd->m_ProductId, 1, pProd->m_Price, pMsg->chat->id, fp);
+            ss << "<b>" << pProd->m_Name << " * " << iQty << "</b> added to Cart. Clicking it again, increases quantity.";
+            STR_MSG_DEFF_RELEASE = ss.str();
+        } else {
+            notifyMsgs[adminChatIds[0]] = pUser->m_Name + std::string(", ") + std::to_string(pUser->m_UserId) + std::string(", wants ") + pProd->m_Name;
+            STR_MSG_DEFF_RELEASE = "Sorry out of stock. You get a msg when available.";
+        }
     }
 
     if(std::string::npos != pMsg->text.find(STR_BTN_EMPTY_CART)) {
@@ -218,11 +235,15 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 TgBot::InputFile::Ptr ProductList::getMedia(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: ProductList getMedia {\n", time(0)); fflush(fp);
     TgBot::InputFile::Ptr pFile = nullptr;
+    std::string strHdr;
 
     if(0 < iNoOfItems) {
         asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) +
                         std::string("active_product_list_") + std::to_string(iSelPage) + std::string(".png");
-        create_product_table(asset_file, fp);
+        strHdr  = std::string("Tmrw: ") + getDBHandle()->getTmrwDate();
+        if(!pMsg->text.compare(STR_BTN_ORG_SOAPS) || std::string::npos != pMsg->text.find("Buy OR-"))
+            strHdr  = STR_BTN_ORG_SOAPS;
+        create_product_table(asset_file, strHdr, fp);
 
         if(isFileExists(asset_file)) pFile = TgBot::InputFile::fromFile(asset_file, "image/png");
         else { fprintf(fp, "Fatal Error: ProductList::getMedia asset file, %s, missing\n", asset_file.c_str()); fflush(fp); }

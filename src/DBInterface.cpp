@@ -179,6 +179,25 @@ bool DBInterface::addNewUser(int64_t chatId, std::string fname, FILE *fp) {
     return true;
 }
 
+void DBInterface::updateLeftUser(unsigned int iChatId, FILE *fp) {
+    std::stringstream ss;
+    SQLite::Transaction transaction(*m_hDB);
+    User::Ptr pUser = getUserForChatId(iChatId, fp);
+
+    if(pUser) {
+        ss.str("");
+        ss << "DELETE FROM User WHERE " << User::USER_CHAT_ID << " = " << iChatId << ";";
+        m_hDB->exec(ss.str());
+
+        ss.str("");
+        ss << "INSERT INTO LeftUsers (" << User::USER_NAME << ", " << User::USER_CHAT_ID << ", " << User::USER_ADDRESS << ", " << User::USER_WBALANCE
+            << ") VALUES (\"" << pUser->m_Name << "\", " << pUser->m_ChatId << ", \"" << pUser->m_Address << "\", " << pUser->m_WBalance << ");";
+        m_hDB->exec(ss.str());
+
+        transaction.commit();
+    }
+}
+
 User::Ptr DBInterface::getUser(SQLite::Statement *pQuery) {
     User::Ptr pUser     = std::make_shared<User>();
     pUser->m_UserId     = pQuery->getColumn(User::USER_ID.c_str()).getInt();
@@ -333,7 +352,7 @@ int DBInterface::addProductToCart(unsigned int iProdId, unsigned qty, unsigned i
         transaction.commit();
     }
 
-    return iQty+1;
+    return iQty+qty;
 }
 
 bool DBInterface::incrementItemQty(int iProdId, unsigned int iOrderNo, FILE *fp) {
@@ -545,6 +564,29 @@ Product::Ptr DBInterface::getProduct(SQLite::Statement *pQuery) {
     //  If Agent, there is a discount
     pProduct->m_Price       = (isAgent) ? (pProduct->m_Price * (100 - DISCOUNT_PERCENT)) / 100 : pProduct->m_Price;
     return pProduct;
+}
+
+void DBInterface::updateStock(unsigned int iProdId, std::string strQty, FILE *fp) {
+    std::stringstream ss;
+    ss << "UPDATE Product SET " << Product::PRODUCT_DESC <<  " = \"" << strQty << "\" WHERE "
+            << Product::PRODUCT_ID << " = " << iProdId << ";";
+    SQLite::Transaction transaction(*m_hDB);
+    m_hDB->exec(ss.str());
+    transaction.commit();
+}
+
+std::vector<Product::Ptr> DBInterface::getAllSoaps(FILE *fp) {
+    std::vector<Product::Ptr> pProducts;
+    Product::Ptr pProduct;
+    std::stringstream ss;
+
+    ss << "SELECT * FROM Product WHERE SUBSTR(" << Product::PRODUCT_CODE << ", 1, 3) = \"OR-\";";
+    SQLite::Statement query(*m_hDB, ss.str());
+    while(query.executeStep()) {
+        pProduct    = getProduct(&query);
+        pProducts.push_back(pProduct);
+    }
+    return pProducts;
 }
 
 std::vector<Product::Ptr> DBInterface::getAllProducts(FILE *fp) {

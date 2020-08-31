@@ -184,6 +184,7 @@ public:
     void updateOrderNo(unsigned int iUserId, FILE *fp);
     void updateTransacNo(unsigned int iUserId, FILE *fp);
     bool addNewUser(int64_t chatId, std::string fname, FILE *fp);
+    void updateLeftUser(unsigned int iChatId, FILE *fp);
     std::vector<User::Ptr> getAllUsers(FILE *fp);
     User::Ptr getUserForChatId(unsigned int iChatId, FILE *fp);
     User::Ptr getUserForUserId(unsigned int iUserId, FILE *fp);
@@ -200,7 +201,9 @@ public:
 
     bool insertNewProduct(std::string strCat, std::string strName, std::string strPrice, FILE *fp);
     std::vector<Product::Ptr> getAllActiveProducts(FILE *fp);
+    std::vector<Product::Ptr> getAllSoaps(FILE *fp);
     std::vector<Product::Ptr> getAllProducts(FILE *fp);
+    void updateStock(unsigned int iProdId, std::string strQty, FILE *fp);
     Product::Ptr getProductForCode(std::string strCode, FILE *fp);
     void activateProductForTomorrow(unsigned int iProdId, FILE *fp);
     void removeProductFromTomorrow(unsigned int iProdId, FILE *fp);
