@@ -182,6 +182,7 @@ void WalletMgmt::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                 pUser    = getDBHandle()->getUserForUserId(pOrder->m_UserId, fp);
                 ss << "Your TopUp req no " << iOrderNo << ", for amount ₹ " << pOrder->m_Amt << ", is " << strMsg;
                 notifyMsgs[pUser->m_ChatId] = ss.str();
+                getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
             } else {
                 STR_MSG_DEFF_RELEASE   = "Invalid input.";
             }
@@ -202,6 +203,7 @@ void WalletMgmt::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             else  {
                 STR_MSG_DEFF_RELEASE = pUser->m_Name + std::string("'s wallet balance is forced to ") + tokens[1];
                 notifyMsgs[pUser->m_ChatId] = std::string("Your wallet balance is forced to ") + tokens[1] + std::string(" by merchant.");
+                getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
             }
         }
     }

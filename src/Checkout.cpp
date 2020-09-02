@@ -181,6 +181,7 @@ void Checkout::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             //  Notify admin
             ss << pUser->m_Name << " topped up Wallet using " << strPGw << ". Pls verify payment. His transac no is " << pUser->m_TransacNo;
             for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
+            getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
         } else {
             STR_MSG_DEFF_RELEASE  = strAmt + " is not a valid amount.";
         }

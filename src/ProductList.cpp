@@ -144,8 +144,8 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     User::Ptr pUser = getDBHandle()->getUserForChatId(pMsg->chat->id, fp);
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) && USER_CTXT_ADMING_MSG == itrCntxt->second) {
         ss.str(""); ss << "Msg from " << pUser->m_Name << ", " << pUser->m_UserId << ", " << pUser->m_Address << "\n\n" << pMsg->text;
-        for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++)
-            notifyMsgs[*itr] = ss.str();
+        for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) notifyMsgs[*itr] = ss.str();
+        getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
         STR_MSG_DEFF_RELEASE = std::string("Your msg is sent to Admin.\n") + STR_MSG_DEFF_RELEASE;
     }
 
@@ -204,6 +204,7 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             STR_MSG_DEFF_RELEASE = ss.str();
         } else {
             notifyMsgs[adminChatIds[0]] = pUser->m_Name + std::string(", ") + std::to_string(pUser->m_UserId) + std::string(", wants ") + pProd->m_Name;
+            getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
             STR_MSG_DEFF_RELEASE = "Sorry out of stock. You get a msg when available.";
         }
     }
@@ -226,6 +227,7 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 
             ss << pUser->m_Name << " has made an order, " << iOrderNo;
             for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
+            getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
             STR_MSG_DEFF_RELEASE = "Your order is placed. You will get a confirmation msg in a few hours.";
         }
     }

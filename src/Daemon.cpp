@@ -90,10 +90,9 @@ void petWatchDog(FILE *fp) {
    //fprintf(fp, "BaseBot %ld: Petting WatchDog\n", time(0)); fflush(fp);
 }
 
-pthread_mutex_t mtx_01, mtx_02;
+pthread_mutex_t mtx_01;
 std::vector< std::tuple<unsigned int, unsigned int> > inTm;
 std::map<unsigned int, unsigned int> inMsgTmStamps;
-nlohmann::fifo_map<unsigned int, std::string> gNtfyMsgs;
 
 void plsWaitThread(std::shared_ptr<TgBot::Bot> pBot, FILE *fp) {
     time_t curTm;
@@ -119,37 +118,32 @@ void plsWaitThread(std::shared_ptr<TgBot::Bot> pBot, FILE *fp) {
 }
 
 void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot, DBInterface::Ptr hDB, FILE *fp) {
-    nlohmann::fifo_map<unsigned int, std::string>::iterator itrNtfy;
-    nlohmann::fifo_map<unsigned int, std::string> notifyMsgs;
-    unsigned int iLoop = 0;
+    std::vector<Notifs::Ptr> notifs;
+    std::vector<Notifs::Ptr>::iterator itr;
+    unsigned int iLoop = 0, iChatId = 0;
 
-    fprintf(fp, "Starting Notification Thread\n"); fflush(fp);
     while(1) {
-        //  Copy all the messages
-        pthread_mutex_lock(&mtx_02);
-        if(!gNtfyMsgs.empty()) {
-            fprintf(fp, "Got bulk-notif-send req.\n"); fflush(fp);
-            notifyMsgs.insert(gNtfyMsgs.begin(), gNtfyMsgs.end());
-            gNtfyMsgs.clear();
-        }
-        pthread_mutex_unlock(&mtx_02);
+        //  Check if any in database
+        notifs = hDB->getNotifications(fp);
 
-        if(!notifyMsgs.empty()) {
-            for(iLoop = 1, itrNtfy = notifyMsgs.begin(); notifyMsgs.end() != itrNtfy; itrNtfy++, iLoop++) {
-                unsigned int iChatId = (MAX_USERS > itrNtfy->first) ? adminChatIds[1] : itrNtfy->first;
+        if(!notifs.empty()) {
+            fprintf(fp, "Got notification request.\n"); fflush(fp);
+            for(iLoop = 1, itr = notifs.begin(); notifs.end() != itr; itr++, iLoop++) {
+                iChatId = (MAX_USERS > (*itr)->m_ChatId) ? adminChatIds[1] : (*itr)->m_ChatId;
                 try {
-                    pBot->getApi().sendMessage(iChatId, itrNtfy->second, false, 0, nullptr, "HTML");
+                    pBot->getApi().sendMessage(iChatId, (*itr)->m_Msg, false, 0, nullptr, "HTML");
                     if(!(iLoop%10)) pBot->getApi().sendMessage(adminChatIds[1], "Pls wait sending notifications.", false, 0, nullptr, "HTML");
                 } catch(std::exception &e) {
                     std::string strExcept = e.what();
                     if(std::string::npos != strExcept.find("blocked") || std::string::npos != strExcept.find("not found")) hDB->updateLeftUser(iChatId, fp);
                     fprintf(fp, "Exception : %s, while sending notification to user.\n", strExcept.c_str()); fflush(fp);
                 }
+                if(itr != notifs.end())hDB->removeNotif((*itr)->m_NotifId, fp);
             }
-            //pBot->getApi().sendMessage(adminChatIds[1], "Sent all notifications.", false, 0, nullptr, "HTML");
+            if(2 < iLoop) pBot->getApi().sendMessage(adminChatIds[1], "Sent all notifications.", false, 0, nullptr, "HTML");
 
-            notifyMsgs.clear();
-            fprintf(fp, "Sent all notifs.\n"); fflush(fp);
+            notifs.clear();
+            fprintf(fp, "Sent all notifications.\n"); fflush(fp);
         }
         sleep(2);
     }
@@ -334,15 +328,6 @@ void BotMainLoop(FILE *fp) {
             std::vector< std::tuple<unsigned int, unsigned int> >::iterator itrWait;
             for(itrWait = inTm.begin(); inTm.end() != itrWait; itrWait++) if(std::get<0>(*itrWait) == pMsg->chat->id) { inTm.erase(itrWait); break; }
             pthread_mutex_unlock(&mtx_01);
-        }
-
-        //  Now broadcast notifications if any
-        std::map<unsigned int, std::string>::iterator itrNtfy;
-        std::map<unsigned int, std::string> ntfyMsgs    = pBaseBtn->getNotifyMsgs(pMsg, fp);
-        if(!ntfyMsgs.empty()) {
-            pthread_mutex_lock(&mtx_02);
-            gNtfyMsgs.insert(ntfyMsgs.begin(), ntfyMsgs.end());
-            pthread_mutex_unlock(&mtx_02);
         }
 
         pBaseBtn->cleanup(pMsg, listBaseBtns, fp);

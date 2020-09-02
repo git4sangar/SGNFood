@@ -286,6 +286,7 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                 fprintf(fp, "BaseBot %ld: SingleOrder onClick, Picking next Confirmed Order: %d\n", time(0), iOrderNo); fflush(fp);
                 break;
         }
+        getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
     }
 
     //  At this stage there shall be a valid order number

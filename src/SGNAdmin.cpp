@@ -152,6 +152,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                 notifyMsgs[pUser->m_ChatId] = myTrim(strMsg.substr(iPos+1));
             }
             STR_MSG_DEFF_RELEASE = (notifyMsgs.empty()) ? "Failed sending msg." : std::string("Sent above message to ") + std::to_string(iLoop) + " user(s).";
+            getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
         } else if(USER_CTXT_USER_AC == itrCntxt->second) {
             iUserIds    = getUserIds(myTrim(strMsg), fp);
             pUser       = getDBHandle()->getUserForUserId(iUserIds[0], fp);
@@ -167,6 +168,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                                              << std::setfill(' ') << std::setw(5) << order->m_Amt << "    "
                                              << std::setfill(' ') << std::setw(5) << order->m_WBalance << "\n";
                 notifyMsgs[pMsg->chat->id] = ss.str();
+                getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
             }
         } else STR_MSG_DEFF_RELEASE = "Invalid Format";
     }
@@ -194,6 +196,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             }
             notifyMsgs[iLoop] = ssMsg.str();
         }
+        getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
     }
     if(!pMsg->text.compare(STR_BTN_REMIND_CHKOUT)) {
         std::vector<User::Ptr> users = getDBHandle()->getCartedUsers(fp);
@@ -201,8 +204,8 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             notifyMsgs[user->m_ChatId] = user->m_Name + std::string(", Your Cart contains items. Forgot to click \"Confirm Checkout\"?\n") +
                                             std::string("\nClick buttons as follows to place order.\nView Cart -> Checkout -> Confirm Checkout.");
         }
+        getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
         STR_MSG_DEFF_RELEASE = std::string("Reminding all users, who has items in Cart, to Confirm Checkout\n");
-        if(10 < users.size()) STR_MSG_DEFF_RELEASE += std::string("It will take some time. Pls wait..");
     }
     if(!pMsg->text.compare(STR_BTN_ORDR_SUMMRY)) {
         ss.str(std::string(""));

@@ -157,6 +157,19 @@ public:
     static std::string REVIEW_REVIEW;
 };
 
+class Notifs {
+public:
+    typedef std::shared_ptr<Notifs> Ptr;
+    unsigned int m_NotifId, m_ChatId, m_UserId;
+    std::string m_Name, m_Msg;
+
+    static std::string NOTIF_ID;
+    static std::string NOTIF_USER_ID;
+    static std::string NOTIF_CHAT_ID;
+    static std::string NOTIF_NAME;
+    static std::string NOTIF_MSG;
+};
+
 class DBInterface {
     std::shared_ptr<SQLite::Database> m_hDB;
     FILE *m_Fp;
@@ -168,6 +181,7 @@ class DBInterface {
     POrder::Ptr     getPOrder(SQLite::Statement *pQuery);
     Product::Ptr    getProduct(SQLite::Statement *pQuery);
     Cart::Ptr       getCart(SQLite::Statement *pQuery);
+    Notifs::Ptr     getNotif(SQLite::Statement *pQuery);
 
 public:
     typedef std::shared_ptr<DBInterface> Ptr;
@@ -193,6 +207,10 @@ public:
     int getWalletBalance(unsigned int iUserId, FILE *fp);
     User::Ptr forceWalletBalance(std::string strUserId, std::string strAmt, FILE *fp);
 //    std::vector<std::string> getAddressesForUser(unsigned int iUserId, FILE *fp);
+
+    void updateNotifications(std::map<unsigned int, std::string> notifs, FILE *fp);
+    std::vector<Notifs::Ptr> getNotifications(FILE *fp);
+    void removeNotif(unsigned int iNotifId, FILE *fp);
 
     std::vector<Category::Ptr> getCategories(FILE *fp);
     Category::Ptr getCategoryForCode(std::string strCode, FILE *fp);

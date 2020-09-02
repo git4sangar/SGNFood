@@ -82,6 +82,12 @@ std::string Reviews::REVIEW_TIME                = "time";
 std::string Reviews::REVIEW_PRODUCT_GROUP_ID    = "product_group_id";
 std::string Reviews::REVIEW_REVIEW              = "review   ";
 
+std::string Notifs::NOTIF_ID         = "notify_id";
+std::string Notifs::NOTIF_USER_ID    = "user_id";
+std::string Notifs::NOTIF_CHAT_ID    = "chat_id";
+std::string Notifs::NOTIF_NAME       = "name";
+std::string Notifs::NOTIF_MSG        = "message";
+
 DBInterface::DBInterface(std::string dbFileName, FILE *fp) {
     m_hDB   = std::make_shared<SQLite::Database>(dbFileName, SQLite::OPEN_READWRITE);
     m_Fp    = fp;
@@ -353,6 +359,56 @@ int DBInterface::addProductToCart(unsigned int iProdId, unsigned qty, unsigned i
     }
 
     return iQty+qty;
+}
+
+Notifs::Ptr DBInterface::getNotif(SQLite::Statement *pQuery) {
+    Notifs::Ptr pNotif  = std::make_shared<Notifs>();
+
+    pNotif->m_NotifId   = pQuery->getColumn(Notifs::NOTIF_ID.c_str()).getUInt();
+    pNotif->m_ChatId    = pQuery->getColumn(Notifs::NOTIF_CHAT_ID.c_str()).getUInt();
+    pNotif->m_UserId    = pQuery->getColumn(Notifs::NOTIF_USER_ID.c_str()).getUInt();
+    pNotif->m_Name      = pQuery->getColumn(Notifs::NOTIF_NAME.c_str()).getString();
+    pNotif->m_Msg       = pQuery->getColumn(Notifs::NOTIF_MSG.c_str()).getString();
+    return pNotif;
+}
+
+void DBInterface::updateNotifications(std::map<unsigned int, std::string> notifs, FILE *fp) {
+    SQLite::Transaction transaction(*m_hDB);
+    std::map<unsigned int, std::string>::iterator itrNtfy;
+
+    for(itrNtfy = notifs.begin(); itrNtfy != notifs.end(); itrNtfy++) {
+        std::stringstream ss;
+        ss << "INSERT INTO Notifs (" << Notifs::NOTIF_CHAT_ID << ", " << Notifs::NOTIF_MSG
+                            << ") VALUES ("
+           << itrNtfy->first << ", \"" << itrNtfy->second << "\");";
+        m_hDB->exec(ss.str());
+    }
+    if(0 < notifs.size()) transaction.commit();
+}
+
+void DBInterface::removeNotif(unsigned int iNotifId, FILE *fp) {
+    SQLite::Transaction transaction(*m_hDB);
+    std::stringstream ss;
+
+    ss << "DELETE FROM Notifs WHERE " << Notifs::NOTIF_ID << " = " << iNotifId << ";";
+    m_hDB->exec(ss.str());
+
+    transaction.commit();
+}
+
+std::vector<Notifs::Ptr> DBInterface::getNotifications(FILE *fp) {
+    std::vector<Notifs::Ptr> dbNotifs;
+    Notifs::Ptr notif;
+    std::stringstream ss;
+
+    ss << "SELECT * FROM Notifs;";
+    SQLite::Statement query(*m_hDB, ss.str());
+
+    while(query.executeStep()) {
+        notif   = getNotif(&query);
+        dbNotifs.push_back(notif);
+    }
+    return dbNotifs;
 }
 
 bool DBInterface::incrementItemQty(int iProdId, unsigned int iOrderNo, FILE *fp) {
