@@ -135,22 +135,18 @@ void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot, DBInterface::Ptr hDB, FI
         pthread_mutex_unlock(&mtx_02);
 
         if(!notifyMsgs.empty()) {
-            //  first element of notifyMsgs points to chat-id of user who made the req
-            unsigned int iWho = notifyMsgs.begin()->first;
-            fprintf(fp, "Who %d, What %s\n", iWho, notifyMsgs.begin()->second.c_str()); fflush(fp);
-
-            for(iLoop = 0, itrNtfy = notifyMsgs.begin(); notifyMsgs.end() != itrNtfy; itrNtfy++, iLoop++) {
-                unsigned int iChatId = (MAX_USERS > itrNtfy->first) ? iWho : itrNtfy->first;
+            for(iLoop = 1, itrNtfy = notifyMsgs.begin(); notifyMsgs.end() != itrNtfy; itrNtfy++, iLoop++) {
+                unsigned int iChatId = (MAX_USERS > itrNtfy->first) ? adminChatIds[1] : itrNtfy->first;
                 try {
                     pBot->getApi().sendMessage(iChatId, itrNtfy->second, false, 0, nullptr, "HTML");
-                    if( !(iLoop%10) ) pBot->getApi().sendMessage(iWho, "Pls wait sending notifications.", false, 0, nullptr, "HTML");
+                    if(!(iLoop%10)) pBot->getApi().sendMessage(adminChatIds[1], "Pls wait sending notifications.", false, 0, nullptr, "HTML");
                 } catch(std::exception &e) {
                     std::string strExcept = e.what();
                     if(std::string::npos != strExcept.find("blocked") || std::string::npos != strExcept.find("not found")) hDB->updateLeftUser(iChatId, fp);
                     fprintf(fp, "Exception : %s, while sending notification to user.\n", strExcept.c_str()); fflush(fp);
                 }
             }
-            pBot->getApi().sendMessage(iWho, "Sent all notifications.", false, 0, nullptr, "HTML");
+            //pBot->getApi().sendMessage(adminChatIds[1], "Sent all notifications.", false, 0, nullptr, "HTML");
 
             notifyMsgs.clear();
             fprintf(fp, "Sent all notifs.\n"); fflush(fp);
@@ -345,7 +341,6 @@ void BotMainLoop(FILE *fp) {
         std::map<unsigned int, std::string> ntfyMsgs    = pBaseBtn->getNotifyMsgs(pMsg, fp);
         if(!ntfyMsgs.empty()) {
             pthread_mutex_lock(&mtx_02);
-            gNtfyMsgs.insert(std::pair<unsigned int, std::string>(pMsg->chat->id, std::string("Your Req: ") + pMsg->text));
             gNtfyMsgs.insert(ntfyMsgs.begin(), ntfyMsgs.end());
             pthread_mutex_unlock(&mtx_02);
         }
