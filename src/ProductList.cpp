@@ -98,10 +98,10 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
         createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
         isInc = true;
     }
-    /*if(pMsg->text.compare(STR_BTN_ORG_SOAPS) && std::string::npos == pMsg->text.find("Buy OR-")) {
+    if(pMsg->text.compare(STR_BTN_ORG_SOAPS) && std::string::npos == pMsg->text.find("Buy OR-")) {
         createKBBtn(STR_BTN_ORG_SOAPS, row[iRowIndex], lstBaseBtns, getSharedPtr());
         isInc = true;
-    }*/
+    }
     if(isInc) iRowIndex++;
 
     //  Populate the next available row

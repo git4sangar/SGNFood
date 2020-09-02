@@ -179,6 +179,15 @@ void BotMainLoop(FILE *fp) {
 
     fprintf(fp, "Main: %ld: Starting MainLoop\n", time(0)); fflush(fp);
 
+    //  Admin Chat Ids
+#ifdef AURA
+    adminChatIds.push_back(303802126);      // Shalini
+#endif
+#ifdef MANI_MAMA
+    adminChatIds.push_back(550919816);      // Myself
+    adminChatIds.push_back(1352652258);     // Santosh
+#endif
+
     std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>(BOT_TOKEN);
     std::thread recv_thread(&plsWaitThread, pBot, fp);
 
@@ -234,19 +243,6 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_ADMIN_PG]      = std::make_shared<SGNAdmin>(hDB);
     listBaseBtns[STR_BTN_SEND_MSG]      = listBaseBtns[STR_BTN_ADMIN_PG];
     listBaseBtns[STR_BTN_PARSER]        = std::make_shared<SGNParser>(hDB);
-
-    //  Admin Chat Ids
-#ifdef AURA
-    adminChatIds.push_back(303802126);      // Shalini
-#endif
-#ifdef MANI_MAMA
-    adminChatIds.push_back(550919816);      // Myself
-    adminChatIds.push_back(1352652258);     // Santosh
-#endif
-#ifdef VIVA
-    adminChatIds.push_back(550919816);      // Myself
-    adminChatIds.push_back(1121498608);     // SDS
-#endif
 
     pBot->getEvents().onAnyMessage( [pBot, &listBaseBtns, fp, &startSec](TgBot::Message::Ptr pMsg) {
         petWatchDog(fp);

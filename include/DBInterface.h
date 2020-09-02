@@ -16,6 +16,13 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <tgbot/tgbot.h>
 
+#define ORGANIC_SOAP_ID_01  (79)
+#define ORGANIC_SOAP_ID_02  (80)
+#define ORGANIC_SOAP_ID_03  (81)
+#define ORGANIC_SOAP_ID_04  (81)
+#define ORGANIC_SOAP_ID_05  (83)
+#define ORGANIC_SOAP_ID_06  (84)
+
 #define SECS_IN_A_DAY   (60 * 60 * 24)
 
 enum class OrderType{ PORDER, TOPUP, NOTA };
