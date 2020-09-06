@@ -200,7 +200,12 @@ TgBot::InputFile::Ptr Checkout::getMedia(TgBot::Message::Ptr pMsg, FILE *fp) {
     TgBot::InputFile::Ptr pFile = nullptr;
 
     if(std::string::npos != pMsg->text.find(STR_BTN_TOP_UP) && std::string(STR_BTN_TOP_UP).length() < pMsg->text.length()) {
+#ifdef AURA
+        std::string asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) + std::string("qr_code_aura_shalini_01.jpeg");
+#endif
+#ifdef MANI_MAMA
         std::string asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) + std::string("qr_code_mani_iyer_02.png");
+#endif
         if(isFileExists(asset_file)) pFile = TgBot::InputFile::fromFile(asset_file, "image/png");
     }
     fprintf(fp, "BaseBot %ld: Checkout getMedia }\n", time(0)); fflush(fp);

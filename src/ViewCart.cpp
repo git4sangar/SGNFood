@@ -42,7 +42,11 @@ void ViewCart::create_cart_table(std::string file_name, FILE *fp) {
         if(0 == toggle) cart_table.filledsquare(0, iLoop, 320, iLoop-30, 0.9, 0.9, 0.9);
         if((iNoOfItems > iIndex) && (iIndex < (iSelPage * (MAX_ITEMS_PER_PAGE-1)))) {
             std::string strCount    = std::to_string(iCount);
-            std::string strProdPack = products[iIndex]->m_Name + std::string(" - ") + products[iIndex]->m_Pack;
+            std::string strProdPack = products[iIndex]->m_Name
+#ifdef AURA
+                    + std::string(" (") + products[iIndex]->m_Pack + std::string(")");
+#endif
+                    ;
             std::string strQty      = std::to_string(cartItems[iIndex]->m_Qnty);
             iSum                    = cartItems[iIndex]->m_Qnty * cartItems[iIndex]->m_Price;
             std::string strPrice    = std::to_string(iSum);

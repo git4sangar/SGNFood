@@ -29,7 +29,7 @@ void ProductList::create_product_table(std::string file_name, std::string strHdr
     product_table.filledsquare(0, 300, 320, 320, 0.0, 0.5, 0.5);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,     5, 305, 0.0, (char *)"SN", 1.0, 1.0, 1.0);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  30+5, 305, 0.0, (char *)strHdr.c_str(), 1.0, 1.0, 1.0);
-    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 190+5, 305, 0.0, (char *)"Code", 1.0, 1.0, 1.0);
+    //product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 190+5, 305, 0.0, (char *)"Code", 1.0, 1.0, 1.0);
     product_table.plot_text_utf8((char *)strFontFile.c_str(), 12, 245+5, 305, 0.0, (char *)"Price", 1.0, 1.0, 1.0);
 
     //  Highlight alternate rows
@@ -41,7 +41,7 @@ void ProductList::create_product_table(std::string file_name, std::string strHdr
         if((iNoOfItems > iIndex) && (iIndex < (iSelPage * MAX_ITEMS_PER_PAGE))) {
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,     5, iLoop-20, 0.0, (char *)std::to_string(iIndex+1).c_str(), 0, 0, 0);
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,  30+5, iLoop-20, 0.0, (char *)products[iIndex]->m_Name.c_str(), 0, 0, 0);
-            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 190+5, iLoop-20, 0.0, (char *)products[iIndex]->m_Code.c_str(), 0, 0, 0);
+            //product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 190+5, iLoop-20, 0.0, (char *)products[iIndex]->m_Code.c_str(), 0, 0, 0);
             std::string strPrice4Pk = std::to_string(products[iIndex]->m_Price) + std::string("/") + products[iIndex]->m_Pack;
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 245+5, iLoop-20, 0.0, (char *)(strPrice4Pk.c_str()), 0, 0, 0);
             iIndex++;
@@ -50,7 +50,7 @@ void ProductList::create_product_table(std::string file_name, std::string strHdr
 
     //  Vertical lines
     product_table.line( 30, 320,  30, 0, 0, 0, 0);
-    product_table.line(190, 320, 190, 0, 0, 0, 0);
+    //product_table.line(190, 320, 190, 0, 0, 0, 0);
     product_table.line(245, 320, 245, 0, 0, 0, 0);
 
     product_table.close();
@@ -61,8 +61,9 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     fprintf(fp, "BaseBot %ld: ProductList::prepareMenu {\n", time(0)); fflush(fp);
 
     std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
-    unsigned int iLoop = 0, iPrev = 0, iNext = 0, iToggle = 0, iRowIndex = 0;
+    unsigned int iLoop = 0, iPrev = 0, iNext = 0, iToggle = 0, iRowIndex = 0, iCurItms = 0, iCount = 0;
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
+    std::stringstream ss;
     std::map<unsigned int, UserContext>::const_iterator itrCntxt;
     std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
 
@@ -70,7 +71,8 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     if(!pMsg->text.compare(STR_BTN_MSG_ADMIN)) {
         m_Context[pMsg->chat->id]   = USER_CTXT_ADMING_MSG;
         lstBaseBtns[strChatId]      = getSharedPtr();
-        STR_MSG_DEFF_RELEASE        = "Pls type whatever you want to convey \"Mani Iyer's Kitchen\" & send. He will respond back.";
+        ss << "Pls type whatever you want to convey <b>" << BUSINESS_NAME << "</b> & send. He will respond back.";
+        STR_MSG_DEFF_RELEASE        = ss.str().c_str();
         return std::make_shared<TgBot::ReplyKeyboardRemove>();
     }
 
@@ -81,12 +83,11 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
 
     iRowIndex = 0;
     for(iToggle = 0, iLoop = (iSelPage - 1) * MAX_ITEMS_PER_PAGE; (iNoOfItems > iLoop) && (iLoop < (iSelPage * MAX_ITEMS_PER_PAGE)); iLoop++, iToggle = (1-iToggle)) {
-        createKBBtn(std::string("Buy ") + products[iLoop]->m_Code, row[iToggle], lstBaseBtns, getSharedPtr());
+        createKBBtn(products[iLoop]->m_Desc, row[iToggle], lstBaseBtns, lstBaseBtns["Quick Menu"]);
         iRowIndex   = (iRowIndex < (iToggle+1)) ? (iToggle+1) : iRowIndex;
     }
 
     //  Populate pages in next available row if no. of items more than MAX_ITEMS_PER_PAGE
-    bool isInc = false;
     std::string strText;
     if(MAX_ITEMS_PER_PAGE < iNoOfItems) {
         iPrev       = (iSelPage == 1) ? 1 : (iSelPage - 1);
@@ -96,13 +97,8 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
         iNext       = (iNoOfItems > (iSelPage * MAX_ITEMS_PER_PAGE)) ? (iSelPage + 1) : iSelPage;
         strText     = std::string(PAGE_SUFFIX) + std::string(" ") + std::to_string(iNext);
         createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
-        isInc = true;
+        iRowIndex++;
     }
-    if(pMsg->text.compare(STR_BTN_ORG_SOAPS) && std::string::npos == pMsg->text.find("Buy OR-")) {
-        createKBBtn(STR_BTN_ORG_SOAPS, row[iRowIndex], lstBaseBtns, getSharedPtr());
-        isInc = true;
-    }
-    if(isInc) iRowIndex++;
 
     //  Populate the next available row
     createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
@@ -110,11 +106,10 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     createKBBtn(STR_BTN_MSG_ADMIN, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
 
+    createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
     if(isAdmin) createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
     else createKBBtn(STR_BTN_FAQ, row[iRowIndex], lstBaseBtns);
-    if(!pMsg->text.compare(STR_BTN_ORG_SOAPS) || std::string::npos != pMsg->text.find("Buy OR-"))
-        createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
-    else createKBBtn(STR_BTN_YOUR_ORDERS, row[iRowIndex], lstBaseBtns);
+    createKBBtn(STR_BTN_YOUR_ORDERS, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
@@ -149,65 +144,9 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         STR_MSG_DEFF_RELEASE = std::string("Your msg is sent to Admin.\n") + STR_MSG_DEFF_RELEASE;
     }
 
-    if(!pMsg->text.compare(STR_BTN_FUND_ME)) {
-        ss << "Dear valueable customers,\n"
-            << "    Mani Iyer's Carrier Services is looking for funds to serve you better.\n\n"
-            << "        Flat <b>22% interest / annum (monthly 1.8%)</b>\n\n"
-            << "You can customize your interest: monthly, quarterly or half-yearly."
-            << " I will credit the interest to your a/c or I pay out in cash.\n\n"
-            << "        <b>I'm ready to execute a promissory note.</b>\n\n"
-            << "Pls call / msg me if you are interested.\n"
-            << "-Santhosh Subramanian\nPh: 97419 83633, 93437 71700";
-        STR_MSG_DEFF_RELEASE = ss.str();
-        return;
-    }
-
     products    = getDBHandle()->getAllActiveProducts(fp);
-    if(!pMsg->text.compare(STR_BTN_ORG_SOAPS) || std::string::npos != pMsg->text.find("Buy OR-"))
-        products = getDBHandle()->getAllSoaps(fp);
     iSelPage    = 1;
     iNoOfItems  = products.size();
-
-    //  Check if reached here through Category Paging Button
-    if(std::string::npos != pMsg->text.find(PAGE_SUFFIX))
-        for(iLoop = 1; iLoop <= MAX_NO_OF_PAGES; iLoop++) {
-            std::stringstream ssCat;
-            ssCat << PAGE_SUFFIX << " " << iLoop;
-
-            if(!pMsg->text.compare(ssCat.str())) {
-                iSelPage    = iLoop;
-                break;
-            }
-        }
-
-    std::string strCode;
-    if(std::string::npos != pMsg->text.find("Buy")) {
-        std::stringstream ss;
-        //  Buy TF-01
-        strCode = pMsg->text.substr(4);  // yields TF-01
-        Product::Ptr pProd  = getDBHandle()->getProductForCode(strCode,fp);
-
-        bool isBuyable = true;
-        if(std::string::npos != pMsg->text.find("Buy OR-")) {
-            int iStock = 0;
-            try {iStock = std::stoi(pProd->m_Desc);} catch(std::exception &e) {iStock = 0;}
-            if(0 == iStock) isBuyable = false;
-            else getDBHandle()->updateStock(pProd->m_ProductId, std::to_string(iStock-1), fp);
-        }
-        if(isBuyable) {
-            //  Find page number of this code
-            for(iLoop = 0; iLoop < iNoOfItems; iLoop++) if(products[iLoop]->m_ProductId == pProd->m_ProductId) break;
-            if(iLoop < iNoOfItems) iSelPage = ((iLoop+1) / MAX_ITEMS_PER_PAGE) + (0 != ((iLoop+1) % MAX_ITEMS_PER_PAGE));
-
-            int iQty = getDBHandle()->addProductToCart(pProd->m_ProductId, 1, pProd->m_Price, pMsg->chat->id, fp);
-            ss << "<b>" << pProd->m_Name << " * " << iQty << "</b> added to Cart. Clicking it again, increases quantity.";
-            STR_MSG_DEFF_RELEASE = ss.str();
-        } else {
-            notifyMsgs[adminChatIds[0]] = pUser->m_Name + std::string(", ") + std::to_string(pUser->m_UserId) + std::string(", wants ") + pProd->m_Name;
-            getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
-            STR_MSG_DEFF_RELEASE = "Sorry out of stock. You get a msg when available.";
-        }
-    }
 
     if(std::string::npos != pMsg->text.find(STR_BTN_EMPTY_CART)) {
         getDBHandle()->emptyCartForUser(pUser->m_OrderNo, fp);
@@ -242,9 +181,12 @@ TgBot::InputFile::Ptr ProductList::getMedia(TgBot::Message::Ptr pMsg, FILE *fp) 
     if(0 < iNoOfItems) {
         asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) +
                         std::string("active_product_list_") + std::to_string(iSelPage) + std::string(".png");
+#ifdef MANI_MAMA
         strHdr  = std::string("Tmrw: ") + getDBHandle()->getTmrwDate();
-        if(!pMsg->text.compare(STR_BTN_ORG_SOAPS) || std::string::npos != pMsg->text.find("Buy OR-"))
-            strHdr  = STR_BTN_ORG_SOAPS;
+#endif
+#ifdef AURA
+        strHdr  = "AurA Soaps";
+#endif
         create_product_table(asset_file, strHdr, fp);
 
         if(isFileExists(asset_file)) pFile = TgBot::InputFile::fromFile(asset_file, "image/png");
@@ -253,4 +195,48 @@ TgBot::InputFile::Ptr ProductList::getMedia(TgBot::Message::Ptr pMsg, FILE *fp) 
     fprintf(fp, "BaseBot %ld: ProductList getMedia }\n", time(0)); fflush(fp);
     return pFile;
 }
+
+/*
+ *
+ *    std::string strCode;
+    if(std::string::npos != pMsg->text.find("Buy")) {
+        std::stringstream ss;
+        //  Buy TF-01
+        strCode = pMsg->text.substr(4);  // yields TF-01
+        Product::Ptr pProd  = getDBHandle()->getProductForCode(strCode,fp);
+
+        bool isBuyable = true;
+        if(std::string::npos != pMsg->text.find("Buy OR-")) {
+            int iStock = 0;
+            try {iStock = std::stoi(pProd->m_Desc);} catch(std::exception &e) {iStock = 0;}
+            if(0 == iStock) isBuyable = false;
+            else getDBHandle()->updateStock(pProd->m_ProductId, std::to_string(iStock-1), fp);
+        }
+        if(isBuyable) {
+            //  Find page number of this code
+            for(iLoop = 0; iLoop < iNoOfItems; iLoop++) if(products[iLoop]->m_ProductId == pProd->m_ProductId) break;
+            if(iLoop < iNoOfItems) iSelPage = ((iLoop+1) / MAX_ITEMS_PER_PAGE) + (0 != ((iLoop+1) % MAX_ITEMS_PER_PAGE));
+
+            int iQty = getDBHandle()->addProductToCart(pProd->m_ProductId, 1, pProd->m_Price, pMsg->chat->id, fp);
+            ss << "<b>" << pProd->m_Name << " * " << iQty << "</b> added to Cart. Clicking it again, increases quantity.";
+            STR_MSG_DEFF_RELEASE = ss.str();
+        } else {
+            notifyMsgs[adminChatIds[0]] = pUser->m_Name + std::string(", ") + std::to_string(pUser->m_UserId) + std::string(", wants ") + pProd->m_Name;
+            getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
+            STR_MSG_DEFF_RELEASE = "Sorry out of stock. You get a msg when available.";
+        }
+    }
+
+    if(!pMsg->text.compare(STR_BTN_FUND_ME)) {
+        ss << "Dear valueable customers,\n"
+            << "    Mani Iyer's Carrier Services is looking for funds to serve you better.\n\n"
+            << "        Flat <b>22% interest / annum (monthly 1.8%)</b>\n\n"
+            << "You can customize your interest: monthly, quarterly or half-yearly."
+            << " I will credit the interest to your a/c or I pay out in cash.\n\n"
+            << "        <b>I'm ready to execute a promissory note.</b>\n\n"
+            << "Pls call / msg me if you are interested.\n"
+            << "-Santhosh Subramanian\nPh: 97419 83633, 93437 71700";
+        STR_MSG_DEFF_RELEASE = ss.str();
+        return;
+    }*/
 

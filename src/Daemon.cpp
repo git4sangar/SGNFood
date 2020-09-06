@@ -42,12 +42,13 @@
 #include "SGNParser.h"
 #include "MyAddress.h"
 #include "Constants.h"
+#include "QuickMenu.h"
 
 #define MYPORT (4950)
 
 std::map<unsigned int, UserContext> m_Context;
 std::vector<unsigned int> adminChatIds;
-bool isAgent;
+//bool isAgent;
 std::string BotVersion::STR_MSG_DEFF_RELEASE;
 
 void BaseButton::cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, FILE *fp) {
@@ -140,7 +141,7 @@ void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot, DBInterface::Ptr hDB, FI
                 }
                 if(itr != notifs.end())hDB->removeNotif((*itr)->m_NotifId, fp);
             }
-            if(2 < iLoop) pBot->getApi().sendMessage(adminChatIds[1], "Sent all notifications.", false, 0, nullptr, "HTML");
+            if(10 < iLoop) pBot->getApi().sendMessage(adminChatIds[1], "Sent all notifications.", false, 0, nullptr, "HTML");
 
             notifs.clear();
             fprintf(fp, "Sent all notifications.\n"); fflush(fp);
@@ -180,11 +181,11 @@ void BotMainLoop(FILE *fp) {
     fprintf(fp, "Main: %ld: Starting MainLoop\n", time(0)); fflush(fp);
 
     //  Admin Chat Ids
+    adminChatIds.push_back(550919816);      // Myself
 #ifdef AURA
     adminChatIds.push_back(303802126);      // Shalini
 #endif
 #ifdef MANI_MAMA
-    adminChatIds.push_back(550919816);      // Myself
     adminChatIds.push_back(1352652258);     // Santosh
 #endif
 
@@ -204,7 +205,6 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns["/start"]              = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns["start"]               = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns[STR_BTN_EMPTY_CART]    = listBaseBtns[STR_BTN_MAINMENU];
-    listBaseBtns[STR_BTN_ORG_SOAPS]     = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns[STR_BTN_FAQ]           = std::make_shared<FAQs>(hDB);
 
     listBaseBtns[STR_BTN_VIEW_CART]     = std::make_shared<ViewCart>(hDB);
@@ -240,6 +240,7 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_CNF_TOPUPs]    = listBaseBtns[STR_BTN_NEW_TOPUPs];
     listBaseBtns[STR_BTN_CNCLD_TOPUPs]  = listBaseBtns[STR_BTN_NEW_TOPUPs];
 
+    listBaseBtns[STR_BTN_QUICK_MENU]    = std::make_shared<QuickMenu>(hDB);
     listBaseBtns[STR_BTN_ADMIN_PG]      = std::make_shared<SGNAdmin>(hDB);
     listBaseBtns[STR_BTN_SEND_MSG]      = listBaseBtns[STR_BTN_ADMIN_PG];
     listBaseBtns[STR_BTN_PARSER]        = std::make_shared<SGNParser>(hDB);
@@ -247,11 +248,6 @@ void BotMainLoop(FILE *fp) {
     pBot->getEvents().onAnyMessage( [pBot, &listBaseBtns, fp, &startSec](TgBot::Message::Ptr pMsg) {
         petWatchDog(fp);
         static bool isSkipOver = false;
-	isAgent = false;
-#ifdef AURA
-        //  Rekha or Vidhya or Myself
-        isAgent = (1298144799 == pMsg->chat->id || 1384523081 == pMsg->chat->id || 550919816 == pMsg->chat->id);
-#endif
 
         fprintf(fp, "BaseBot %ld: Received \"%s\" for chatId: %ld onAnyMessage as it arrived\n", time(0), pMsg->text.c_str(), pMsg->chat->id); fflush(fp);
         std::shared_ptr<BaseButton> pBaseBtn = nullptr;
@@ -330,6 +326,25 @@ void BotMainLoop(FILE *fp) {
         fprintf(fp, "BaseBot %ld: Done responding back\n", time(0)); fflush(fp);
     });
 
+    pBot->getEvents().onCallbackQuery( [pBot, &listBaseBtns, fp](TgBot::CallbackQuery::Ptr pQuery) {
+        petWatchDog(fp);
+        std::shared_ptr<BaseButton> pBaseBtn = nullptr;
+
+        fprintf(fp, "id : %s, inlineMessageId : %s, chatInstance : %s, data : %s\n",
+                pQuery->id.c_str(), pQuery->inlineMessageId.c_str(), pQuery->chatInstance.c_str(), pQuery->data.c_str()); fflush(fp);
+        std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator itrBBtn;
+        if(listBaseBtns.end() != (itrBBtn = listBaseBtns.find(pQuery->data))) {
+            pBaseBtn = itrBBtn->second->getSharedPtr();
+        } else {
+            pBaseBtn    = listBaseBtns[STR_BTN_QUICK_MENU];
+        }
+
+        pQuery->message->text   = pQuery->data;
+        pBaseBtn->init(pQuery->message, fp);
+        pBaseBtn->onClick(pQuery->message, fp);
+        TgBot::GenericReply::Ptr pMenu = pBaseBtn->prepareMenu(listBaseBtns, pQuery->message, fp);
+        pBot->getApi().sendMessage(pQuery->message->chat->id, pBaseBtn->getMsg(), false, 0, pMenu, pBaseBtn->getParseMode());
+    });
     //fprintf(fp, "BaseBot %ld: Bot username %s\n", time(0), pBot->getApi().getMe()->username.c_str()); fflush(fp);
 
     std::shared_ptr<TgBot::TgLongPoll> pLongPoll  = std::make_shared<TgBot::TgLongPoll>(*pBot, 100, 3);

@@ -13,7 +13,7 @@
 
 #define SGN_BOT_VER "1.1.2"
 
-#define MANI_MAMA
+#define AURA
 #define _Pi_
 
 //------------------------------------AurA------------------------------------
@@ -21,9 +21,10 @@
     #define BOT_TOKEN	    "655366902:AAGEaKH0q1xXu0Lwd5C5HBDZsUnPTjn13X4"
     #define BOT_DB_FILE     "sgn_aura.db"
     #define BOT_LOG_FILE    "log_file_aura.log"
-    #define PAYTM_MOBILE    "98406 25165"
+    #define PAYTM_MOBILE    "99401 30135"
     #define GPAY_MOBILE     "99401 30135"
-    #define BHIM_UPI        "shaliniv16@okicici"
+    #define PHONE_PE_NO     "99401 30135"
+    #define BUSINESS_NAME   "AurA Admin"
 
     #ifdef _VM_
         #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/AuraBot"
@@ -44,6 +45,7 @@
     #define PAYTM_MOBILE    "93410 66700"
     #define GPAY_MOBILE     "93410 66700"
     #define PHONE_PE_NO     "93410 66700"
+    #define BUSINESS_NAME   "Mani Iyer's Kitchen"
 
     #ifdef _VM_
         #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/ManiBot"
@@ -134,7 +136,7 @@
 #define STR_BTN_CNFM_ORDER      "Confirm Order"
 #define STR_BTN_CNCL_ORDER      "Cancel Order"
 #define SRT_BTN_DLVR_ORDER      "Deliver Order"
-//#define STR_BTN_PRINT_ORDER     "Print Order"
+#define STR_BTN_QUICK_MENU      "Quick Menu"
 //#define STR_BTN_EDIT_ORDER      "Edit Order"
 
 #define STR_BTN_ITEM_LIST       "Item List"
@@ -184,14 +186,12 @@
 #define STR_BTN_PRODUCT_LIST    "Product List"
 #define SRT_BTN_SINGLE_ITEM     "Single Item"
 
-#define STR_BTN_ORG_SOAPS       "Organic Soaps"
-
 //enum class UserContext {ADDRESS, CLEANUP, PRICE_CHANGE, NEW_ORDER, CNF_ORDER, YOUR_ORDER, REVIEW, NOTA};
 typedef int UserContext;
 
 extern std::map<unsigned int, UserContext> m_Context;
 extern std::vector<unsigned int> adminChatIds;
-extern bool isAgent;
+//extern bool isAgent;
 
 extern std::string getAddressNotification();
 

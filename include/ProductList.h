@@ -14,12 +14,7 @@
 #include "DBInterface.h"
 #include "BaseButton.h"
 
-#define SGN_OPTION_01   "Need Coconut Soap"
-#define SGN_OPTION_02   "Need Neem Soap"
-#define SGN_OPTION_03   "Need Sandal Soap"
-#define SGN_OPTION_04   "Need Kasturi Turmeric"
-#define SGN_OPTION_05   "Not Interested"
-
+#define MAX_BTNS_PER_ROW    (5)
 #ifdef AURA
     #define PAGE_SUFFIX     "Product Page"
 #else
@@ -41,8 +36,9 @@ public:
     //  This object is not created on every invocation. So clear it before using.
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
         products.clear(); asset_file.clear(); iSelPage = 0; iNoOfItems = 0;
-        STR_MSG_DEFF_RELEASE   = "\"Buy\" adds an item to Cart. Refer \"Code\" above. Click again to increase qty.";
-//STR_MSG_DEFF_RELEASE   = "<b>Type & send</b> your orders like how you do in WhatsApp. While typing use these words <b>breakfast, bisibelebath, lunch, sambar, kuzhambu, rasam, curry, kootu, rice</b>";
+        STR_MSG_DEFF_RELEASE    = "Click a button to add to Cart. Click <b>View Cart</b> once done.";
+        //STR_MSG_DEFF_RELEASE   = "\"Buy\" adds an item to Cart. Refer \"Code\" above. Click again to increase qty.";
+        //STR_MSG_DEFF_RELEASE   = "<b>Type & send</b> your orders like how you do in WhatsApp. While typing use these words <b>breakfast, bisibelebath, lunch, sambar, kuzhambu, rasam, curry, kootu, rice</b>";
         isAdmin = false; notifyMsgs.clear();
     }
     std::string getMsg() { return STR_MSG_DEFF_RELEASE;}

@@ -34,15 +34,16 @@ public:
     typedef std::shared_ptr<User> Ptr;
     unsigned int m_UserId, m_ChatId, m_OrderNo, m_TransacNo;
     int m_WBalance;
+    unsigned int m_ProdId;
     unsigned long long m_Mobile;
     std::string m_Name, m_Address;
 
-    User() : m_UserId {0}, m_ChatId {0}, m_OrderNo {0}, m_WBalance(0), m_Mobile {0}, m_TransacNo {0} {}
+    User() : m_UserId {0}, m_ChatId {0}, m_OrderNo {0}, m_WBalance(0), m_ProdId {0}, m_Mobile {0}, m_TransacNo {0} {}
 
     static std::string USER_ID;
     static std::string USER_NAME;
     static std::string USER_CHAT_ID;
-    static std::string USER_MOBILE;
+    static std::string USER_PROD_ID;
     static std::string USER_ORDER_NO;
     static std::string USER_ADDRESS;
     static std::string USER_WBALANCE;
@@ -226,7 +227,6 @@ public:
 
     bool insertNewProduct(std::string strCat, std::string strName, std::string strPrice, FILE *fp);
     std::vector<Product::Ptr> getAllActiveProducts(FILE *fp);
-    std::vector<Product::Ptr> getAllSoaps(FILE *fp);
     std::vector<Product::Ptr> getAllProducts(FILE *fp);
     void updateStock(unsigned int iProdId, std::string strQty, FILE *fp);
     Product::Ptr getProductForCode(std::string strCode, FILE *fp);
@@ -234,6 +234,9 @@ public:
     void removeProductFromTomorrow(unsigned int iProdId, FILE *fp);
 
     Product::Ptr getProductById(unsigned int iProdId, FILE *fp);
+
+    void retainProdId(unsigned int iChatId, unsigned int iProdId, FILE *fp);
+    unsigned int getChosenProduct(unsigned int iChatId, FILE *fp);
 
     std::vector<Product::Ptr> getOneProductForCode(std::string strCode, FILE *fp);
     std::vector<Product::Ptr> getOneProductForName(std::string strName, FILE *fp);

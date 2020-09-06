@@ -201,7 +201,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     if(!pMsg->text.compare(STR_BTN_REMIND_CHKOUT)) {
         std::vector<User::Ptr> users = getDBHandle()->getCartedUsers(fp);
         for(auto &user : users) {
-            notifyMsgs[user->m_ChatId] = user->m_Name + std::string(", Your Cart contains items. Forgot to click \"Confirm Checkout\"?\n") +
+            notifyMsgs[user->m_ChatId] = user->m_Name + std::string(", Your Cart contains items. Forgot to click <b>Confirm Checkout</b>?\n") +
                                             std::string("\nClick buttons as follows to place order.\nView Cart -> Checkout -> Confirm Checkout.");
         }
         getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
