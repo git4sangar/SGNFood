@@ -48,8 +48,30 @@
 
 std::map<unsigned int, UserContext> m_Context;
 std::vector<unsigned int> adminChatIds;
-//bool isAgent;
+nlohmann::fifo_map<std::string, std::string> descToCode;
+pthread_mutex_t mtx_01;
+std::vector< std::tuple<unsigned int, unsigned int> > inTm;
+std::map<unsigned int, unsigned int> inMsgTmStamps;
 std::string BotVersion::STR_MSG_DEFF_RELEASE;
+//bool isAgent;
+
+void initGlobals() {
+    descToCode.clear();
+    descToCode[BREAKFAST]       = "TF-";
+    descToCode[BISIBELEBATH]    = "TF-";
+    descToCode[SAMBAR]          = "SB-";
+    descToCode[MORKUZHAMBU]     = "SB-";
+    descToCode[VATHAKUZHAMBU]   = "SB-";
+    descToCode[RASAM]           = "RS-";
+    descToCode[CURRY]           = "CR-";
+    descToCode[KOOTU]           = "KT-";
+    descToCode[RICE]            = "RC-";
+    descToCode[LUNCH]           = "LN-";
+    descToCode[SWEET]           = "SW-";
+    descToCode[ULUNDU_VADAI]    = "Ulundu Vadai(2)";
+    descToCode[COCONUT_POLI]    = "Coconut Poli(3)";
+    descToCode[DHAL_POLI]       = "Dhall Poli(3)";
+}
 
 void BaseButton::cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, FILE *fp) {
     std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator itrBtn;
@@ -91,10 +113,6 @@ void petWatchDog(FILE *fp) {
    //fprintf(fp, "BaseBot %ld: Petting WatchDog\n", time(0)); fflush(fp);
 }
 
-pthread_mutex_t mtx_01;
-std::vector< std::tuple<unsigned int, unsigned int> > inTm;
-std::map<unsigned int, unsigned int> inMsgTmStamps;
-
 void plsWaitThread(std::shared_ptr<TgBot::Bot> pBot, FILE *fp) {
     time_t curTm;
     std::vector<unsigned int> chatIds;
@@ -128,7 +146,7 @@ void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot, DBInterface::Ptr hDB, FI
         notifs = hDB->getNotifications(fp);
 
         if(!notifs.empty()) {
-            fprintf(fp, "Got notification request.\n"); fflush(fp);
+            fprintf(fp, "Got %ld notification request.\n", notifs.size()); fflush(fp);
             for(iLoop = 1, itr = notifs.begin(); notifs.end() != itr; itr++, iLoop++) {
                 iChatId = (MAX_USERS > (*itr)->m_ChatId) ? adminChatIds[1] : (*itr)->m_ChatId;
                 try {
@@ -179,6 +197,7 @@ void BotMainLoop(FILE *fp) {
     time_t startSec = time(NULL);
 
     fprintf(fp, "Main: %ld: Starting MainLoop\n", time(0)); fflush(fp);
+    initGlobals();
 
     //  Admin Chat Ids
     adminChatIds.push_back(550919816);      // Myself

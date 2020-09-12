@@ -13,26 +13,11 @@
 
 #define QTY_PER_ROW     (4)
 
-//  Description column of Product Table
-#define BREAKFAST       "Breakfast"
-#define BISIBELEBATH    "Bisibele Bath"
-#define SAMBAR          "Sambar"
-#define MORKUZHAMBU     "Morkuzhambu"
-#define VATHAKUZHAMBU   "Vathakuzhambu"
-#define RASAM           "Rasam"
-#define CURRY           "Curry"
-#define KOOTU           "Kootu"
-#define RICE            "Rice"
-#define LUNCH           "Full Lunch"
-#define ULUNDU_VADAI    "Ulundu Vadai(2)"
-#define COCONUT_POLI    "Coconut Poli(3)"
-#define DHAL_POLI       "Dhall Poli(3)"
-
 class QuickMenu : public BaseButton, public std::enable_shared_from_this<QuickMenu> {
     nlohmann::fifo_map<std::string, int> qty, pcs;
     std::map<unsigned int, std::string> notifyMsgs;
     Product::Ptr pProd;
-    std::map<std::string, std::string> descToCode;
+
 public:
     QuickMenu(DBInterface::Ptr hDB) : BaseButton(hDB) {
     }
@@ -43,21 +28,6 @@ public:
         STR_MSG_DEFF_RELEASE.clear();
         notifyMsgs.clear();
         pProd = nullptr;
-
-        descToCode.clear();
-        descToCode[BREAKFAST]       = "TF-";
-        descToCode[BISIBELEBATH]    = "TF-";
-        descToCode[SAMBAR]          = "SB-";
-        descToCode[MORKUZHAMBU]     = "SB-";
-        descToCode[VATHAKUZHAMBU]   = "SB-";
-        descToCode[RASAM]           = "RS-";
-        descToCode[CURRY]           = "CR-";
-        descToCode[KOOTU]           = "KT-";
-        descToCode[RICE]            = "RC-";
-        descToCode[LUNCH]           = "LN-";
-        descToCode[ULUNDU_VADAI]    = "Ulundu Vadai(2)";
-        descToCode[COCONUT_POLI]    = "Coconut Poli(3)";
-        descToCode[DHAL_POLI]       = "Dhall Poli(3)";
 
         //  Shall be in multiples of QTY_PER_ROW
         pcs.clear();

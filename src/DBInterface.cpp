@@ -669,6 +669,8 @@ std::vector<Product::Ptr> DBInterface::getAllProducts(FILE *fp) {
 bool DBInterface::insertNewProduct(std::string strCat, std::string strName, std::string strPrice, FILE *fp) {
     int iFound = 0, iPrice;
     std::stringstream ss;
+    nlohmann::fifo_map<std::string, std::string>::iterator itrDesc;
+    std::string strDesc = "-";
 
     //  Parse category code
     if(2 != strCat.length()) return false;
@@ -678,8 +680,18 @@ bool DBInterface::insertNewProduct(std::string strCat, std::string strName, std:
         if(std::string::npos != prod->m_Code.find(strCat))
             iFound++;
     }
+
+    //  Is category existing?
     if(0 != iFound) {
         iFound++;
+        //  Get Description
+        for(itrDesc = descToCode.begin(); itrDesc != descToCode.end(); itrDesc++) {
+            std::string strTmp = strCat + "-";
+            if(!itrDesc->second.compare(strTmp)) {
+                strDesc = itrDesc->first;
+                break;
+            }
+        }
         ss << strCat << "-" <<std::setfill('0') << std::setw(2) << iFound;
         strCat = ss.str();
     } else return false;
@@ -699,11 +711,12 @@ bool DBInterface::insertNewProduct(std::string strCat, std::string strName, std:
                 Product::PRODUCT_PACK<< ", " <<
                 Product::PRODUCT_DESC << ", " <<
                 Product::PRODUCT_DATE << ") VALUES (\"" << strCat << "\", \"" << strName << "\", \"file\", "
-                << iPrice << ", \"1pk\", \"-\", \"1970-01-01 00:00:00:000\");";
+                << iPrice << ", \"1pk\", \"" << strDesc << "\", \"1970-01-01 00:00:00:000\");";
     m_hDB->exec(ss.str());
     transaction.commit();
     return true;
 }
+
 std::vector<Product::Ptr> DBInterface::getAllActiveProducts(FILE *fp) {
     std::vector<Product::Ptr> pProducts;
     std::stringstream ss;

@@ -10,6 +10,7 @@
 
 #include <map>
 #include <vector>
+#include "fifo_map.h"
 
 #define SGN_BOT_VER "1.1.2"
 
@@ -186,6 +187,22 @@
 #define STR_BTN_PRODUCT_LIST    "Product List"
 #define SRT_BTN_SINGLE_ITEM     "Single Item"
 
+//  Description column of Product Table
+#define BREAKFAST       "Breakfast"
+#define BISIBELEBATH    "Bisibele Bath"
+#define SAMBAR          "Sambar"
+#define MORKUZHAMBU     "Morkuzhambu"
+#define VATHAKUZHAMBU   "Vathakuzhambu"
+#define RASAM           "Rasam"
+#define CURRY           "Curry"
+#define KOOTU           "Kootu"
+#define RICE            "Rice"
+#define LUNCH           "Full Lunch"
+#define SWEET           "Sweet"
+#define ULUNDU_VADAI    "Ulundu Vadai(2)"
+#define COCONUT_POLI    "Coconut Poli(3)"
+#define DHAL_POLI       "Dhall Poli(3)"
+
 //enum class UserContext {ADDRESS, CLEANUP, PRICE_CHANGE, NEW_ORDER, CNF_ORDER, YOUR_ORDER, REVIEW, NOTA};
 typedef int UserContext;
 
@@ -194,5 +211,6 @@ extern std::vector<unsigned int> adminChatIds;
 //extern bool isAgent;
 
 extern std::string getAddressNotification();
+extern nlohmann::fifo_map<std::string, std::string> descToCode;
 
 #endif /* CONSTANTS_H_ */
