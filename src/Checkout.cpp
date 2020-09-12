@@ -54,12 +54,12 @@ std::string Checkout::getPaymentString(unsigned int iOrderNo, std::string strNam
 
 std::string Checkout::getTopUpString() {
     std::stringstream ss;
-    ss << "\n\n1) Transfer Topup amount via GPay / PayTM / PhonePe using above QR Code." <<
-            "\n        GPay : " << GPAY_MOBILE << ",\n        PayTm : " << PAYTM_MOBILE << ",\n        PhonePe : " << PHONE_PE_NO <<
-            "\n2) Mention <b>" << pUser->m_TransacNo << "</b> in desc." <<
-            "\n<b>3) WhatsApp Screen-Shot to "<< PAYTM_MOBILE <<
-            "</b>\n\nAfter transferring, click a \"Topped Up\" button below." <<
-            " Your Wallet will be updated after verification.";
+    ss << "\n\n1) Transfer via GPay, PayTM, PhonePe.\n(Long press below numbers to copy)" <<
+            "\n        GPay :        " << GPAY_MOBILE << "\n        PayTm :      " << PAYTM_MOBILE << "\n        PhonePe : " << PHONE_PE_NO <<
+            "\n\n2) Your Ref No: " << pUser->m_TransacNo << ". You <b>MUST MENTION " << pUser->m_TransacNo 
+                    << "</b> while transfer.\n(Otherwise, we couldnt <b>Track your Payment</b>)" <<
+            "\n\n3) WhatsApp Screen-Shot to "<< PAYTM_MOBILE <<
+            "\n\nAfter transferring, click appropriate \"Topped Up\" button below.";
     return ss.str();
 }
 
@@ -200,13 +200,10 @@ TgBot::InputFile::Ptr Checkout::getMedia(TgBot::Message::Ptr pMsg, FILE *fp) {
     TgBot::InputFile::Ptr pFile = nullptr;
 
     if(std::string::npos != pMsg->text.find(STR_BTN_TOP_UP) && std::string(STR_BTN_TOP_UP).length() < pMsg->text.length()) {
-#ifdef AURA
-        std::string asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) + std::string("qr_code_aura_shalini_01.jpeg");
-#endif
 #ifdef MANI_MAMA
         std::string asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) + std::string("qr_code_mani_iyer_02.png");
-#endif
         if(isFileExists(asset_file)) pFile = TgBot::InputFile::fromFile(asset_file, "image/png");
+#endif
     }
     fprintf(fp, "BaseBot %ld: Checkout getMedia }\n", time(0)); fflush(fp);
     return pFile;

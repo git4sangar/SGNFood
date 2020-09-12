@@ -141,17 +141,19 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
         std::string strMsg = pMsg->text;
-        int iPos = 0, iUserId = 0;
+        int iPos = 0, iUserId = 0, iCount = 0;
         std::vector<unsigned int> iUserIds;
         std::vector<POrder::Ptr> orders;
 
         if(USER_CTXT_SEND_MSG == itrCntxt->second && std::string::npos != (iPos = strMsg.find_first_of(":")) && (0 < iPos) && (strMsg.length() > (iPos+1))) {
             iUserIds = getUserIds(myTrim(strMsg.substr(0,iPos)), fp, ',');
 
-            for(iLoop = 0; (iLoop < iUserIds.size()) && (0 < iUserIds[iLoop]) && (pUser = getDBHandle()->getUserForUserId(iUserIds[iLoop], fp)); iLoop++) {
-                notifyMsgs[pUser->m_ChatId] = myTrim(strMsg.substr(iPos+1));
+            for(iLoop = 0, iCount = 0; (iLoop < iUserIds.size()) && (0 < iUserIds[iLoop]); iLoop++) {
+                pUser = getDBHandle()->getUserForUserId(iUserIds[iLoop], fp);
+                if(pUser) { notifyMsgs[pUser->m_ChatId] = myTrim(strMsg.substr(iPos+1)); iCount++;}
+                else {fprintf(fp, "Skipping UserId %d while sending notification.\n", iUserIds[iLoop]); fflush(fp);}
             }
-            STR_MSG_DEFF_RELEASE = (notifyMsgs.empty()) ? "Failed sending msg." : std::string("Sent above message to ") + std::to_string(iLoop) + " user(s).";
+            STR_MSG_DEFF_RELEASE = (notifyMsgs.empty()) ? "Failed sending msg." : std::string("Sent above message to ") + std::to_string(iCount) + " user(s).";
             getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
         } else if(USER_CTXT_USER_AC == itrCntxt->second) {
             iUserIds    = getUserIds(myTrim(strMsg), fp);

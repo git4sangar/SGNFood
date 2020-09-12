@@ -97,8 +97,15 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
         iNext       = (iNoOfItems > (iSelPage * MAX_ITEMS_PER_PAGE)) ? (iSelPage + 1) : iSelPage;
         strText     = std::string(PAGE_SUFFIX) + std::string(" ") + std::to_string(iNext);
         createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
+#ifndef MANI_MAMA
         iRowIndex++;
+#endif
     }
+#ifdef MANI_MAMA
+    createKBBtn(STR_BTN_FUND_ME, row[iRowIndex], lstBaseBtns, getSharedPtr());
+    iRowIndex++;
+#endif
+    
 
     //  Populate the next available row
     createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
@@ -135,6 +142,21 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     std::stringstream ss;
 
     if(!pMsg->text.compare(STR_BTN_MSG_ADMIN)) return;
+
+#ifdef MANI_MAMA
+    if(!pMsg->text.compare(STR_BTN_FUND_ME)) {
+        ss << "Dear Valueable Customers,\n"
+            << "    Mani Iyer's Carrier Services is looking for funds to serve you better.\n\n"
+            << "        Flat <b>22% interest / annum (monthly 1.8%)</b>\n\n"
+            << "You can customize your interest: monthly, quarterly or half-yearly."
+            << " I will credit the interest to your a/c or I pay out in cash.\n\n"
+            << "        <b>I'm ready to execute a promissory note.</b>\n\n"
+            << "Pls call / msg me if you are interested.\n"
+            << "-Santhosh Subramanian\nPh: 97419 83633, 93437 71700";
+        STR_MSG_DEFF_RELEASE = ss.str();
+        return;
+    }
+#endif
 
     User::Ptr pUser = getDBHandle()->getUserForChatId(pMsg->chat->id, fp);
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) && USER_CTXT_ADMING_MSG == itrCntxt->second) {
