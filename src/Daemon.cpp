@@ -43,6 +43,7 @@
 #include "MyAddress.h"
 #include "Constants.h"
 #include "QuickMenu.h"
+#include "HttpClient.h"
 
 #define MYPORT (4950)
 
@@ -55,7 +56,7 @@ std::map<unsigned int, unsigned int> inMsgTmStamps;
 std::string BotVersion::STR_MSG_DEFF_RELEASE;
 //bool isAgent;
 
-void initGlobals() {
+void initGlobals(FILE *fp) {
     descToCode.clear();
     descToCode[BREAKFAST]       = "TF-";
     descToCode[BISIBELEBATH]    = "TF-";
@@ -71,6 +72,12 @@ void initGlobals() {
     descToCode[ULUNDU_VADAI]    = "Ulundu Vadai(2)";
     descToCode[COCONUT_POLI]    = "Coconut Poli(3)";
     descToCode[DHAL_POLI]       = "Dhall Poli(3)";
+
+    curl_global_init(CURL_GLOBAL_ALL);
+
+    pthread_t tCurThread;
+    pthread_create(&tCurThread, NULL, &HttpClient::run, (void *)fp);
+    pthread_detach(tCurThread);
 }
 
 void BaseButton::cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, FILE *fp) {
@@ -197,7 +204,7 @@ void BotMainLoop(FILE *fp) {
     time_t startSec = time(NULL);
 
     fprintf(fp, "Main: %ld: Starting MainLoop\n", time(0)); fflush(fp);
-    initGlobals();
+    initGlobals(fp);
 
     //  Admin Chat Ids
     adminChatIds.push_back(550919816);      // Myself

@@ -9,34 +9,34 @@
 #include <bits/stdc++.h>
 #include <boost/algorithm/string.hpp>
 #include <memory>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "pngwriter.h"
 
 #include "BaseButton.h"
 #include "Constants.h"
 #include "Checkout.h"
+#include "HttpClient.h"
 
 std::string Checkout::STR_MSG_DEFF_RELEASE  = "";
 std::string Checkout::STR_BTN_GPAY_TOP_UP   = "Topped Up GPay";
 std::string Checkout::STR_BTN_PAYTM_TOP_UP  = "Topped Up PayTM";
 std::string Checkout::STR_BTN_PHONEPE_TOP_UP= "Topped Up PhonePe";
 
-/*std::string Checkout::getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, unsigned int iTotal, FILE *fp) {
+#ifdef AURA
+std::string Checkout::getPaymentString(unsigned int iWho, unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp) {
+    getPaymentLink(iWho, iOrderNo, iTotal, strName, fp);
     std::stringstream ss;
-    ss << "Hi " << strName << ", You are just a step away from making an order. Your Total bill is <b>₹ " << iTotal << "</b>\n";
-    ss << "\nYour shipping address is: \n<b>" << strAddress;
-    ss << "</b>\n\n1) Use one of the below payment methods to <b>CONFIRM</b> your Order." <<
-                "\n2) Open GPay or PayTM app & pay ₹ " << iTotal <<
-                "\n3) Mention the <b>Order no: " << iOrderNo << "</b> while paying." <<
-                "\nGPay -> \"What is this for\", in PayTM -> \"Add a Message\" on right hand side."<<
-                "\n\nYou will receive a confirmation message in a few hours, after the merchant verifies this order." <<
-//                "\nProvide the OTP during delivery." <<
-//                "\n\n<b>*</b> This bot is <b>not</b> integrated with payment banks like Paytm, GPay, etc...\n" <<
-                "\n<b>Note: Merchant has the right to remove any of the items you ordered for valid reasons.</b>";
-    return ss.str();
-}*/
 
-std::string Checkout::getPaymentString(unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp) {
+    ss <<  "Hi " << strName << ",\n\n<b>Pls Wait a few secs..,</b>\n\nYou get a payment link. Pay by clicking it.";
+    ss << "\n\nYour Total bill is <b>₹ " << iTotal << "</b>";
+    ss << "\n\nYour Shipping address is :\n" << strAddress;
+    ss << "\n\nNote: Payment link can also be seen at:\n" << STR_BTN_MAINMENU << " -> " << STR_BTN_YOUR_ORDERS << " -> " << iOrderNo;
+    return ss.str();
+}
+#else
+std::string Checkout::getPaymentString(unsigned int iWho, unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp) {
     std::stringstream ss;
     int iNewBal = pUser->m_WBalance - iTotal;
 
@@ -50,6 +50,62 @@ std::string Checkout::getPaymentString(unsigned int iOrderNo, std::string strNam
                 << "\n<b>Note: Your order may still be delivered.</b>";
     }
     return ss.str();
+}
+#endif
+
+void Checkout::getPaymentLink(unsigned int iWho, unsigned int iOrderNo, int iAmt, std::string strUserName, FILE *fp) {
+    std::stringstream ssPayLd, ssUrl;
+    ssUrl << CASH_FREE_BASE_URL << CASH_FREE_ORDER_API;
+
+    std::map<std::string, std::string> formData;
+    formData["appId"]           = CASH_FREE_APP_ID;
+    formData["secretKey"]       = CASH_FREE_SECRET_KEY;
+    formData["orderId"]         = std::to_string(iOrderNo);
+    formData["orderAmount"]     = std::to_string(iAmt);
+    formData["customerName"]    = strUserName;
+    formData["customerPhone"]   = GPAY_MOBILE;
+    formData["customerEmail"]   = BOT_MAIL;
+    formData["returnUrl"]       = REDIRECT_URL;
+    formData["notifyUrl"]       = REDIRECT_URL;
+
+    pHttpClient->postReqFormData(ssUrl.str(), formData, iWho, iOrderNo);
+}
+
+//  Called from Http thread context. Accessing member variables is prohibited.
+void Checkout::onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp) {
+    boost::property_tree::ptree root;
+    std::string strSuccess = "OK";  //  Case sensitive
+
+    std::map<unsigned int, std::string> msgToUsers;
+    std::stringstream ss, ssMsg1, ssMsg2; ss << strResp;
+    User::Ptr   pUser   = getDBHandle()->getUserForOrderNo(iOrderNo, fp);
+
+    boost::property_tree::read_json(ss, root);
+    if(!strSuccess.compare(root.get<std::string>("status"))) {
+        std::string strUrl  = root.get<std::string>("paymentLink");
+        ssMsg1 << "Make payment by clicking:\n" << strUrl
+                << "\n\nAfter paying, click:\n" << STR_BTN_MAINMENU << " -> " << STR_BTN_YOUR_ORDERS << " -> " << iOrderNo << " to see txn details.";
+        msgToUsers[iChatId] = ssMsg1.str();
+
+        //  Now assume the order is placed
+        getDBHandle()->insertToOrder(pUser, iTotal, CartStatus::PAYMENT_PENDING, strUrl, OrderType::PORDER, fp);
+        getDBHandle()->updateOrderNo(pUser->m_UserId, fp);
+
+        ssMsg2 << pUser->m_Name << " has made an order, " << iOrderNo;
+        for(auto &id : adminChatIds)  msgToUsers[id] = (iChatId == id) ? ssMsg1.str() : ssMsg2.str();
+    } else {
+        msgToUsers[iChatId] = "Something went wrong. Pls try after sometime.";
+    }
+    getDBHandle()->updateNotifications(msgToUsers, fp);
+}
+
+//  Called from Http thread context. Accessing member variables is prohibited.
+void Checkout::onDownloadFailure(unsigned int iChatId, unsigned int iOrderNo, FILE *fp) {
+    std::stringstream ssMsg1;
+    std::map<unsigned int, std::string> msgToUsers;
+    ssMsg1 << "Something went wrong. Pls try checking out again.\n";
+    msgToUsers[iChatId] = ssMsg1.str() ;
+    getDBHandle()->updateNotifications(msgToUsers, fp);
 }
 
 std::string Checkout::getTopUpString() {
@@ -132,9 +188,11 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
     }
 
     else if(!pMsg->text.compare(STR_BTN_CHECKOUT)) {
-        STR_MSG_DEFF_RELEASE  = getPaymentString(pUser->m_OrderNo, pMsg->from->firstName, pUser->m_Address, iTotal, fp);
+        STR_MSG_DEFF_RELEASE  = getPaymentString(pMsg->chat->id, pUser->m_OrderNo, pMsg->from->firstName, pUser->m_Address, iTotal, fp);
+#ifndef AURA
         createKBBtn(STR_BTN_CNF_CHECKOUT, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_MAINMENU]);
         iRowIndex++;
+#endif
     }
 
     //  To avoid exception

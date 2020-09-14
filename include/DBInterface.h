@@ -210,6 +210,7 @@ public:
     std::vector<User::Ptr> getAllUsers(FILE *fp);
     User::Ptr getUserForChatId(unsigned int iChatId, FILE *fp);
     User::Ptr getUserForUserId(unsigned int iUserId, FILE *fp);
+    User::Ptr getUserForOrderNo(unsigned int iOrderNo, FILE *fp);
     int getNoOfUsers(FILE *fp);
     int getIntStatus(CartStatus stat);
     int getWalletBalance(unsigned int iUserId, FILE *fp);
@@ -263,6 +264,8 @@ public:
     void clearAllCartedItems(FILE *fp);
     int getAllOutstanding(FILE *fp);
     std::map<unsigned int, unsigned int> getOrderSummary(FILE *fp);
+    void setPaymentLink(unsigned int iOrderNo, std::string strPaymentLink, FILE *fp);
+    std::string getPaymentLink(unsigned int iOrderNo, FILE *fp);
 };
 
 

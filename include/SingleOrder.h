@@ -17,6 +17,7 @@
 #include "Constants.h"
 #include "DBInterface.h"
 #include "BaseButton.h"
+#include "HttpClient.h"
 
 #define ORDER_PAGE      "Order Page"
 #define INT_CNFM_ORDER  (201)   //STR_BTN_CNFM_ORDER
@@ -25,7 +26,7 @@
 #define INT_PRINT_ORDER (204)   //STR_BTN_PRINT_ORDER
 #define INT_DLVR_ORDER   (205)   //SRT_BTN_DELIVERED
 
-class SingleOrder : public BaseButton, public std::enable_shared_from_this<SingleOrder> {
+class SingleOrder : public BaseButton, public std::enable_shared_from_this<SingleOrder>, public HttpResponse {
     std::vector<Cart::Ptr> orderItems;
     std::vector<Product::Ptr> products;
     std::map<std::string, unsigned int> mapCmdToInt;
@@ -35,6 +36,7 @@ class SingleOrder : public BaseButton, public std::enable_shared_from_this<Singl
     UserContext usrCtxt;
     unsigned int iNoOfItems, iOrderNo, iPgNo;
     bool isPrint;
+    std::shared_ptr<HttpClient> pHttpClient;
 
 public:
     SingleOrder(DBInterface::Ptr hDB) : BaseButton(hDB), usrCtxt(USER_CTXT_NOTA), iNoOfItems(0), iOrderNo(0), iPgNo(0), isPrint(false) {}
@@ -56,6 +58,10 @@ public:
 
     std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     static std::string STR_MSG_DEFF_RELEASE;
+
+    //  For HTTP Client
+    void onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, std::string strPaymentLink, FILE *fp);
+    void onDownloadFailure(unsigned int iChatId, unsigned int iOrderNo, FILE *fp);
 };
 
 

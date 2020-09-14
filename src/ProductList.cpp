@@ -109,7 +109,9 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
 
     //  Populate the next available row
     createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
+#ifndef AURA
     createKBBtn(STR_BTN_TOP_UP, row[iRowIndex], lstBaseBtns);
+#endif
     createKBBtn(STR_BTN_MSG_ADMIN, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
 

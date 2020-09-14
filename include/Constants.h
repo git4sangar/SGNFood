@@ -25,7 +25,13 @@
     #define PAYTM_MOBILE    "99401 30135"
     #define GPAY_MOBILE     "99401 30135"
     #define PHONE_PE_NO     "99401 30135"
-    #define BUSINESS_NAME   "AurA Admin"
+    #define BUSINESS_NAME   "AurA Organic Soaps"
+    #define CASH_FREE_APP_ID        "3154900f9ad69d4ef8377bff894513"
+    #define CASH_FREE_SECRET_KEY    "fbaf05426f3146c990630fd897db57e2d7ae7ddd"
+    #define BOT_MAIL                "bot@bot.com"
+    #define REDIRECT_URL            "http://ohobot.com//"
+    //#define CASH_FREE_URL           "https://test.cashfree.com/"
+    #define CASH_FREE_URL         "https://api.cashfree.com/"
 
     #ifdef _VM_
         #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/AuraBot"
@@ -47,6 +53,12 @@
     #define GPAY_MOBILE     "93410 66700"
     #define PHONE_PE_NO     "93410 66700"
     #define BUSINESS_NAME   "Mani Iyer's Kitchen"
+    #define CASH_FREE_APP_ID          "aura_app_id"
+    #define CASH_FREE_SECRET_KEY      "aura_secret_key"
+    #define REDIRECT_URL                "http://ohobot.com/"
+    #define BOT_MAIL                    "bot@bot.com"
+    #define CASH_FREE_URL               "https://test.cashfree.com/"
+    //#define CASH_FREE_URL             "https://api.cashfree.com/"
 
     #ifdef _VM_
         #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/ManiBot"
@@ -62,6 +74,12 @@
 #define AURA_BOT        "655366902:AAGEaKH0q1xXu0Lwd5C5HBDZsUnPTjn13X4"
 #define THRAYA_BOT      "664320846:AAHffJ_8LG0W8eGCuYsrgkK4fOCj9j2FgTo"
 
+//  CashFree
+#define CASH_FREE_BASE_URL      CASH_FREE_URL
+#define CASH_FREE_ORDER_API     "api/v1/order/create"
+#define CASH_FREE_STATUS_API    "api/v1/order/info/status"
+#define CA_CERT_FILE            "cacert.pem"
+
 #define BOT_DB_PATH     "db/"
 #define BOT_LOG_PATH    "logs/"
 
@@ -71,6 +89,7 @@
 
 #define BOT_ASSETS_PATH     "assets/"
 
+#define ONE_KB              (1024)
 #define MAX_MOBILE_DIGITS   (10)
 #define MAX_WAIT_B4_RESP    (10)
 #define MIN_ITEMS_FOR_PNG   (4)

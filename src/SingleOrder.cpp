@@ -21,6 +21,9 @@
 std::string SingleOrder::STR_MSG_DEFF_RELEASE  = "Your Cart";
 
 void SingleOrder::init(TgBot::Message::Ptr pMsg, FILE *fp) {
+    pHttpClient = std::make_shared<HttpClient>(fp);
+    pHttpClient->subscribeListener(shared_from_this());
+
    orderItems.clear(); products.clear(); pOrder = nullptr; asset_file.clear();
    pageName.clear(); iPgNo = 0; isPrint = false;
    iNoOfItems = 0; STR_MSG_DEFF_RELEASE  = "Your Order";
@@ -134,6 +137,42 @@ int SingleOrder::create_order_items_table(std::shared_ptr<pngwriter> pPNGWriter,
     return iIndex;
 }
 
+//  Called from Http thread context. Accessing member variables is prohibited.
+void SingleOrder::onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp) {
+    boost::property_tree::ptree root;
+    User::Ptr   pUser;
+    std::string strSuccess = "OK", strActive = "ACTIVE", strPaid = "PAID";
+    std::stringstream ss, ssMsg1;
+    std::map<unsigned int, std::string> msgToUsers;
+
+    ss << strResp;
+    boost::property_tree::read_json(ss, root);
+    if(!strSuccess.compare(root.get<std::string>("status"))) {
+        ssMsg1 << "<b>Transac Details:</b>\n" << "Order No : " << iOrderNo;
+
+        //  If it is paid
+        if(!strPaid.compare(root.get<std::string>("orderStatus"))) {
+            if(std::string::npos != strResp.find("txTime"))
+                ssMsg1 << "\nTransac Time : " << root.get<std::string>("txTime");
+            if(std::string::npos != strResp.find("txMsg"))
+                ssMsg1 << "\nTransac Status : " << root.get<std::string>("txMsg");
+            if(std::string::npos != strResp.find("referenceId"))
+                ssMsg1 << "\nRef No : " << root.get<std::string>("referenceId");
+        }
+
+        //  If it is still active
+        if(!strActive.compare(root.get<std::string>("orderStatus"))) {
+            ssMsg1 << "\nMake payment by clicking:\n" << getDBHandle()->getPaymentLink(iOrderNo, fp);
+        }
+        msgToUsers[iChatId] = ssMsg1.str();
+        fprintf(fp, "ChatId: %d, Msg: %s\n", iChatId, msgToUsers[iChatId].c_str());fflush(fp);
+        getDBHandle()->updateNotifications(msgToUsers, fp);
+    }
+}
+
+//  Called from Http thread context. Accessing member variables is prohibited.
+void SingleOrder::onDownloadFailure(unsigned int iChatId, unsigned int iOrderNo, FILE *fp) {}
+
 TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SingleOrder::prepareMenu {\n", time(0)); fflush(fp);
 
@@ -150,6 +189,16 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
     std::map<unsigned int, UserContext>::const_iterator itrCntxt;
     std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
     std::string strChatId       = std::to_string(pMsg->chat->id);
+
+#ifdef AURA
+    std::map<std::string, std::string> formData;
+    std::stringstream ssUrl;
+    ssUrl << CASH_FREE_BASE_URL << CASH_FREE_STATUS_API;
+    formData["appId"]           = CASH_FREE_APP_ID;
+    formData["secretKey"]       = CASH_FREE_SECRET_KEY;
+    formData["orderId"]         = std::to_string(iOrderNo);
+    pHttpClient->postReqFormData(ssUrl.str(), formData, pMsg->chat->id, iOrderNo);
+#endif
 
     iRowIndex = 0;
     if(USER_CTXT_NEW_ORDER == usrCtxt) {

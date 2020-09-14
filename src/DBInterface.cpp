@@ -345,6 +345,17 @@ User::Ptr DBInterface::getUserForChatId(unsigned int iChatId, FILE *fp) {
     return pUser;
 }
 
+User::Ptr DBInterface::getUserForOrderNo(unsigned int iOrderNo, FILE *fp) {
+    std::stringstream ss;
+    User::Ptr pUser;
+    ss << "SELECT * FROM User WHERE " << User::USER_ORDER_NO << " = " << iOrderNo << ";";
+    SQLite::Statement query(*m_hDB, ss.str());
+    if(query.executeStep()) {
+        pUser   = getUser(&query);
+    }
+    return pUser;
+}
+
 int DBInterface::addProductToCart(unsigned int iProdId, unsigned qty, unsigned int iPrice, unsigned int chatId, FILE *fp) {
     std::stringstream ss;
     int iQty = 0;
@@ -1171,6 +1182,33 @@ std::map<unsigned int, unsigned int> DBInterface::getOrderSummary(FILE *fp) {
         if(pCart) ordrSmry[pCart->m_ProductId] += pCart->m_Qnty;
     }
     return ordrSmry;
+}
+
+void DBInterface::setPaymentLink(unsigned int iOrderNo, std::string strPaymentLink, FILE *fp) {
+    std::stringstream ss;
+    SQLite::Transaction transaction(*m_hDB);
+
+    ss << "UPDATE POrder SET " << POrder::PORDER_PAY_GW << " = \"" << strPaymentLink << "\" WHERE "
+        << POrder::PORDER_NO << " = " << iOrderNo << ";";
+    fprintf(fp, "Query %s\n", ss.str().c_str()); fflush(fp);
+    m_hDB->exec(ss.str());
+
+    transaction.commit();
+}
+
+
+std::string DBInterface::getPaymentLink(unsigned int iOrderNo, FILE *fp) {
+    std::stringstream ss;
+    POrder::Ptr pOrder;
+
+    ss << "SELECT * FROM POrder WHERE " << POrder::PORDER_NO << " = " << iOrderNo << ";";
+    SQLite::Statement query(*m_hDB, ss.str());
+    fprintf(fp, "Query %s\n", ss.str().c_str()); fflush(fp);
+    if(query.executeStep()) {
+        pOrder  = getPOrder(&query);
+        return pOrder->m_PayGW;
+    }
+    return std::string();
 }
 
 /*
