@@ -705,7 +705,7 @@ bool DBInterface::insertNewProduct(std::string strCat, std::string strName, std:
         }
         ss << strCat << "-" <<std::setfill('0') << std::setw(2) << iFound;
         strCat = ss.str();
-    } else return false;
+    } else strDesc = strName;
 
     //  Check name
     if(MAX_ITEM_LENGTH < strName.length()) return false;

@@ -24,9 +24,29 @@ std::string Checkout::STR_BTN_GPAY_TOP_UP   = "Topped Up GPay";
 std::string Checkout::STR_BTN_PAYTM_TOP_UP  = "Topped Up PayTM";
 std::string Checkout::STR_BTN_PHONEPE_TOP_UP= "Topped Up PhonePe";
 
+std::string Checkout::getMobileNo(std::string strAddress) {
+    int iDigits = 0;
+    bool isDone = false;
+    std::string strMobile;
+
+    for(char &c : strAddress) {
+        if(std::isspace(c)) continue;
+
+        if(std::isdigit(c)) { iDigits++; strMobile += c; }
+        else if(isDone) break;
+        else { iDigits = 0; strMobile.clear(); }
+
+        if(MAX_MOBILE_DIGITS <= iDigits) {
+            isDone = true;
+        }
+    }
+    return strMobile.substr(strMobile.length() - MAX_MOBILE_DIGITS);
+}
+
+
 #ifdef AURA
 std::string Checkout::getPaymentString(unsigned int iWho, unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp) {
-    getPaymentLink(iWho, iOrderNo, iTotal, strName, fp);
+    getPaymentLink(iWho, iOrderNo, iTotal, strName, strAddress, fp);
     std::stringstream ss;
 
     ss <<  "Hi " << strName << ",\n\n<b>Pls Wait a few secs..,</b>\n\nYou get a payment link. Pay by clicking it.";
@@ -53,7 +73,7 @@ std::string Checkout::getPaymentString(unsigned int iWho, unsigned int iOrderNo,
 }
 #endif
 
-void Checkout::getPaymentLink(unsigned int iWho, unsigned int iOrderNo, int iAmt, std::string strUserName, FILE *fp) {
+void Checkout::getPaymentLink(unsigned int iWho, unsigned int iOrderNo, int iAmt, std::string strUserName, std::string strAddress,FILE *fp) {
     std::stringstream ssPayLd, ssUrl;
     ssUrl << CASH_FREE_BASE_URL << CASH_FREE_ORDER_API;
 
@@ -63,7 +83,7 @@ void Checkout::getPaymentLink(unsigned int iWho, unsigned int iOrderNo, int iAmt
     formData["orderId"]         = std::to_string(iOrderNo);
     formData["orderAmount"]     = std::to_string(iAmt);
     formData["customerName"]    = strUserName;
-    formData["customerPhone"]   = GPAY_MOBILE;
+    formData["customerPhone"]   = getMobileNo(strAddress);
     formData["customerEmail"]   = BOT_MAIL;
     formData["returnUrl"]       = REDIRECT_URL;
     formData["notifyUrl"]       = REDIRECT_URL;
@@ -114,7 +134,7 @@ std::string Checkout::getTopUpString() {
             "\n        GPay :        " << GPAY_MOBILE << "\n        PayTm :      " << PAYTM_MOBILE << "\n        PhonePe : " << PHONE_PE_NO <<
             "\n\n2) Your Ref No: " << pUser->m_TransacNo << ". You <b>MUST MENTION " << pUser->m_TransacNo 
                     << "</b> while transfer.\n(Otherwise, we couldnt <b>Track your Payment</b>)" <<
-            "\n\n3) WhatsApp Screen-Shot to "<< PAYTM_MOBILE <<
+            "\n\n3) WhatsApp Screen-Shot to "<< WHATSAPP_NO <<
             "\n\nAfter transferring, click appropriate \"Topped Up\" button below.";
     return ss.str();
 }

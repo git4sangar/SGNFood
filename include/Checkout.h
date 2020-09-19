@@ -49,7 +49,8 @@ public:
 
     std::string getPaymentString(unsigned int iWho, unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp);
     std::string getTopUpString();
-    void getPaymentLink(unsigned int iWho, unsigned int iOrderNo, int iAmt, std::string strUserName, FILE *fp);
+    void getPaymentLink(unsigned int iWho, unsigned int iOrderNo, int iAmt, std::string strUserName, std::string strAddress, FILE *fp);
+    std::string getMobileNo(std::string strAddress);
 
     //  Overriding cleanup, otherwise it clears up what is just set in prepareMenu
     void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}

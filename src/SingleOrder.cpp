@@ -191,13 +191,16 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
     std::string strChatId       = std::to_string(pMsg->chat->id);
 
 #ifdef AURA
-    std::map<std::string, std::string> formData;
-    std::stringstream ssUrl;
-    ssUrl << CASH_FREE_BASE_URL << CASH_FREE_STATUS_API;
-    formData["appId"]           = CASH_FREE_APP_ID;
-    formData["secretKey"]       = CASH_FREE_SECRET_KEY;
-    formData["orderId"]         = std::to_string(iOrderNo);
-    pHttpClient->postReqFormData(ssUrl.str(), formData, pMsg->chat->id, iOrderNo);
+    //  If not cancelled order
+    if(pageName.compare(STR_BTN_CNCLD_ORDERS)) {
+        std::map<std::string, std::string> formData;
+        std::stringstream ssUrl;
+        ssUrl << CASH_FREE_BASE_URL << CASH_FREE_STATUS_API;
+        formData["appId"]           = CASH_FREE_APP_ID;
+        formData["secretKey"]       = CASH_FREE_SECRET_KEY;
+        formData["orderId"]         = std::to_string(iOrderNo);
+        pHttpClient->postReqFormData(ssUrl.str(), formData, pMsg->chat->id, iOrderNo);
+    }
 #endif
 
     iRowIndex = 0;

@@ -88,6 +88,7 @@ TgBot::GenericReply::Ptr PriceChange::prepareMenu(std::map<std::string, std::sha
         lstBaseBtns[strChatId]      = getSharedPtr();
         STR_MSG_DEFF_RELEASE  = std::string("Add a product by typing,\n\"Category(as below), Name (20 chars), Price (only numbers) & send\"") +
                                         std::string("\n\nExample:\nTF,   Chappathi, 60") +
+                                        std::string("\n:\nNO,   Ama Vadai, 30") +
                                         std::string("\nCR,   Beans Curry,   30") +
                                         std::string("\nSB,   Onion Sambar,   30") +
                                         std::string("\nKT,   Tindora Kootu,   30") +

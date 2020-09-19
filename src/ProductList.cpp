@@ -17,7 +17,50 @@
 #include "Constants.h"
 
 std::string ProductList::STR_MSG_DEFF_RELEASE   = " ";
+#ifdef AURA
+void ProductList::create_product_table(std::string file_name, std::string strHdr, FILE *fp) {
+    fprintf(fp, "BaseBot %ld: ProductList::create_product_table {\n", time(0)); fflush(fp);
 
+    pngwriter product_table(320, 320, 1.0, file_name.c_str());
+    char toggle = 0;
+
+    //  Headers
+    std::string strFontFile = std::string(BOT_ROOT_PATH) + std::string(BOT_FONT_PATH) + std::string(BOT_FONT_FILE_BOLD);
+    product_table.filledsquare(0, 300, 320, 320, 0.0, 0.5, 0.5);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,     5, 305, 0.0, (char *)"SN", 1.0, 1.0, 1.0);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  30+5, 305, 0.0, (char *)strHdr.c_str(), 1.0, 1.0, 1.0);
+
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  160+5, 305, 0.0, (char *)"SN", 1.0, 1.0, 1.0);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 12,  190+5, 305, 0.0, (char *)strHdr.c_str(), 1.0, 1.0, 1.0);
+
+    //  Highlight alternate rows
+    int iLoop = 0, iIndex = 0, yAxis = 300;
+    iIndex = (iSelPage - 1) * MAX_ITEMS_PER_PAGE;
+
+    for(iLoop = 300; iLoop > 0; iLoop -= 30, toggle = 1 - toggle) {
+        if(0 == toggle) product_table.filledsquare(0, iLoop, 320, iLoop-30, 0.9, 0.9, 0.9);
+        if((iNoOfItems > iIndex) && (iIndex < (iSelPage * MAX_ITEMS_PER_PAGE))) {
+            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,     5, iLoop-20, 0.0, (char *)std::to_string(iIndex+1).c_str(), 0, 0, 0);
+            product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,  30+5, iLoop-20, 0.0, (char *)products[iIndex]->m_Name.c_str(), 0, 0, 0);
+            if(iNoOfItems > (iIndex+1)) {
+                product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 160+5, iLoop-20, 0.0, (char *)std::to_string(iIndex+2).c_str(), 0, 0, 0);
+                product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 190+5, iLoop-20, 0.0, (char *)products[iIndex+1]->m_Name.c_str(), 0, 0, 0);
+            }
+            iIndex+=2; yAxis -= 30;
+        }
+    }
+
+    //  Vertical lines
+    product_table.line( 30, 320,  30, yAxis, 0, 0, 0);
+    product_table.line(160, 320, 160, yAxis, 0, 0, 0);
+    product_table.line(190, 320, 190, yAxis, 0, 0, 0);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 5, 40, 0.0, (char *)"Price ₹ 130/pack", 0, 0, 0);
+    product_table.plot_text_utf8((char *)strFontFile.c_str(), 10, 5, 10, 0.0, (char *)"A pack contains 2 soaps.", 0, 0, 0);
+
+    product_table.close();
+    fprintf(fp, "BaseBot %ld: ProductList::create_product_table }\n", time(0)); fflush(fp);
+}
+#else
 void ProductList::create_product_table(std::string file_name, std::string strHdr, FILE *fp) {
     fprintf(fp, "BaseBot %ld: ProductList::create_product_table {\n", time(0)); fflush(fp);
 
@@ -56,6 +99,7 @@ void ProductList::create_product_table(std::string file_name, std::string strHdr
     product_table.close();
     fprintf(fp, "BaseBot %ld: ProductList::create_product_table }\n", time(0)); fflush(fp);
 }
+#endif
 
 TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: ProductList::prepareMenu {\n", time(0)); fflush(fp);
@@ -82,30 +126,15 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     }
 
     iRowIndex = 0;
-    for(iToggle = 0, iLoop = (iSelPage - 1) * MAX_ITEMS_PER_PAGE; (iNoOfItems > iLoop) && (iLoop < (iSelPage * MAX_ITEMS_PER_PAGE)); iLoop++, iToggle = (1-iToggle)) {
-        createKBBtn(products[iLoop]->m_Desc, row[iToggle], lstBaseBtns, lstBaseBtns["Quick Menu"]);
-        iRowIndex   = (iRowIndex < (iToggle+1)) ? (iToggle+1) : iRowIndex;
+    for(iLoop = 0, iToggle = (iNoOfItems/3) + (iNoOfItems%3); iNoOfItems > iLoop; iLoop++) {
+        createKBBtn(products[iLoop]->m_Desc, row[iRowIndex], lstBaseBtns, lstBaseBtns["Quick Menu"]);
+        if((iLoop+1) % iToggle == 0) iRowIndex++;
     }
 
-    //  Populate pages in next available row if no. of items more than MAX_ITEMS_PER_PAGE
-    std::string strText;
-    if(MAX_ITEMS_PER_PAGE < iNoOfItems) {
-        iPrev       = (iSelPage == 1) ? 1 : (iSelPage - 1);
-        strText     = std::string(PAGE_SUFFIX) + std::string(" ") + std::to_string(iPrev);
-        createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
-
-        iNext       = (iNoOfItems > (iSelPage * MAX_ITEMS_PER_PAGE)) ? (iSelPage + 1) : iSelPage;
-        strText     = std::string(PAGE_SUFFIX) + std::string(" ") + std::to_string(iNext);
-        createKBBtn(strText, row[iRowIndex], lstBaseBtns, getSharedPtr());
-#ifndef MANI_MAMA
-        iRowIndex++;
-#endif
-    }
 #ifdef MANI_MAMA
     createKBBtn(STR_BTN_FUND_ME, row[iRowIndex], lstBaseBtns, getSharedPtr());
-    iRowIndex++;
 #endif
-    
+    if(iToggle && (iLoop % iToggle)) iRowIndex++;
 
     //  Populate the next available row
     createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
