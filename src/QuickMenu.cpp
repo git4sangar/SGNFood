@@ -88,9 +88,26 @@ void QuickMenu::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         if(!prod->m_Name.compare(pMsg->text) || isFound ) {
             getDBHandle()->retainProdId(pMsg->chat->id, prod->m_ProductId, fp);
             pProd   = prod;
+            strPicFile = prod->m_PicFile;
             break;
         }
     }
 
     fprintf(fp, "BaseBot %ld: QuickMenu onClick }\n", time(0)); fflush(fp);
 }
+
+
+TgBot::InputFile::Ptr QuickMenu::getMedia(TgBot::Message::Ptr pMsg, FILE *fp) {
+     fprintf(fp, "BaseBot %ld: QuickMenu getMedia {\n", time(0)); fflush(fp);
+     std::string asset_file;
+     TgBot::InputFile::Ptr pFile = nullptr;
+ 
+     if(!strPicFile.empty() && strPicFile.compare("file")) {
+         asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) + strPicFile;
+ 
+         if(isFileExists(asset_file)) pFile = TgBot::InputFile::fromFile(asset_file, "image/jpg");
+         else { fprintf(fp, "Fatal Error: ProductList::getMedia asset file, %s, missing\n", asset_file.c_str()); fflush(fp); }
+     }
+     fprintf(fp, "BaseBot %ld: QuickMenu getMedia }\n", time(0)); fflush(fp);
+     return pFile;
+ }

@@ -143,7 +143,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         std::string strMsg = pMsg->text;
         int iPos = 0, iUserId = 0, iCount = 0;
         std::vector<unsigned int> iUserIds;
-        std::vector<POrder::Ptr> orders;
+        std::vector<POrder::Ptr> orders, old_orders;
 
         if(USER_CTXT_SEND_MSG == itrCntxt->second && std::string::npos != (iPos = strMsg.find_first_of(":")) && (0 < iPos) && (strMsg.length() > (iPos+1))) {
             iUserIds = getUserIds(myTrim(strMsg.substr(0,iPos)), fp, ',');
@@ -159,6 +159,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             iUserIds    = getUserIds(myTrim(strMsg), fp);
             pUser       = getDBHandle()->getUserForUserId(iUserIds[0], fp);
             if(pUser) orders      = getDBHandle()->getOrdersByUser(pUser->m_UserId, fp);
+            if(1 < iUserIds.size()) old_orders  = getDBHandle()->getOrdersByUser(iUserIds[1], fp);
             if(!orders.empty()) {
                 ss << "<b>" << pUser->m_Name << ", Id: " << pUser->m_UserId << "\n";
                 ss  << std::setfill(' ') << std::setw(5) << "Date" << "    "
@@ -169,6 +170,15 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                                              << std::setfill(' ') << std::setw(5) << order->m_OrderNo << "    "
                                              << std::setfill(' ') << std::setw(5) << order->m_Amt << "    "
                                              << std::setfill(' ') << std::setw(5) << order->m_WBalance << "\n";
+                if(0 < old_orders.size()) {
+                    ss << "----------\n";
+                    ss << "Name: " << old_orders[0]->m_Name;
+                    ss << "\nWBal: " << getDBHandle()->getLeftUserWBal(pUser->m_ChatId, fp) << "\n";
+                    for(auto &order : old_orders) ss << std::setfill(' ') << std::setw(5) << order->m_OrdrTm.substr(5,5) << "    "
+                                             << std::setfill(' ') << std::setw(5) << order->m_OrderNo << "    "
+                                             << std::setfill(' ') << std::setw(5) << order->m_Amt << "    "
+                                             << std::setfill(' ') << std::setw(5) << order->m_WBalance << "\n";
+                }
                 notifyMsgs[pMsg->chat->id] = ss.str();
                 getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
             }

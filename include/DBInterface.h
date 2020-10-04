@@ -266,6 +266,7 @@ public:
     std::map<unsigned int, unsigned int> getOrderSummary(FILE *fp);
     void setPaymentLink(unsigned int iOrderNo, std::string strPaymentLink, FILE *fp);
     std::string getPaymentLink(unsigned int iOrderNo, FILE *fp);
+    int getLeftUserWBal(unsigned int iChatId, FILE *fp);
 };
 
 

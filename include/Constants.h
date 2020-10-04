@@ -14,7 +14,7 @@
 
 #define SGN_BOT_VER "1.1.2"
 
-#define AURA
+#define AURA 
 #define _Pi_
 
 //------------------------------------AurA------------------------------------

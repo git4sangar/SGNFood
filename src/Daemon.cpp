@@ -161,7 +161,7 @@ void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot, DBInterface::Ptr hDB, FI
                     if(!(iLoop%10)) pBot->getApi().sendMessage(adminChatIds[1], "Pls wait sending notifications.", false, 0, nullptr, "HTML");
                 } catch(std::exception &e) {
                     std::string strExcept = e.what();
-                    if(std::string::npos != strExcept.find("blocked") || std::string::npos != strExcept.find("not found")) hDB->updateLeftUser(iChatId, fp);
+                    //if(std::string::npos != strExcept.find("blocked") || std::string::npos != strExcept.find("not found")) hDB->updateLeftUser(iChatId, fp);
                     fprintf(fp, "Exception : %s, while sending notification to user.\n", strExcept.c_str()); fflush(fp);
                 }
                 if(itr != notifs.end())hDB->removeNotif((*itr)->m_NotifId, fp);

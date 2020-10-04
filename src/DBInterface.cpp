@@ -206,6 +206,18 @@ bool DBInterface::addNewUser(int64_t chatId, std::string fname, FILE *fp) {
     return true;
 }
 
+int DBInterface::getLeftUserWBal(unsigned int iChatId, FILE *fp) {
+    std::stringstream ss;
+    int iWBal = 0;
+
+    ss << "SELECT * FROM LeftUsers WHERE " << User::USER_CHAT_ID << " = " << iChatId << ";";
+    SQLite::Statement query(*m_hDB, ss.str());
+    if(query.executeStep()) {
+        iWBal   = query.getColumn(User::USER_WBALANCE.c_str()).getInt();
+    }
+    return iWBal;
+}
+
 void DBInterface::updateLeftUser(unsigned int iChatId, FILE *fp) {
     std::stringstream ss;
     SQLite::Transaction transaction(*m_hDB);

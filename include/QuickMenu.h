@@ -17,7 +17,7 @@ class QuickMenu : public BaseButton, public std::enable_shared_from_this<QuickMe
     nlohmann::fifo_map<std::string, int> qty, pcs;
     std::map<unsigned int, std::string> notifyMsgs;
     Product::Ptr pProd;
-
+    std::string strPicFile;
 public:
     QuickMenu(DBInterface::Ptr hDB) : BaseButton(hDB) {
     }
@@ -27,6 +27,7 @@ public:
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
         STR_MSG_DEFF_RELEASE.clear();
         notifyMsgs.clear();
+        strPicFile.clear();
         pProd = nullptr;
 
         //  Shall be in multiples of QTY_PER_ROW
@@ -57,6 +58,7 @@ public:
 
     TgBot::GenericReply::Ptr prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& listKBBtns, TgBot::Message::Ptr pMsg, FILE *fp);
     void onClick(TgBot::Message::Ptr pMessage, FILE *fp);
+    TgBot::InputFile::Ptr getMedia(TgBot::Message::Ptr pMsg, FILE *fp);
 
     std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
 

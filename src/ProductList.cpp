@@ -39,7 +39,7 @@ void ProductList::create_product_table(std::string file_name, std::string strHdr
 
     for(iLoop = 300; iLoop > 0; iLoop -= 30, toggle = 1 - toggle) {
         if(0 == toggle) product_table.filledsquare(0, iLoop, 320, iLoop-30, 0.9, 0.9, 0.9);
-        if((iNoOfItems > iIndex) && (iIndex < (iSelPage * MAX_ITEMS_PER_PAGE))) {
+        if(iNoOfItems > iIndex) {
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,     5, iLoop-20, 0.0, (char *)std::to_string(iIndex+1).c_str(), 0, 0, 0);
             product_table.plot_text_utf8((char *)strFontFile.c_str(), 10,  30+5, iLoop-20, 0.0, (char *)products[iIndex]->m_Name.c_str(), 0, 0, 0);
             if(iNoOfItems > (iIndex+1)) {
@@ -126,7 +126,7 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     }
 
     iRowIndex = 0;
-    for(iLoop = 0, iToggle = (iNoOfItems/3) + (iNoOfItems%3); iNoOfItems > iLoop; iLoop++) {
+    for(iLoop = 0, iToggle = (iNoOfItems/3) + (0 != (iNoOfItems%3)); iNoOfItems > iLoop; iLoop++) {
         createKBBtn(products[iLoop]->m_Desc, row[iRowIndex], lstBaseBtns, lstBaseBtns["Quick Menu"]);
         if((iLoop+1) % iToggle == 0) iRowIndex++;
     }
@@ -200,6 +200,7 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     products    = getDBHandle()->getAllActiveProducts(fp);
     iSelPage    = 1;
     iNoOfItems  = products.size();
+    if(0 == iNoOfItems) STR_MSG_DEFF_RELEASE = "Dear Customer,\nYou will get a msg once the Menu is Ready.";
 
     if(std::string::npos != pMsg->text.find(STR_BTN_EMPTY_CART)) {
         getDBHandle()->emptyCartForUser(pUser->m_OrderNo, fp);
