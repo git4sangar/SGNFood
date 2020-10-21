@@ -748,7 +748,7 @@ std::vector<Product::Ptr> DBInterface::getAllActiveProducts(FILE *fp) {
 
     ss << "SELECT * FROM Product WHERE SUBSTR(" << Product::PRODUCT_DATE << ", 1, 10) = \"" << getTmrwDate() << "\" ORDER BY " << Product::PRODUCT_DATE << " ASC;";
 #ifdef AURA
-    ss.str(""); ss << "SELECT * FROM Product;";
+    ss.str(""); ss << "SELECT * FROM Product WHERE SUBSTR(" << Product::PRODUCT_CODE << ", 1, 3)  = \"OR-\"";
 #endif
     SQLite::Statement query(*m_hDB, ss.str());
     while(query.executeStep()) {
