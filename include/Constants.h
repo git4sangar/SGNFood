@@ -14,7 +14,7 @@
 
 #define SGN_BOT_VER "1.1.2"
 
-#define AURA 
+#define MANI_MAMA 
 #define _Pi_
 
 //------------------------------------AurA------------------------------------
@@ -44,8 +44,8 @@
     #endif
 
     #ifdef _Pi_
-        #define BIN_FILE_PATH     "/home/pi/sgn/projs/SGNFood/bin/AuraBot"
-        #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNFood/aura/"
+        #define BIN_FILE_PATH     "/home/sgn/sgn/projs/SGNFood/bin/AuraBot"
+        #define BOT_ROOT_PATH     "/home/sgn/sgn/projs/SGNFood/aura/"
     #endif
 #endif
 
@@ -72,8 +72,8 @@
     #endif
 
     #ifdef _Pi_
-        #define BIN_FILE_PATH     "/home/pi/sgn/projs/SGNFood/bin/ManiBot"
-        #define BOT_ROOT_PATH     "/home/pi/sgn/projs/SGNFood/mani_mama/"
+        #define BIN_FILE_PATH     "/home/sgn/sgn/projs/SGNFood/bin/ManiBot"
+        #define BOT_ROOT_PATH     "/home/sgn/sgn/projs/SGNFood/mani_mama/"
     #endif
 #endif
 
@@ -156,7 +156,7 @@
 #define STR_BTN_ADMIN_PG        "Admin Page"
 #define STR_BTN_MENU_MGMT       "Menu Mgmt"
 #define STR_BTN_PARSER          "Parser"
-#define STR_BTN_FUND_ME         "Fund Me?"
+#define STR_BTN_FUND_ME         "Diwali Bakshanam"
 #define STR_BTN_MSG_ADMIN       "Msg Admin"
 
 #define STR_BTN_CNFM_ORDER      "Confirm Order"
@@ -224,6 +224,7 @@
 #define RICE            "Rice"
 #define LUNCH           "Full Lunch"
 #define SWEET           "Sweet"
+#define PICKLE          "Pickle"
 #define ULUNDU_VADAI    "Ulundu Vadai(2)"
 #define COCONUT_POLI    "Coconut Poli(3)"
 #define DHAL_POLI       "Dhall Poli(3)"

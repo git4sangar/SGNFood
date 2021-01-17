@@ -76,7 +76,7 @@ void QuickMenu::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     }
 
     //  Product name or Product description
-    std::vector<Product::Ptr> products  = getDBHandle()->getAllActiveProducts(fp);
+    std::vector<Product::Ptr> products  = getDBHandle()->getActvProdsToSearch(fp);
     for(auto &prod : products) {
 
         // Check if incoming string is available in descToCode
@@ -89,6 +89,8 @@ void QuickMenu::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             getDBHandle()->retainProdId(pMsg->chat->id, prod->m_ProductId, fp);
             pProd   = prod;
             strPicFile = prod->m_PicFile;
+            if(!pProd->m_Code.compare("Sweet") || !pProd->m_Code.compare("Karam"))
+                STR_MSG_DEFF_RELEASE    = pProd->m_Desc;
             break;
         }
     }

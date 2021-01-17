@@ -599,16 +599,19 @@ Category::Ptr DBInterface::getCategory(SQLite::Statement *pQuery) {
     return pCategory;
 }
 
-std::vector<Category::Ptr> DBInterface::getCategories(FILE *fp) {
-    std::vector<Category::Ptr> pCategories;
+std::vector<std::string> DBInterface::getCategories(FILE *fp) {
+    std::vector<std::string> pCategories;
     std::stringstream ss;
-    Category::Ptr pCategory;
+    std::string strCat;
 
-    ss << "SELECT * FROM Category;";
+    ss << "SELECT DISTINCT " << Product::PRODUCT_CODE << " FROM Product WHERE "
+            << Product::PRODUCT_PRICE << " > 0 AND "
+            << Product::PRODUCT_DATE << " = \"true\";";
+
     SQLite::Statement query(*m_hDB, ss.str());
     while(query.executeStep()) {
-        pCategory = getCategory(&query);
-        pCategories.push_back(pCategory);
+        strCat  = query.getColumn(Product::PRODUCT_CODE.c_str()).getString();
+        pCategories.push_back(strCat);
     }
     return pCategories;
 }
@@ -740,6 +743,25 @@ bool DBInterface::insertNewProduct(std::string strCat, std::string strName, std:
     return true;
 }
 
+std::vector<Product::Ptr> DBInterface::getActvProdsToSearch(FILE *fp) {
+    std::vector<Product::Ptr> pProducts;
+    std::stringstream ss;
+    Product::Ptr pProduct;
+    std::string strDate = getCurTime();
+
+    ss << "SELECT * FROM Product WHERE SUBSTR(" << Product::PRODUCT_DATE << ", 1, 10) = \"" << getTmrwDate()
+            << "\" OR " << Product::PRODUCT_DATE << " = \"true\";";
+#ifdef AURA
+    ss.str(""); ss << "SELECT * FROM Product WHERE SUBSTR(" << Product::PRODUCT_CODE << ", 1, 3)  = \"OR-\"";
+#endif
+    SQLite::Statement query(*m_hDB, ss.str());
+    while(query.executeStep()) {
+        pProduct    = getProduct(&query);
+        pProducts.push_back(pProduct);
+    }
+    return pProducts;
+}
+
 std::vector<Product::Ptr> DBInterface::getAllActiveProducts(FILE *fp) {
     std::vector<Product::Ptr> pProducts;
     std::stringstream ss;
@@ -792,11 +814,40 @@ Product::Ptr DBInterface::getProductForCode(std::string strCode, FILE *fp) {
     return pProd;
 }
 
+std::vector<Product::Ptr> DBInterface::getProductsForCategory(std::string strCat, FILE *fp) {
+    std::vector<Product::Ptr> pProducts;
+    std::stringstream ss;
+    Product::Ptr pProduct;
+
+    ss << "SELECT * from Product WHERE "
+            << Product::PRODUCT_CODE << " = \"" << strCat << "\" AND "
+            << Product::PRODUCT_DATE << " = \"true\";";
+    SQLite::Statement query(*m_hDB, ss.str());
+    while(query.executeStep()) {
+        pProduct    = getProduct(&query);
+        pProducts.push_back(pProduct);
+    }
+    return pProducts;
+}
+
 Product::Ptr DBInterface::getProductById(unsigned int iProdId, FILE *fp) {
     Product::Ptr pProduct;
     std::stringstream ss;
 
     ss << "SELECT * FROM Product WHERE " << Product::PRODUCT_ID << " = " << iProdId << ";";
+    SQLite::Statement query(*m_hDB, ss.str());
+    if(query.executeStep()) {
+        pProduct    = getProduct(&query);
+    }
+    return pProduct;
+}
+
+Product::Ptr DBInterface::getProductByName(std::string strName, FILE *fp) {
+    std::vector<Product::Ptr> oneProduct;
+    Product::Ptr pProduct;
+    std::stringstream ss;
+
+    ss << "SELECT * FROM Product WHERE " << Product::PRODUCT_NAME << " = \"" << strName << "\";";
     SQLite::Statement query(*m_hDB, ss.str());
     if(query.executeStep()) {
         pProduct    = getProduct(&query);
@@ -1152,7 +1203,7 @@ void DBInterface::updateAllDelivered(FILE *fp) {
                 << Cart::CART_ORDER_NO << " IN (SELECT " << POrder::PORDER_NO << " FROM POrder WHERE "
                 << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND ("
                 << POrder::PORDER_NO << " % 2) != 0 AND "
-                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) = \"" << getYstrDate() << "\");";
+                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) <= \"" << getYstrDate() << "\");";
     m_hDB->exec(ss.str());
 
     ss.str(std::string());
@@ -1162,7 +1213,7 @@ void DBInterface::updateAllDelivered(FILE *fp) {
             << "\" WHERE "
                 << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND ("
                 << POrder::PORDER_NO << " % 2) != 0 AND "
-                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) = \"" << getYstrDate() << "\";";
+                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) <= \"" << getYstrDate() << "\";";
     m_hDB->exec(ss.str());
     transaction.commit();
 }

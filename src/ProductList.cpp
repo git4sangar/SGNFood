@@ -131,9 +131,9 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
         if((iLoop+1) % iToggle == 0) iRowIndex++;
     }
 
-#ifdef MANI_MAMA
-    createKBBtn(STR_BTN_FUND_ME, row[iRowIndex], lstBaseBtns, getSharedPtr());
-#endif
+//#ifdef MANI_MAMA
+//    createKBBtn(STR_BTN_FUND_ME, row[iRowIndex], lstBaseBtns);
+//#endif
     if(iToggle && (iLoop % iToggle)) iRowIndex++;
 
     //  Populate the next available row

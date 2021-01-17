@@ -40,12 +40,13 @@
 #include "WalletMgmt.h"
 #include "SGNAdmin.h"
 #include "SGNParser.h"
+#include "SpecialList.h"
 #include "MyAddress.h"
 #include "Constants.h"
 #include "QuickMenu.h"
 #include "HttpClient.h"
 
-#define MYPORT (4950)
+#define MYPORT (60000)
 
 std::map<unsigned int, UserContext> m_Context;
 std::vector<unsigned int> adminChatIds;
@@ -69,6 +70,7 @@ void initGlobals(FILE *fp) {
     descToCode[RICE]            = "RC-";
     descToCode[LUNCH]           = "LN-";
     descToCode[SWEET]           = "SW-";
+    descToCode[PICKLE]          = "PK-";
     descToCode[ULUNDU_VADAI]    = "Ulundu Vadai(2)";
     descToCode[COCONUT_POLI]    = "Coconut Poli(3)";
     descToCode[DHAL_POLI]       = "Dhall Poli(3)";
@@ -212,7 +214,8 @@ void BotMainLoop(FILE *fp) {
     adminChatIds.push_back(303802126);      // Shalini
 #endif
 #ifdef MANI_MAMA
-    adminChatIds.push_back(1352652258);     // Santosh
+    adminChatIds.push_back(1352652258);     // Santosh 1
+    adminChatIds.push_back(1476972743);     // Santosh 2
 #endif
 
     std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>(BOT_TOKEN);
@@ -233,6 +236,7 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_EMPTY_CART]    = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns[STR_BTN_FAQ]           = std::make_shared<FAQs>(hDB);
 
+    listBaseBtns[STR_BTN_FUND_ME]       = std::make_shared<SpecialList>(hDB);
     listBaseBtns[STR_BTN_VIEW_CART]     = std::make_shared<ViewCart>(hDB);
     listBaseBtns[STR_BTN_REMOVE]        = listBaseBtns[STR_BTN_VIEW_CART];
 

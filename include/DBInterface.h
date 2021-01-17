@@ -221,12 +221,13 @@ public:
     std::vector<Notifs::Ptr> getNotifications(FILE *fp);
     void removeNotif(unsigned int iNotifId, FILE *fp);
 
-    std::vector<Category::Ptr> getCategories(FILE *fp);
+    std::vector<std::string> getCategories(FILE *fp);
     Category::Ptr getCategoryForCode(std::string strCode, FILE *fp);
     Category::Ptr getCategoryForName(std::string strName, FILE *fp);
     Category::Ptr getCategoryById(int catId, FILE *fp);
 
     bool insertNewProduct(std::string strCat, std::string strName, std::string strPrice, FILE *fp);
+    std::vector<Product::Ptr> getActvProdsToSearch(FILE *fp);
     std::vector<Product::Ptr> getAllActiveProducts(FILE *fp);
     std::vector<Product::Ptr> getAllProducts(FILE *fp);
     void updateStock(unsigned int iProdId, std::string strQty, FILE *fp);
@@ -235,10 +236,12 @@ public:
     void removeProductFromTomorrow(unsigned int iProdId, FILE *fp);
 
     Product::Ptr getProductById(unsigned int iProdId, FILE *fp);
+    Product::Ptr getProductByName(std::string strName, FILE *fp);
 
     void retainProdId(unsigned int iChatId, unsigned int iProdId, FILE *fp);
     unsigned int getChosenProduct(unsigned int iChatId, FILE *fp);
 
+    std::vector<Product::Ptr> getProductsForCategory(std::string strCat, FILE *fp);
     std::vector<Product::Ptr> getOneProductForCode(std::string strCode, FILE *fp);
     std::vector<Product::Ptr> getOneProductForName(std::string strName, FILE *fp);
     bool updateProductPrice(std::string strPriceId, std::string strPrice, FILE *fp);

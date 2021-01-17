@@ -34,6 +34,7 @@ add_executable(BaseBot
     src/SGNParser.cpp
     src/QuickMenu.cpp
     src/HttpClient.cpp
+    src/SpecialList.cpp
 	)
 
 target_link_libraries(BaseBot TgBot sqlite3 SQLiteCpp ssl crypto curl pthread PNGwriter png freetype ${CMAKE_THREAD_LIBS_INIT} ${BOOST_THREAD} ${BOOST_SYSTEM} ${BOOST_CHRONO})
