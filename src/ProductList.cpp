@@ -120,6 +120,14 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
         return std::make_shared<TgBot::ReplyKeyboardRemove>();
     }
 
+	if(strAddress.empty() || !isMobileNoPresent(strAddress) || !pMsg->text.compare(STR_BTN_CHANGE_ADDRESS)) {
+        m_Context[pMsg->chat->id] = USER_CTXT_ADDRESS;
+        std::string strChatId   = std::to_string(pMsg->chat->id);
+        lstBaseBtns[strChatId]  = getSharedPtr();
+        STR_MSG_DEFF_RELEASE    = getAddressNotification();
+        return std::make_shared<TgBot::ReplyKeyboardRemove>();
+    }
+
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
         m_Context.erase(itrCntxt);
         if(lstBaseBtns.end() != (itrBtn = lstBaseBtns.find(strChatId))) lstBaseBtns.erase(itrBtn);
@@ -131,9 +139,6 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
         if((iLoop+1) % iToggle == 0) iRowIndex++;
     }
 
-//#ifdef MANI_MAMA
-//    createKBBtn(STR_BTN_FUND_ME, row[iRowIndex], lstBaseBtns);
-//#endif
     if(iToggle && (iLoop % iToggle)) iRowIndex++;
 
     //  Populate the next available row
@@ -162,6 +167,40 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     return pMainMenu;
 }
 
+bool ProductList::isMobileNoPresent(std::string strAddress) {
+    int iDigits = 0;
+
+    for(char &c : strAddress) {
+        if(std::isspace(c)) continue;
+        if(std::isdigit(c)) iDigits++;
+        else iDigits = 0;
+
+        if(MAX_MOBILE_DIGITS <= iDigits) {
+            break;
+        }
+    }
+    return MAX_MOBILE_DIGITS <= iDigits;
+}
+
+std::string ProductList::getMobileNo(std::string strAddress) {
+    int iDigits = 0;
+    bool isDone = false;
+    std::string strMobile;
+
+    for(char &c : strAddress) {
+        if(std::isspace(c)) continue;
+
+        if(std::isdigit(c)) { iDigits++; strMobile += c; }
+        else if(isDone) break;
+        else { iDigits = 0; strMobile.clear(); }
+
+        if(MAX_MOBILE_DIGITS <= iDigits) {
+            isDone = true;
+        }
+    }
+    return strMobile.substr(strMobile.length() - MAX_MOBILE_DIGITS);
+}
+
 void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: ProductList onClick pMsg %s {\n", time(0), pMsg->text.c_str()); fflush(fp);
     getDBHandle()->addNewUser(pMsg->chat->id, pMsg->from->firstName, fp);
@@ -174,28 +213,27 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 
     if(!pMsg->text.compare(STR_BTN_MSG_ADMIN)) return;
 
-#ifdef MANI_MAMA
-    if(!pMsg->text.compare(STR_BTN_FUND_ME)) {
-        ss << "Dear Valueable Customers,\n"
-            << "    Mani Iyer's Carrier Services is looking for funds to serve you better.\n\n"
-            << "        Flat <b>22% interest / annum (monthly 1.8%)</b>\n\n"
-            << "You can customize your interest: monthly, quarterly or half-yearly."
-            << " I will credit the interest to your a/c or I pay out in cash.\n\n"
-            << "        <b>I'm ready to execute a promissory note.</b>\n\n"
-            << "Pls call / msg me if you are interested.\n"
-            << "-Santhosh Subramanian\nPh: 97419 83633, 93437 71700";
-        STR_MSG_DEFF_RELEASE = ss.str();
-        return;
-    }
-#endif
-
     User::Ptr pUser = getDBHandle()->getUserForChatId(pMsg->chat->id, fp);
-    if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) && USER_CTXT_ADMING_MSG == itrCntxt->second) {
-        ss.str(""); ss << "Msg from " << pUser->m_Name << ", " << pUser->m_UserId << ", " << pUser->m_Address << "\n\n" << pMsg->text;
-        for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) notifyMsgs[*itr] = ss.str();
-        getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
-        STR_MSG_DEFF_RELEASE = std::string("Your msg is sent to Admin.\n") + STR_MSG_DEFF_RELEASE;
+    if(pUser) strAddress = pUser->m_Address;
+
+    if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
+		if(USER_CTXT_ADMING_MSG == itrCntxt->second) {
+    	    ss.str(""); ss << "Msg from " << pUser->m_Name << ", " << pUser->m_UserId << ", " << pUser->m_Address << "\n\n" << pMsg->text;
+	        for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) notifyMsgs[*itr] = ss.str();
+    	    getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
+	        STR_MSG_DEFF_RELEASE = std::string("Your msg is sent to Admin.\n") + STR_MSG_DEFF_RELEASE;
+		}
+		if(USER_CTXT_ADDRESS == itrCntxt->second) {
+			if(isMobileNoPresent(pMsg->text)) {
+				getDBHandle()->addAddressToShipping(pUser->m_UserId, pMsg->text, fp);
+				strAddress = pMsg->text;
+			} else {
+				strAddress.clear();
+			}
+		}
     }
+
+	if(!pMsg->text.compare(STR_BTN_CHANGE_ADDRESS) || strAddress.empty() || !isMobileNoPresent(strAddress)) return;
 
     products    = getDBHandle()->getAllActiveProducts(fp);
     iSelPage    = 1;
@@ -207,7 +245,7 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         STR_MSG_DEFF_RELEASE = std::string("Your cart is empty now.\n") + STR_MSG_DEFF_RELEASE;
     }
 
-    if(!pMsg->text.compare(STR_BTN_CNF_CHECKOUT)) {
+    if(!pMsg->text.compare(STR_BTN_CHECKOUT)) {
         int iTotal = 0;
 
         std::vector<Cart::Ptr> cartItems = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
@@ -221,7 +259,13 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             ss << pUser->m_Name << " has made an order, " << iOrderNo;
             for(auto &id : adminChatIds)  notifyMsgs[id] = ss.str();
             getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
-            STR_MSG_DEFF_RELEASE = "Your order is placed. You will get a confirmation msg in a few hours.";
+
+			int iNewBal = pUser->m_WBalance - iTotal;
+            ss.str(""); ss << "Your order is placed. You will get a confirmation msg in a few hours.\n";
+            if(0 > iNewBal) {
+                ss << "\n<b>Note:</b> You've -VE BALANCE: " << static_cast<int>(pUser->m_WBalance - iTotal) << ".\nPayments are made via <b>Top Up</b> button below.";
+            }
+            STR_MSG_DEFF_RELEASE = ss.str();
         }
     }
     fprintf(fp, "BaseBot %ld: ProductList onClick }\n", time(0)); fflush(fp);

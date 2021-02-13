@@ -74,20 +74,21 @@ std::string Checkout::getPaymentString(unsigned int iWho, unsigned int iOrderNo,
 #endif
 
 void Checkout::getPaymentLink(unsigned int iWho, unsigned int iOrderNo, int iAmt, std::string strUserName, std::string strAddress,FILE *fp) {
-    std::stringstream ssPayLd, ssUrl;
-    ssUrl << CASH_FREE_BASE_URL << CASH_FREE_ORDER_API;
+    std::stringstream ssTmp, ssUrl;
 
     std::map<std::string, std::string> formData;
     formData["appId"]           = CASH_FREE_APP_ID;
     formData["secretKey"]       = CASH_FREE_SECRET_KEY;
-    formData["orderId"]         = std::to_string(iOrderNo);
+    ssTmp << VENDOR_ID << "_" << iOrderNo;
+    formData["orderId"]         = ssTmp.str();
     formData["orderAmount"]     = std::to_string(iAmt);
     formData["customerName"]    = strUserName;
     formData["customerPhone"]   = getMobileNo(strAddress);
     formData["customerEmail"]   = BOT_MAIL;
     formData["returnUrl"]       = REDIRECT_URL;
-    formData["notifyUrl"]       = REDIRECT_URL;
+    formData["notifyUrl"]       = std::string("");
 
+    ssUrl << CASH_FREE_BASE_URL << CASH_FREE_ORDER_API;
     pHttpClient->postReqFormData(ssUrl.str(), formData, iWho, iOrderNo);
 }
 
@@ -98,20 +99,15 @@ void Checkout::onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, st
 
     std::map<unsigned int, std::string> msgToUsers;
     std::stringstream ss, ssMsg1, ssMsg2; ss << strResp;
-    User::Ptr   pUser   = getDBHandle()->getUserForOrderNo(iOrderNo, fp);
+	User::Ptr   pUser   = getDBHandle()->getUserForChatId(iChatId, fp);
 
     boost::property_tree::read_json(ss, root);
     if(!strSuccess.compare(root.get<std::string>("status"))) {
         std::string strUrl  = root.get<std::string>("paymentLink");
-        ssMsg1 << "Make payment by clicking:\n" << strUrl
-                << "\n\nAfter paying, click:\n" << STR_BTN_MAINMENU << " -> " << STR_BTN_YOUR_ORDERS << " -> " << iOrderNo << " to see txn details.";
+		ssMsg1 << "Click the following link to make the payment for Top Up.\n" << strUrl;
         msgToUsers[iChatId] = ssMsg1.str();
 
-        //  Now assume the order is placed
-        getDBHandle()->insertToOrder(pUser, iTotal, CartStatus::PAYMENT_PENDING, strUrl, OrderType::PORDER, fp);
-        getDBHandle()->updateOrderNo(pUser->m_UserId, fp);
-
-        ssMsg2 << pUser->m_Name << " has made an order, " << iOrderNo;
+        ssMsg2 << pUser->m_Name << " is attempting Top Up via CashFree. Pls verify payment after a few mins. His transac no is " << iOrderNo;
         for(auto &id : adminChatIds)  msgToUsers[id] = (iChatId == id) ? ssMsg1.str() : ssMsg2.str();
     } else {
         msgToUsers[iChatId] = "Something went wrong. Pls try after sometime.";
@@ -161,6 +157,7 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
     std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
 
     std::string strBtn;
+	std::stringstream ss;
     int iRowIndex   = 0, iLoop = 0;
     pMainMenu   = std::make_shared<TgBot::ReplyKeyboardMarkup>();
 
@@ -179,13 +176,16 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
 
             strBtn = std::string(STR_BTN_TOP_UP) + " 2000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
             strBtn = std::string(STR_BTN_TOP_UP) + " 5000"; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+        	iRowIndex++;
         } else {
-            STR_MSG_DEFF_RELEASE  = getTopUpString();
-            strBtn = STR_BTN_GPAY_TOP_UP + strAmt;  createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
-            strBtn = STR_BTN_PAYTM_TOP_UP + strAmt; createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
-            strBtn = STR_BTN_PHONEPE_TOP_UP + strAmt;  createKBBtn(strBtn, row[iRowIndex], lstBaseBtns, getSharedPtr());
+			getPaymentLink(pMsg->chat->id, pUser->m_TransacNo, std::stoi(strAmt), pUser->m_Name, pUser->m_Address, fp);
+
+            getDBHandle()->insertToOrder(pUser, std::stoi(strAmt), CartStatus::PAYMENT_PENDING, "CFree", OrderType::TOPUP, fp);
+            getDBHandle()->updateTransacNo(pUser->m_UserId, fp);
+
+            ss.str(""); ss <<  "Hi " << pUser->m_Name << ",\n\n<b>Pls Wait a few secs..,</b>\n\nYou get a payment link. Pay by clicking it.";
+            STR_MSG_DEFF_RELEASE  = ss.str();
         }
-        iRowIndex++;
     }
 
     else if(std::string::npos != pMsg->text.find("Topped Up")) {
@@ -209,10 +209,6 @@ TgBot::GenericReply::Ptr Checkout::prepareMenu(std::map<std::string, std::shared
 
     else if(!pMsg->text.compare(STR_BTN_CHECKOUT)) {
         STR_MSG_DEFF_RELEASE  = getPaymentString(pMsg->chat->id, pUser->m_OrderNo, pMsg->from->firstName, pUser->m_Address, iTotal, fp);
-#ifndef AURA
-        createKBBtn(STR_BTN_CNF_CHECKOUT, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_MAINMENU]);
-        iRowIndex++;
-#endif
     }
 
     //  To avoid exception
@@ -277,12 +273,6 @@ TgBot::InputFile::Ptr Checkout::getMedia(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: Checkout getMedia {\n", time(0)); fflush(fp);
     TgBot::InputFile::Ptr pFile = nullptr;
 
-    if(std::string::npos != pMsg->text.find(STR_BTN_TOP_UP) && std::string(STR_BTN_TOP_UP).length() < pMsg->text.length()) {
-#ifdef MANI_MAMA
-        std::string asset_file  = std::string(BOT_ROOT_PATH) + std::string(BOT_ASSETS_PATH) + std::string("qr_code_mani_iyer_02.png");
-        if(isFileExists(asset_file)) pFile = TgBot::InputFile::fromFile(asset_file, "image/png");
-#endif
-    }
     fprintf(fp, "BaseBot %ld: Checkout getMedia }\n", time(0)); fflush(fp);
     return pFile;
 }

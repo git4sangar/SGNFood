@@ -17,37 +17,6 @@
 #define MANI_MAMA 
 #define _Pi_
 
-//------------------------------------AurA------------------------------------
-#ifdef AURA
-    #define BOT_TOKEN	    "655366902:AAGEaKH0q1xXu0Lwd5C5HBDZsUnPTjn13X4"
-    #define BOT_DB_FILE     "sgn_aura.db"
-    #define BOT_LOG_FILE    "log_file_aura.log"
-    #define PAYTM_MOBILE    "99401 30135"
-    #define GPAY_MOBILE     "99401 30135"
-    #define PHONE_PE_NO     "99401 30135"
-    #define WHATSAPP_NO     "99401 30135"
-    #define BUSINESS_NAME   "AurA Organic Soaps"
-    #define CASH_TEST_APP_ID        "3154900f9ad69d4ef8377bff894513"
-    #define CASH_FREE_APP_ID        "760934e74bc9d12ac17abdb5439067"
-
-    #define CASH_TEST_SECRET_KEY    "fbaf05426f3146c990630fd897db57e2d7ae7ddd"
-    #define CASH_FREE_SECRET_KEY    "db7f536560a49628679db2d6926aeb4b7cedd374"
-
-    #define BOT_MAIL                "thrayaa@gmail.com"
-    #define REDIRECT_URL            "http://ohobot.com//"
-    //#define CASH_FREE_URL           "https://test.cashfree.com/"
-    #define CASH_FREE_URL         "https://api.cashfree.com/"
-
-    #ifdef _VM_
-        #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/AuraBot"
-        #define BOT_ROOT_PATH       "/home/svaithiy/sgn/projs/SGNFood/aura/"
-    #endif
-
-    #ifdef _Pi_
-        #define BIN_FILE_PATH     "/home/sgn/sgn/projs/SGNFood/bin/AuraBot"
-        #define BOT_ROOT_PATH     "/home/sgn/sgn/projs/SGNFood/aura/"
-    #endif
-#endif
 
 //------------------------------------Mani Mama------------------------------------
 #ifdef MANI_MAMA
@@ -58,13 +27,19 @@
     #define GPAY_MOBILE     "93410 66700"
     #define PHONE_PE_NO     "93410 66700"
     #define WHATSAPP_NO     "97419 83633"
+	#define VENDOR_ID       (2)
     #define BUSINESS_NAME   "Mani Iyer's Kitchen"
-    #define CASH_FREE_APP_ID          "aura_app_id"
-    #define CASH_FREE_SECRET_KEY      "aura_secret_key"
-    #define REDIRECT_URL                "http://ohobot.com/"
+    #define REDIRECT_URL                "https://ohobot.com/api/v1/cashfree/response"
     #define BOT_MAIL                    "bot@bot.com"
-    #define CASH_FREE_URL               "https://test.cashfree.com/"
-    //#define CASH_FREE_URL             "https://api.cashfree.com/"
+
+    #define CASH_TEST_APP_ID        "4948385cd24ff371a0e8c6b7e38494"
+    #define CASH_TEST_SECRET_KEY    "e58d6fd7160a61a27acf3369d11a0e1c04eea697"
+
+    #define CASH_FREE_APP_ID        "947884d0d4f82dff5d892238988749"
+    #define CASH_FREE_SECRET_KEY    "8c7aa1bc36bc2578111d7dc882a4afb8be031a54"
+
+    //#define CASH_FREE_URL               "https://test.cashfree.com/"
+    #define CASH_FREE_URL             "https://api.cashfree.com/"
 
     #ifdef _VM_
         #define BIN_FILE_PATH       "/home/svaithiy/sgn/projs/SGNFood/bin/ManiBot"
@@ -186,7 +161,7 @@
 #define STR_BTN_YOUR_ORDERS     "A/C Stmt"
 
 #define STR_BTN_TOP_UP          "Top Up"
-#define STR_BTN_CNF_CHECKOUT    "Confirm Checkout"
+//#define STR_BTN_CNF_CHECKOUT    "Confirm Checkout"
 
 #define STR_BTN_NEW_TOPUPs      "New TopUps"
 #define STR_BTN_CNF_TOPUPs      "Confirmed TopUps"

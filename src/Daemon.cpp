@@ -240,7 +240,7 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_VIEW_CART]     = std::make_shared<ViewCart>(hDB);
     listBaseBtns[STR_BTN_REMOVE]        = listBaseBtns[STR_BTN_VIEW_CART];
 
-    listBaseBtns[STR_BTN_CHECKOUT]      = std::make_shared<Checkout>(hDB);
+    listBaseBtns[STR_BTN_CHECKOUT]      = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns[STR_BTN_TOP_UP]        = std::make_shared<Checkout>(hDB);
 
     listBaseBtns[STR_BTN_SHPG_ADDRESS]  = std::make_shared<MyAddress>(hDB);

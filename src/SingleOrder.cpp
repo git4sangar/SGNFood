@@ -147,13 +147,21 @@ void SingleOrder::onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo,
 
     ss << strResp;
     boost::property_tree::read_json(ss, root);
+
+	POrder::Ptr pOrdrStat  = getDBHandle()->getOrderForOrderNo(iOrderNo, fp);
     if(!strSuccess.compare(root.get<std::string>("status"))) {
         ssMsg1 << "<b>Transac Details:</b>\n" << "Order No : " << iOrderNo;
+		if(pOrdrStat) {
+            ssMsg1 << "\n\nAmount : " << pOrdrStat->m_Amt
+                    << "\nName : " << pOrdrStat->m_Name
+                    << "\nUser Id : " << pOrdrStat->m_UserId
+                    << "\nAddress : " << pOrdrStat->m_Address;
+        }
 
         //  If it is paid
         if(!strPaid.compare(root.get<std::string>("orderStatus"))) {
             if(std::string::npos != strResp.find("txTime"))
-                ssMsg1 << "\nTransac Time : " << root.get<std::string>("txTime");
+                ssMsg1 << "\n\nTransac Time : " << root.get<std::string>("txTime");
             if(std::string::npos != strResp.find("txMsg"))
                 ssMsg1 << "\nTransac Status : " << root.get<std::string>("txMsg");
             if(std::string::npos != strResp.find("referenceId"))
@@ -162,7 +170,7 @@ void SingleOrder::onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo,
 
         //  If it is still active
         if(!strActive.compare(root.get<std::string>("orderStatus"))) {
-            ssMsg1 << "\nMake payment by clicking:\n" << getDBHandle()->getPaymentLink(iOrderNo, fp);
+			ssMsg1 <<"\n<b>Payment not made yet.</b>";
         }
         msgToUsers[iChatId] = ssMsg1.str();
         fprintf(fp, "ChatId: %d, Msg: %s\n", iChatId, msgToUsers[iChatId].c_str());fflush(fp);
@@ -177,7 +185,19 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
     fprintf(fp, "BaseBot %ld: SingleOrder::prepareMenu {\n", time(0)); fflush(fp);
 
     if(0 == iNoOfItems) {
-        STR_MSG_DEFF_RELEASE  = "No more orders";
+		if(0 == (iOrderNo % 2)) {
+            std::map<std::string, std::string> formData;
+            std::stringstream ssTmp;
+
+            formData["appId"]           = CASH_FREE_APP_ID;
+            formData["secretKey"]       = CASH_FREE_SECRET_KEY;
+            ssTmp << VENDOR_ID << "_" << iOrderNo;
+            formData["orderId"]         = ssTmp.str();
+            ssTmp.str(""); ssTmp << CASH_FREE_BASE_URL << CASH_FREE_STATUS_API;
+            pHttpClient->postReqFormData(ssTmp.str(), formData, pMsg->chat->id, iOrderNo);
+        } else {
+            STR_MSG_DEFF_RELEASE  = "No more orders";
+        }
         return nullptr;
     }
 
@@ -189,19 +209,6 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
     std::map<unsigned int, UserContext>::const_iterator itrCntxt;
     std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
     std::string strChatId       = std::to_string(pMsg->chat->id);
-
-#ifdef AURA
-    //  If not cancelled order
-    if(pageName.compare(STR_BTN_CNCLD_ORDERS)) {
-        std::map<std::string, std::string> formData;
-        std::stringstream ssUrl;
-        ssUrl << CASH_FREE_BASE_URL << CASH_FREE_STATUS_API;
-        formData["appId"]           = CASH_FREE_APP_ID;
-        formData["secretKey"]       = CASH_FREE_SECRET_KEY;
-        formData["orderId"]         = std::to_string(iOrderNo);
-        pHttpClient->postReqFormData(ssUrl.str(), formData, pMsg->chat->id, iOrderNo);
-    }
-#endif
 
     iRowIndex = 0;
     if(USER_CTXT_NEW_ORDER == usrCtxt) {
