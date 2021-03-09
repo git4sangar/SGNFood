@@ -62,6 +62,8 @@ public:
     //  For HTTP Client
     void onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, std::string strPaymentLink, FILE *fp);
     void onDownloadFailure(unsigned int iChatId, unsigned int iOrderNo, FILE *fp);
+
+	void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp) {}
 };
 
 

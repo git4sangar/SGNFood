@@ -81,6 +81,7 @@ TgBot::GenericReply::Ptr OrderMgmt::prepareMenu(std::map<std::string, std::share
     STR_MSG_DEFF_RELEASE    = pageName;
     iRowIndex = 0;
     if(0 < iNoOfItems) {
+    	STR_MSG_DEFF_RELEASE    = std::to_string(iNoOfItems) + std::string(" ") + pageName;
         for(iToggle = 0, iLoop = (iSelPage - 1) * MAX_ITEMS_PER_PAGE; (iNoOfItems > iLoop) && (iLoop < (iSelPage * MAX_ITEMS_PER_PAGE)); iLoop++) {
             if(0 == (orders[iLoop]->m_OrderNo %2)) continue;        // Skip the TopUps
             strText = std::to_string(orders[iLoop]->m_OrderNo);

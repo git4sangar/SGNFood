@@ -105,6 +105,25 @@ void BaseButton::createKBBtn(std::string strName, std::vector<TgBot::KeyboardBut
         lstBaseBtns[strName] = pBtn;
 }
 
+std::string getMobileNo(std::string strAddress) {
+    int iDigits = 0;
+    bool isDone = false;
+    std::string strMobile;
+
+    for(char &c : strAddress) {
+        if(std::isspace(c)) continue;
+
+        if(std::isdigit(c)) { iDigits++; strMobile += c; }
+        else if(isDone) break;
+        else { iDigits = 0; strMobile.clear(); }
+
+        if(MAX_MOBILE_DIGITS <= iDigits) {
+            isDone = true;
+        }
+    }   
+    return strMobile.substr(strMobile.length() - MAX_MOBILE_DIGITS);
+}
+
 void petWatchDog(FILE *fp) {
    int sockfd = 0;
    struct hostent *he;

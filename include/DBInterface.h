@@ -270,6 +270,7 @@ public:
     void setPaymentLink(unsigned int iOrderNo, std::string strPaymentLink, FILE *fp);
     std::string getPaymentLink(unsigned int iOrderNo, FILE *fp);
     int getLeftUserWBal(unsigned int iChatId, FILE *fp);
+	std::string updateDeliveryCharge(unsigned int iOrderNo, unsigned int iAmt, FILE *fp);
 };
 
 

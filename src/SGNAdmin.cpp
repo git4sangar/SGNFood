@@ -192,7 +192,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         std::vector<POrder::Ptr> orders = getDBHandle()->getOrderByStatus(CartStatus::READY_FOR_DELIVERY, OrderType::PORDER, fp);
         for(iLoop = 0; iLoop < orders.size(); iLoop++) {
             std::stringstream ssMsg;
-            ssMsg << orders[iLoop]->m_OrderNo << ", " << orders[iLoop]->m_Name.substr(0,10)
+            ssMsg << iLoop+1 << ")" << orders[iLoop]->m_OrderNo << ", " << orders[iLoop]->m_Name.substr(0,10)
                     << ", Id: "<< orders[iLoop]->m_UserId << ", <b>₹ " << orders[iLoop]->m_Amt << "</b>";
 
             std::vector<std::string> lines  = split_address(orders[iLoop]->m_Address);

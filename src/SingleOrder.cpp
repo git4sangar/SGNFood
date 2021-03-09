@@ -25,8 +25,8 @@ void SingleOrder::init(TgBot::Message::Ptr pMsg, FILE *fp) {
     pHttpClient->subscribeListener(shared_from_this());
 
    orderItems.clear(); products.clear(); pOrder = nullptr; asset_file.clear();
-   pageName.clear(); iPgNo = 0; isPrint = false;
-   iNoOfItems = 0; STR_MSG_DEFF_RELEASE  = "Your Order";
+   pageName.clear(); iPgNo = 0; isPrint = false; usrCtxt = USER_CTXT_NOTA;
+   iNoOfItems = 0; iOrderNo = 0; STR_MSG_DEFF_RELEASE  = "Your Order";
    notifyMsgs.clear();
 
    mapCmdToInt[STR_BTN_CNFM_ORDER]  = INT_CNFM_ORDER;
@@ -122,7 +122,7 @@ int SingleOrder::create_order_items_table(std::shared_ptr<pngwriter> pPNGWriter,
     if(iNoOfItems <= iIndex) {
         for(iSum = iQty = iLoop = 0; iLoop < orderItems.size(); iLoop ++) {
             iQty    += orderItems[iLoop]->m_Qnty;
-            iSum    += (orderItems[iLoop]->m_Qnty * products[iLoop]->m_Price);
+            iSum    += (orderItems[iLoop]->m_Qnty * orderItems[iLoop]->m_Price);
         }
         pPNGWriter->plot_text_utf8((char *)strFontFile.c_str(), 12,  70+5, 5, 0.0, (char *)"Total ₹: ", 0, 0, 0);
         pPNGWriter->plot_text_utf8((char *)strFontFile.c_str(), 10, 140+5, 5, 0.0, (char *)std::to_string(iSum).c_str(), 0, 0, 0);
@@ -184,8 +184,15 @@ void SingleOrder::onDownloadFailure(unsigned int iChatId, unsigned int iOrderNo,
 TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SingleOrder::prepareMenu {\n", time(0)); fflush(fp);
 
+    unsigned int iPrev, iNext, iLoop, iRowIndex = 0, iItemsPerRow = 0, iItems, iRowsReqd;
+    std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
+    std::string strText;
+    TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
+    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
+
     if(0 == iNoOfItems) {
-		if(0 == (iOrderNo % 2)) {
+		if(0 < iOrderNo && 0 == (iOrderNo % 2)) {
             std::map<std::string, std::string> formData;
             std::stringstream ssTmp;
 
@@ -195,20 +202,22 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
             formData["orderId"]         = ssTmp.str();
             ssTmp.str(""); ssTmp << CASH_FREE_BASE_URL << CASH_FREE_STATUS_API;
             pHttpClient->postReqFormData(ssTmp.str(), formData, pMsg->chat->id, iOrderNo);
+			return nullptr;
         } else {
-            STR_MSG_DEFF_RELEASE  = "No more orders";
+			std::string strChatId   = std::to_string(pMsg->chat->id);
+			if(!pMsg->text.compare(STR_BTN_DLVRY_CHARGE)) {
+				m_Context[pMsg->chat->id]   = USER_CTXT_DLVRY_CHARGE;
+				lstBaseBtns[strChatId]      = getSharedPtr();
+	    	    STR_MSG_DEFF_RELEASE        = std::string("Add delivery charge as follows.\n order no : amount") +
+    	    	                                std::string("\n\nExample:\nTo add delivery charge ₹50 to order no: 10351 type & send\n10351 : 50");
+	    	    return std::make_shared<TgBot::ReplyKeyboardRemove>();
+			}
+			if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
+		        m_Context.erase(itrCntxt);
+        		if(lstBaseBtns.end() != (itrBtn = lstBaseBtns.find(strChatId))) lstBaseBtns.erase(itrBtn);
+		    }
         }
-        return nullptr;
     }
-
-    unsigned int iPrev, iNext, iLoop, iRowIndex = 0, iItemsPerRow = 0, iItems, iRowsReqd;
-    std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
-    std::string strText;
-    TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
-
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
-    std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
-    std::string strChatId       = std::to_string(pMsg->chat->id);
 
     iRowIndex = 0;
     if(USER_CTXT_NEW_ORDER == usrCtxt) {
@@ -227,10 +236,11 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
     }
 
     //  Easy for the user to navigate back to the orders page if there are more order-pages
-    if(0 < iPgNo) {
-        createKBBtn(pageName + std::string(" page ") + std::to_string(iPgNo), row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_ORDERS]);
-        iRowIndex++;
-    }
+    if(0 < iPgNo)
+		createKBBtn(pageName + std::string(" page ") + std::to_string(iPgNo), row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_ORDERS]);
+	createKBBtn(STR_BTN_DLVRY_CHARGE, row[iRowIndex], lstBaseBtns, getSharedPtr());
+	iRowIndex++;
+    
 
     //  Populate the next available row
     if(USER_CTXT_YOUR_ORDER == usrCtxt) {
@@ -259,7 +269,8 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
 void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SingleOrder onClick pMessage %s {\n", time(0), pMsg->text.c_str()); fflush(fp);
 
-    unsigned int iLoop = 0, iOrdrsSz = 0;
+    unsigned int iLoop = 0, iOrdrsSz = 0, iAmt;
+	std::string::size_type pos;
     std::vector<POrder::Ptr> orders;
     Product::Ptr pProduct;
     std::string strOrderNo, strCmd, strSNo;
@@ -272,9 +283,20 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
     fprintf(fp, "BaseBot %ld: SingleOrder onClick, isAdmin: %d\n", time(0), isAdmin); fflush(fp);
 
+	if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
+		if(USER_CTXT_DLVRY_CHARGE == itrCntxt->second && std::string::npos != (pos = pMsg->text.find_first_of(":")) && (0 < pos) && (pMsg->text.length() > (pos+1))) {
+			iOrderNo= std::stoi(myTrim(pMsg->text.substr(0, pos)));
+			iAmt	= std::stoi(myTrim(pMsg->text.substr(pos+1)));
+			STR_MSG_DEFF_RELEASE	= getDBHandle()->updateDeliveryCharge(iOrderNo, iAmt, fp);
+		} else {
+			STR_MSG_DEFF_RELEASE	= "Invalid format";	
+		}
+    	fprintf(fp, "BaseBot %ld: SingleOrder onClick pMessage }\n", time(0)); fflush(fp);
+		return;
+	}
 
     //  Get the Order No. Possible values: "1087", "Confirm Order 1003", "Cancel Order 1342", "Edit Order 3214", "Print Order 4923", "Deliver Order 3387"
-    std::string::size_type pos  = pMsg->text.find_first_of("0123456789");
+    pos  = pMsg->text.find_first_of("0123456789");
     try {
         if(0 < pos) strCmd = pMsg->text.substr(0, pos-1);
         strOrderNo  = pMsg->text.substr(pos);
@@ -319,6 +341,9 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                 getDBHandle()->updateOrderStatus(iOrderNo, CartStatus::READY_FOR_DELIVERY, OrderType::PORDER, fp);
                 notifyMsgs[pUser->m_ChatId] = std::string("Your order no: ") + std::to_string(iOrderNo) + std::string(" is Confirmed.");
                 fprintf(fp, "BaseBot %ld: SingleOrder onClick, Confirming Order: %d\n", time(0), iOrderNo); fflush(fp);
+
+                orders = getDBHandle()->getOrderByStatus(CartStatus::READY_FOR_DELIVERY, OrderType::PORDER, fp);
+				STR_MSG_DEFF_RELEASE = std::string("Confirmed orders till now: ") + std::to_string(orders.size());
 
                 orders = getDBHandle()->getOrderByStatus(CartStatus::PAYMENT_PENDING, OrderType::PORDER, fp);
                 iOrderNo = (orders.empty()) ? 0 : orders[0]->m_OrderNo;

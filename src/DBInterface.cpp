@@ -9,6 +9,7 @@
 #include <sstream>
 #include <sstream>
 #include <time.h>
+#include <curl/curl.h>
 
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <tgbot/tgbot.h>
@@ -1202,8 +1203,9 @@ void DBInterface::updateAllDelivered(FILE *fp) {
     ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(CartStatus::DELIVERED) << " WHERE "
                 << Cart::CART_ORDER_NO << " IN (SELECT " << POrder::PORDER_NO << " FROM POrder WHERE "
                 << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND ("
-                << POrder::PORDER_NO << " % 2) != 0 AND "
-                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) <= \"" << getYstrDate() << "\");";
+				<< POrder::PORDER_NO << " % 2) != 0);";
+//                << POrder::PORDER_NO << " % 2) != 0 AND "
+//                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) <= \"" << getYstrDate() << "\");";
     m_hDB->exec(ss.str());
 
     ss.str(std::string());
@@ -1212,8 +1214,9 @@ void DBInterface::updateAllDelivered(FILE *fp) {
             << POrder::PORDER_DLVR_TM << " = \"" << getCurTime()
             << "\" WHERE "
                 << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND ("
-                << POrder::PORDER_NO << " % 2) != 0 AND "
-                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) <= \"" << getYstrDate() << "\";";
+                << POrder::PORDER_NO << " % 2) != 0;";
+//                << POrder::PORDER_NO << " % 2) != 0 AND "
+//                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) <= \"" << getYstrDate() << "\";";
     m_hDB->exec(ss.str());
     transaction.commit();
 }
@@ -1272,6 +1275,59 @@ std::string DBInterface::getPaymentLink(unsigned int iOrderNo, FILE *fp) {
         return pOrder->m_PayGW;
     }
     return std::string();
+}
+
+std::string DBInterface::updateDeliveryCharge(unsigned int iOrderNo, unsigned int iAmt, FILE *fp) {
+	std::stringstream ss;
+	POrder::Ptr pOrder;
+	User::Ptr pUser;
+
+	//	Get the User for this order
+	pOrder = getOrderForOrderNo(iOrderNo, fp);
+	if(pOrder) pUser = getUserForUserId(pOrder->m_UserId, fp);
+	if(!pUser) return "Invalid Order No";
+
+	//	Update Cart
+	SQLite::Transaction transaction(*m_hDB);
+	ss.str(std::string());
+	ss << "INSERT INTO Cart (" <<
+            Cart::CART_PRODUCT_ID << ", " <<
+            Cart::CART_PRODUCT_PRICE << ", " <<
+            Cart::CART_USER_ID << ", " <<
+            Cart::CART_QNTY << ", " <<
+            Cart::CART_STATUS << ", " <<
+            Cart::CART_ORDER_NO << ") VALUES (" <<
+            PROD_DLVRY_CHARGE << "," << iAmt << ", " << pUser->m_UserId << ", 1, "
+            	<< getIntStatus(CartStatus::READY_FOR_DELIVERY) << ", " << iOrderNo << ");";
+	m_hDB->exec(ss.str());
+
+	//	Need to update the balance
+	ss.str(std::string());
+	ss << "UPDATE User SET " << User::USER_WBALANCE << " = "  << User::USER_WBALANCE << "-" << iAmt
+           << " WHERE " << User::USER_ID << " = " << pUser->m_UserId << ";";
+	m_hDB->exec(ss.str());
+	fprintf(fp, "Query 1 %s\n", ss.str().c_str()); fflush(fp);
+	
+	ss.str(std::string());
+	ss << "UPDATE POrder SET " << POrder::PORDER_AMOUNT << " = " << POrder::PORDER_AMOUNT << " + " << iAmt
+		<< ", " << POrder::PORDER_WBALANCE << " = " << POrder::PORDER_WBALANCE << " - " << iAmt
+		<< " WHERE " << POrder::PORDER_NO << " = " << iOrderNo << ";"; 
+	m_hDB->exec(ss.str());
+	fprintf(fp, "Query 2 %s\n", ss.str().c_str()); fflush(fp);
+	
+
+	//	Commit all transactions till now
+	transaction.commit();
+
+	//	Return string
+	ss.str(""); ss << "Delivery charge of ₹" << iAmt << " is added to order no " << iOrderNo;
+	CURL *curl  = curl_easy_init();
+	char *pMsg  = curl_easy_escape(curl, ss.str().c_str(), 0); 
+	ss.str(""); ss << STR_WHATSAPP_LINK << "91" << getMobileNo(pUser->m_Address) << "?text=" << pMsg;
+
+	if(pMsg) curl_free(pMsg);
+	if(curl) curl_easy_cleanup(curl);
+	return ss.str();
 }
 
 /*

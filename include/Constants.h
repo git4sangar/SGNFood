@@ -60,6 +60,7 @@
 #define CASH_FREE_ORDER_API     "api/v1/order/create"
 #define CASH_FREE_STATUS_API    "api/v1/order/info/status"
 #define CA_CERT_FILE            "cacert.pem"
+#define STR_WHATSAPP_LINK		"https://wa.me/"
 
 #define BOT_DB_PATH     "db/"
 #define BOT_LOG_PATH    "logs/"
@@ -70,6 +71,7 @@
 
 #define BOT_ASSETS_PATH     "assets/"
 
+#define PROD_DLVRY_CHARGE	(132)
 #define ONE_KB              (1024)
 #define MAX_MOBILE_DIGITS   (10)
 #define MAX_WAIT_B4_RESP    (10)
@@ -123,6 +125,7 @@
 #define USER_CTXT_SEND_MSG      (114)
 #define USER_CTXT_USER_AC       (115)
 #define USER_CTXT_ADMING_MSG    (118)
+#define USER_CTXT_DLVRY_CHARGE	(119)
 
 #define STR_WALLET  "Wallet"
 
@@ -157,6 +160,7 @@
 #define STR_BTN_CNCLD_ORDERS    "Cancelled Orders"
 #define STR_BTN_ORDR_SUMMRY     "Order Summary"
 #define STR_BTN_DLVRY_LIST      "Delivery List"
+#define STR_BTN_DLVRY_CHARGE    "Dlvry ₹"
 #define STR_BTN_ALL_DLVRD       "All Dlvrd"
 #define STR_BTN_YOUR_ORDERS     "A/C Stmt"
 
@@ -212,6 +216,7 @@ extern std::vector<unsigned int> adminChatIds;
 //extern bool isAgent;
 
 extern std::string getAddressNotification();
+extern std::string getMobileNo(std::string strAddress);
 extern nlohmann::fifo_map<std::string, std::string> descToCode;
 
 #endif /* CONSTANTS_H_ */
