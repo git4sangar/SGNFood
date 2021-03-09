@@ -126,6 +126,7 @@
 #define USER_CTXT_USER_AC       (115)
 #define USER_CTXT_ADMING_MSG    (118)
 #define USER_CTXT_DLVRY_CHARGE	(119)
+#define USER_CTXT_NEW_ADDRESS	(120)
 
 #define STR_WALLET  "Wallet"
 
@@ -177,6 +178,7 @@
 #define STR_BTN_SINGLE_ORDER    "Single Order"
 #define STR_BTN_ADD_BY_SN       "Add to Cart by SN"
 #define STR_BTN_CHANGE_ADDRESS  "Change Address"
+#define STR_BTN_UPDATE_ADDRESS  "New Address"
 #define STR_BTN_ABOUT           "About"
 #define STR_BTN_FAQ             "FAQs"
 #define STR_BTN_SHPG_ADDRESS    "Shipping Address"
@@ -217,6 +219,7 @@ extern std::vector<unsigned int> adminChatIds;
 
 extern std::string getAddressNotification();
 extern std::string getMobileNo(std::string strAddress);
+extern bool isMobileNoPresent(std::string strAddress);
 extern nlohmann::fifo_map<std::string, std::string> descToCode;
 
 #endif /* CONSTANTS_H_ */

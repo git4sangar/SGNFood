@@ -90,6 +90,13 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
         STR_MSG_DEFF_RELEASE        = std::string("To see a user's stmt, type his/her userid & send");
         return std::make_shared<TgBot::ReplyKeyboardRemove>();
     }
+	if(!pMsg->text.compare(STR_BTN_UPDATE_ADDRESS)) {
+		m_Context[pMsg->chat->id]   = USER_CTXT_NEW_ADDRESS;
+		lstBaseBtns[strChatId]      = getSharedPtr();
+		STR_MSG_DEFF_RELEASE        = std::string("Enter the new address as follows\n\nUser Id : Address\nEg. 937 : 32 II Floor SKM Apts, Marathahalli")
+										+ std::string("\n\nNote: Mobile no is must.\n<b>No special chars, like \", &, *, # are allowed</b>");
+		return std::make_shared<TgBot::ReplyKeyboardRemove>();
+	}
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
         m_Context.erase(itrCntxt);
         if(lstBaseBtns.end() != (itrBtn = lstBaseBtns.find(strChatId))) lstBaseBtns.erase(itrBtn);
@@ -118,6 +125,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
 
     createKBBtn(STR_BTN_USER_ORDERS, row[iRowIndex], lstBaseBtns, getSharedPtr());
     createKBBtn(STR_BTN_DLVRY_LIST, row[iRowIndex], lstBaseBtns, getSharedPtr());
+    createKBBtn(STR_BTN_UPDATE_ADDRESS, row[iRowIndex], lstBaseBtns, getSharedPtr());
     iRowIndex++;
 
     //  Add all the rows to main menu
@@ -182,7 +190,11 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                 notifyMsgs[pMsg->chat->id] = ss.str();
                 getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
             }
-        } else STR_MSG_DEFF_RELEASE = "Invalid Format";
+        } if(USER_CTXT_NEW_ADDRESS == itrCntxt->second && std::string::npos != (iPos = strMsg.find_first_of(":"))
+				&& (0 < iPos) && (strMsg.length() > (iPos+1)) && isMobileNoPresent(myTrim(strMsg.substr(iPos+1)))) {
+			iUserId					= std::stoi(myTrim(strMsg.substr(0, iPos)));
+			STR_MSG_DEFF_RELEASE	= getDBHandle()->updateUserAddress(iUserId, myTrim(strMsg.substr(iPos+1)), fp);
+		} else STR_MSG_DEFF_RELEASE = "Invalid Format";
     }
     if(!pMsg->text.compare(STR_BTN_ALL_DLVRD)) {
         getDBHandle()->updateAllDelivered(fp);

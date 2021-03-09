@@ -105,6 +105,21 @@ void BaseButton::createKBBtn(std::string strName, std::vector<TgBot::KeyboardBut
         lstBaseBtns[strName] = pBtn;
 }
 
+bool isMobileNoPresent(std::string strAddress) {
+    int iDigits = 0;
+
+    for(char &c : strAddress) {
+        if(std::isspace(c)) continue;
+        if(std::isdigit(c)) iDigits++;
+        else iDigits = 0;
+
+        if(MAX_MOBILE_DIGITS <= iDigits) {
+            break;
+        }
+    }   
+    return MAX_MOBILE_DIGITS <= iDigits;
+}
+
 std::string getMobileNo(std::string strAddress) {
     int iDigits = 0;
     bool isDone = false;

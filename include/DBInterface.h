@@ -271,6 +271,7 @@ public:
     std::string getPaymentLink(unsigned int iOrderNo, FILE *fp);
     int getLeftUserWBal(unsigned int iChatId, FILE *fp);
 	std::string updateDeliveryCharge(unsigned int iOrderNo, unsigned int iAmt, FILE *fp);
+	std::string updateUserAddress(int iUserId, std::string strAddress, FILE *fp);
 };
 
 

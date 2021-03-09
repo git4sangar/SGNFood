@@ -1330,6 +1330,22 @@ std::string DBInterface::updateDeliveryCharge(unsigned int iOrderNo, unsigned in
 	return ss.str();
 }
 
+std::string DBInterface::updateUserAddress(int iUserId, std::string strAddress, FILE *fp) {
+	std::stringstream ss;
+	SQLite::Transaction transaction(*m_hDB);
+
+	User::Ptr pUser	= getUserForUserId(iUserId, fp);
+	if(pUser) {
+		ss << "UPDATE User SET "
+			<< User::USER_ADDRESS << " = \"" << strAddress
+			<< "\" WHERE " << User::USER_ID << " = " << iUserId << ";";
+		m_hDB->exec(ss.str());
+		transaction.commit();
+		return pUser->m_Name + "'s address updated";
+	}
+	return "Invalid User id";
+}
+
 /*
  *         static std::string PORDER_ID;
     static std::string PORDER_NO;
