@@ -190,7 +190,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                 notifyMsgs[pMsg->chat->id] = ss.str();
                 getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
             }
-        } if(USER_CTXT_NEW_ADDRESS == itrCntxt->second && std::string::npos != (iPos = strMsg.find_first_of(":"))
+        } else if(USER_CTXT_NEW_ADDRESS == itrCntxt->second && std::string::npos != (iPos = strMsg.find_first_of(":"))
 				&& (0 < iPos) && (strMsg.length() > (iPos+1)) && isMobileNoPresent(myTrim(strMsg.substr(iPos+1)))) {
 			iUserId					= std::stoi(myTrim(strMsg.substr(0, iPos)));
 			STR_MSG_DEFF_RELEASE	= getDBHandle()->updateUserAddress(iUserId, myTrim(strMsg.substr(iPos+1)), fp);
