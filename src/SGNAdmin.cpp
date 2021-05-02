@@ -205,7 +205,7 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         for(iLoop = 0; iLoop < orders.size(); iLoop++) {
             std::stringstream ssMsg;
             ssMsg << iLoop+1 << ")" << orders[iLoop]->m_OrderNo << ", " << orders[iLoop]->m_Name.substr(0,10)
-                    << ", Id: "<< orders[iLoop]->m_UserId << ", <b>₹ " << orders[iLoop]->m_Amt << "</b>";
+                    << ", Id: "<< orders[iLoop]->m_UserId << ", <b>₹ " << orders[iLoop]->m_Amt << "</b>, Bal: " << orders[iLoop]->m_WBalance;
 
             std::vector<std::string> lines  = split_address(orders[iLoop]->m_Address);
             for(auto &line : lines) ssMsg << "\n" << line;
