@@ -406,6 +406,14 @@ int DBInterface::addProductToCart(unsigned int iProdId, unsigned qty, unsigned i
     return iQty+qty;
 }
 
+bool DBInterface::isProdCarted(unsigned int iProdId, unsigned int iOrderNo, FILE *fp) {
+	std::stringstream ss;
+	ss << "SELECT * FROM Cart WHERE " << Cart::CART_ORDER_NO << " = " << iOrderNo
+		<< " AND " << Cart::CART_PRODUCT_ID << " = " << iProdId << ";";
+	SQLite::Statement query(*m_hDB, ss.str());
+	return query.executeStep();
+}
+
 Notifs::Ptr DBInterface::getNotif(SQLite::Statement *pQuery) {
     Notifs::Ptr pNotif  = std::make_shared<Notifs>();
 
@@ -1306,15 +1314,12 @@ std::string DBInterface::updateDeliveryCharge(unsigned int iOrderNo, unsigned in
 	ss << "UPDATE User SET " << User::USER_WBALANCE << " = "  << User::USER_WBALANCE << "-" << iAmt
            << " WHERE " << User::USER_ID << " = " << pUser->m_UserId << ";";
 	m_hDB->exec(ss.str());
-	fprintf(fp, "Query 1 %s\n", ss.str().c_str()); fflush(fp);
 	
 	ss.str(std::string());
 	ss << "UPDATE POrder SET " << POrder::PORDER_AMOUNT << " = " << POrder::PORDER_AMOUNT << " + " << iAmt
 		<< ", " << POrder::PORDER_WBALANCE << " = " << POrder::PORDER_WBALANCE << " - " << iAmt
 		<< " WHERE " << POrder::PORDER_NO << " = " << iOrderNo << ";"; 
 	m_hDB->exec(ss.str());
-	fprintf(fp, "Query 2 %s\n", ss.str().c_str()); fflush(fp);
-	
 
 	//	Commit all transactions till now
 	transaction.commit();

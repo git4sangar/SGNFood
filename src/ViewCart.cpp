@@ -207,8 +207,15 @@ void ViewCart::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
             if(0 == iFound) { fprintf(fp, "BaseBot %ld: Fatal error, iFound == 0, ViewCart onClick\n", time(0)); fflush(fp); }
         }
 
-        //  Now Cart would have been updated after processing Remove
+		//	Add delivery charges if not added already
         Product::Ptr pProduct;
+		if(!cartItems.empty() && !getDBHandle()->isProdCarted(PROD_DLVRY_CHARGE, pUser->m_OrderNo, fp)) {
+            pProduct    = getDBHandle()->getProductById(PROD_DLVRY_CHARGE, fp);
+			getDBHandle()->addProductToCart(PROD_DLVRY_CHARGE, 1, pProduct->m_Price, pMsg->chat->id, fp);
+			cartItems   = getDBHandle()->getCartItemsForOrderNo(pUser->m_OrderNo, fp);
+		}
+
+        //  Now Cart would have been updated after processing Remove
         for(itrCart = cartItems.begin(); itrCart != cartItems.end(); itrCart++) {
             pProduct    = getDBHandle()->getProductById((*itrCart)->m_ProductId, fp);
             products.push_back(pProduct);
