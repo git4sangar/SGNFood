@@ -1211,9 +1211,9 @@ void DBInterface::updateAllDelivered(FILE *fp) {
     ss << "UPDATE Cart SET " << Cart::CART_STATUS << " = " << getIntStatus(CartStatus::DELIVERED) << " WHERE "
                 << Cart::CART_ORDER_NO << " IN (SELECT " << POrder::PORDER_NO << " FROM POrder WHERE "
                 << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND ("
-				<< POrder::PORDER_NO << " % 2) != 0);";
-//                << POrder::PORDER_NO << " % 2) != 0 AND "
-//                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) <= \"" << getYstrDate() << "\");";
+//				<< POrder::PORDER_NO << " % 2) != 0);";
+                << POrder::PORDER_NO << " % 2) != 0 AND "
+                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) <= \"" << getYstrDate() << "\");";
     m_hDB->exec(ss.str());
 
     ss.str(std::string());
@@ -1222,9 +1222,9 @@ void DBInterface::updateAllDelivered(FILE *fp) {
             << POrder::PORDER_DLVR_TM << " = \"" << getCurTime()
             << "\" WHERE "
                 << POrder::PORDER_STATUS << " = " << getIntStatus(CartStatus::READY_FOR_DELIVERY) << " AND ("
-                << POrder::PORDER_NO << " % 2) != 0;";
-//                << POrder::PORDER_NO << " % 2) != 0 AND "
-//                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) <= \"" << getYstrDate() << "\";";
+//                << POrder::PORDER_NO << " % 2) != 0;";
+                << POrder::PORDER_NO << " % 2) != 0 AND "
+                << "SUBSTR(" << POrder::PORDER_ORDR_TM << ", 1, 10) <= \"" << getYstrDate() << "\";";
     m_hDB->exec(ss.str());
     transaction.commit();
 }

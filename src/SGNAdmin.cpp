@@ -147,6 +147,12 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     int iOutstanding = 0, iLoop = 0;
     std::stringstream ss;
 
+    //  Is this user an Admin?
+	bool isAdmin = false;
+    std::vector<unsigned int>::const_iterator itr;
+    for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
+	if(!isAdmin) { fprintf(fp, "Unauthorized Admin\n"); fflush(fp); STR_MSG_DEFF_RELEASE = "Unauthorized Access"; return; }
+
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
         std::string strMsg = pMsg->text;
         int iPos = 0, iUserId = 0, iCount = 0;
