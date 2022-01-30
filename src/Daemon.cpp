@@ -47,6 +47,7 @@
 #include "HttpClient.h"
 
 #define MYPORT (60000)
+#define UPDATE_ID_FILE "update_id.txt"
 
 std::map<unsigned int, UserContext> m_Context;
 std::vector<unsigned int> adminChatIds;
@@ -183,6 +184,7 @@ void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot, DBInterface::Ptr hDB, FI
     std::vector<Notifs::Ptr> notifs;
     std::vector<Notifs::Ptr>::iterator itr;
     unsigned int iLoop = 0, iChatId = 0;
+	//std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>("1351042610:AAFJriXJPfpsZs--xaKVKp7kjVf7n7tQr7Q");	// ManiMama Bot
 
     while(1) {
         //  Check if any in database
@@ -197,7 +199,7 @@ void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot, DBInterface::Ptr hDB, FI
                     if(!(iLoop%10)) pBot->getApi().sendMessage(adminChatIds[1], "Pls wait sending notifications.", false, 0, nullptr, "HTML");
                 } catch(std::exception &e) {
                     std::string strExcept = e.what();
-                    //if(std::string::npos != strExcept.find("blocked") || std::string::npos != strExcept.find("not found")) hDB->updateLeftUser(iChatId, fp);
+                    if(std::string::npos != strExcept.find("blocked") || std::string::npos != strExcept.find("not found")) hDB->deactivate(iChatId, fp);
                     fprintf(fp, "Exception : %s, while sending notification to user.\n", strExcept.c_str()); fflush(fp);
                 }
                 if(itr != notifs.end())hDB->removeNotif((*itr)->m_NotifId, fp);
@@ -233,6 +235,36 @@ std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator isSingleOrder
     }
     return retItr;
 }
+
+std::int32_t getUpdateId() {
+    std::string root_path   = std::string(BOT_ROOT_PATH);
+    std::string log_path    = std::string(BOT_LOG_PATH);
+    std::string update_file	= root_path + log_path + UPDATE_ID_FILE;
+
+    std::string strUpdateId("0");
+    std::ifstream myfile(update_file);
+	if(myfile.is_open()) {
+	    myfile >> strUpdateId;
+		myfile.close();
+	}
+    return std::stoi(strUpdateId);    
+}
+
+void setUpdateId(std::int32_t updateId) {
+	static std::int32_t prev = 0;
+    std::string root_path   = std::string(BOT_ROOT_PATH);
+    std::string log_path    = std::string(BOT_LOG_PATH);
+    std::string update_file	= root_path + log_path + UPDATE_ID_FILE;
+
+	if(prev != updateId) {
+		prev = updateId;
+	    std::ofstream myfile(update_file, std::ios::trunc);
+	    myfile << std::to_string(updateId);
+		myfile.flush();
+	    myfile.close();
+	}
+}
+
 void BotMainLoop(FILE *fp) {
     std::string root_path   = std::string(BOT_ROOT_PATH);
     std::string db_path     = std::string(BOT_DB_PATH);
@@ -412,14 +444,16 @@ void BotMainLoop(FILE *fp) {
     //fprintf(fp, "BaseBot %ld: Bot username %s\n", time(0), pBot->getApi().getMe()->username.c_str()); fflush(fp);
 
     std::shared_ptr<TgBot::TgLongPoll> pLongPoll  = std::make_shared<TgBot::TgLongPoll>(*pBot, 100, 3);
+	std::int32_t update_id = getUpdateId();
     while (true) {
         try {
             petWatchDog(fp);
-            //pBot->getApi().deleteWebhook();
-            //fprintf(fp, "BaseBot %ld: Long poll started\n", time(0)); fflush(fp);
-            pLongPoll->start();
+    		pBot->getApi().deleteWebhook();
+            update_id = pLongPoll->start(update_id);
+			setUpdateId(update_id);
         } catch (std::exception& e) {
-            fprintf(fp, "BaseBot %ld: An exception occured at longPoll %s\n", time(0), e.what()); fflush(fp);
+			if(update_id > 0) update_id++;
+            fprintf(fp, "BaseBot %ld: An exception occured at longPoll %s\nUpdating id %d\n", time(0), e.what(), update_id); fflush(fp);
         }
     }
 }

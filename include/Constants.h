@@ -20,7 +20,8 @@
 
 //------------------------------------Mani Mama------------------------------------
 #ifdef MANI_MAMA
-    #define BOT_TOKEN       "1351042610:AAGlnvR26ZsX7ElSyU8l3PwIcJ8GMs48N0Q"
+    #define BOT_TOKEN       "1351042610:AAFJriXJPfpsZs--xaKVKp7kjVf7n7tQr7Q"	//	ManiMama_Bot
+    //#define BOT_TOKEN       "2109953794:AAFYLFRhfanODUdjmkYmf8a3o_FC6xKQ1Oc"	//	ManiIyer Bot
     #define BOT_DB_FILE     "sgn_mani.db"
     #define BOT_LOG_FILE    "log_file_mani.log"
     #define PAYTM_MOBILE    "93410 66700"
@@ -51,7 +52,6 @@
         #define BOT_ROOT_PATH     "/home/sgn/sgn/projs/SGNFood/mani_mama/"
     #endif
 #endif
-
 #define AURA_BOT        "655366902:AAGEaKH0q1xXu0Lwd5C5HBDZsUnPTjn13X4"
 #define THRAYA_BOT      "664320846:AAHffJ_8LG0W8eGCuYsrgkK4fOCj9j2FgTo"
 

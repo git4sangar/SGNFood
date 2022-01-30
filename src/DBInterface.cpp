@@ -219,6 +219,19 @@ int DBInterface::getLeftUserWBal(unsigned int iChatId, FILE *fp) {
     return iWBal;
 }
 
+void DBInterface::deactivate(unsigned int iChatId, FILE *fp) {
+    std::stringstream ss;
+    SQLite::Transaction transaction(*m_hDB);
+    User::Ptr pUser = getUserForChatId(iChatId, fp);
+
+    if(pUser) {
+        ss.str("");
+        ss << "UPDATE User SET is_active = 0 WHERE " << User::USER_CHAT_ID << " = " << iChatId << ";";
+        m_hDB->exec(ss.str());
+        transaction.commit();
+    }
+}
+
 void DBInterface::updateLeftUser(unsigned int iChatId, FILE *fp) {
     std::stringstream ss;
     SQLite::Transaction transaction(*m_hDB);
@@ -248,6 +261,7 @@ User::Ptr DBInterface::getUser(SQLite::Statement *pQuery) {
     pUser->m_Address    = pQuery->getColumn(User::USER_ADDRESS.c_str()).getString();
     pUser->m_WBalance   = pQuery->getColumn(User::USER_WBALANCE.c_str()).getInt();
     pUser->m_TransacNo  = pQuery->getColumn(User::USER_TRANSAC_NO.c_str()).getInt();
+	pUser->m_isActive	= pQuery->getColumn("is_active").getInt();
     return pUser;
 }
 
@@ -329,7 +343,7 @@ User::Ptr DBInterface::forceWalletBalance(std::string strUserId, std::string str
 int DBInterface::getNoOfUsers(FILE *fp) {
     int iNoOfUsers = 0;
 
-    SQLite::Statement query(*m_hDB, "SELECT COUNT(*) FROM User;");
+    SQLite::Statement query(*m_hDB, "SELECT COUNT(*) FROM User WHERE is_active = 1;");
     if(query.executeStep()) {
         iNoOfUsers = query.getColumn("COUNT(*)").getUInt();
     }
@@ -428,15 +442,20 @@ Notifs::Ptr DBInterface::getNotif(SQLite::Statement *pQuery) {
 void DBInterface::updateNotifications(std::map<unsigned int, std::string> notifs, FILE *fp) {
     SQLite::Transaction transaction(*m_hDB);
     std::map<unsigned int, std::string>::iterator itrNtfy;
+	bool needToCommit = false;
 
     for(itrNtfy = notifs.begin(); itrNtfy != notifs.end(); itrNtfy++) {
+		User::Ptr pUser = nullptr;
+		if(MAX_USERS < itrNtfy->first) pUser  = getUserForChatId(itrNtfy->first, fp);
+		if(pUser && !pUser->m_isActive) continue;
         std::stringstream ss;
         ss << "INSERT INTO Notifs (" << Notifs::NOTIF_CHAT_ID << ", " << Notifs::NOTIF_MSG
                             << ") VALUES ("
            << itrNtfy->first << ", \"" << itrNtfy->second << "\");";
         m_hDB->exec(ss.str());
+		needToCommit = true;
     }
-    if(0 < notifs.size()) transaction.commit();
+    if(needToCommit) transaction.commit();
 }
 
 void DBInterface::removeNotif(unsigned int iNotifId, FILE *fp) {

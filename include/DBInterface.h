@@ -34,7 +34,7 @@ public:
     typedef std::shared_ptr<User> Ptr;
     unsigned int m_UserId, m_ChatId, m_OrderNo, m_TransacNo;
     int m_WBalance;
-    unsigned int m_ProdId;
+    unsigned int m_ProdId, m_isActive;
     unsigned long long m_Mobile;
     std::string m_Name, m_Address;
 
@@ -207,6 +207,7 @@ public:
     void updateTransacNo(unsigned int iUserId, FILE *fp);
     bool addNewUser(int64_t chatId, std::string fname, FILE *fp);
     void updateLeftUser(unsigned int iChatId, FILE *fp);
+	void deactivate(unsigned int iChatId, FILE *fp);
     std::vector<User::Ptr> getAllUsers(FILE *fp);
     User::Ptr getUserForChatId(unsigned int iChatId, FILE *fp);
     User::Ptr getUserForUserId(unsigned int iUserId, FILE *fp);
