@@ -22,7 +22,8 @@
 #ifdef MANI_MAMA
     #define BOT_TOKEN       "1351042610:AAFJriXJPfpsZs--xaKVKp7kjVf7n7tQr7Q"	//	ManiMama_Bot
     //#define BOT_TOKEN       "2109953794:AAFYLFRhfanODUdjmkYmf8a3o_FC6xKQ1Oc"	//	ManiIyer Bot
-    #define BOT_DB_FILE     "sgn_mani.db"
+    #define BOT_DB_FILE     "sgn_mani_no_git.db"
+    //#define BOT_DB_FILE     "sgn_mani.db"
     #define BOT_LOG_FILE    "log_file_mani.log"
     #define PAYTM_MOBILE    "93410 66700"
     #define GPAY_MOBILE     "93410 66700"
@@ -213,8 +214,8 @@
 //enum class UserContext {ADDRESS, CLEANUP, PRICE_CHANGE, NEW_ORDER, CNF_ORDER, YOUR_ORDER, REVIEW, NOTA};
 typedef int UserContext;
 
-extern std::map<unsigned int, UserContext> m_Context;
-extern std::vector<unsigned int> adminChatIds;
+extern std::map<int64_t, UserContext> m_Context;
+extern std::vector<int64_t> adminChatIds;
 //extern bool isAgent;
 
 extern std::string getAddressNotification();

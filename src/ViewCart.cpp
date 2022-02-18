@@ -138,7 +138,7 @@ TgBot::GenericReply::Ptr ViewCart::prepareMenu(std::map<std::string, std::shared
     }
 
     //  The predefined address is contained in button text
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) &&
         m_Context[pMsg->chat->id] == USER_CTXT_CLEANUP) {
         m_Context.erase(itrCntxt);

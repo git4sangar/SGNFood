@@ -131,7 +131,7 @@ void EditMenu::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     getDBHandle()->addNewUser(pMsg->chat->id, pMsg->from->firstName, fp);
 
     bool isAdmin = false;
-    std::vector<unsigned int>::const_iterator itr;
+    std::vector<int64_t>::const_iterator itr;
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
 
     if(!isAdmin) return;

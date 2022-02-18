@@ -55,7 +55,7 @@ public:
 
     virtual std::vector<unsigned int> getChatIdsForNotification(TgBot::Message::Ptr pMessage, FILE *fp) {return std::vector<unsigned int>();}
     //std::vector<unsigned int> getNotifyUsers() {return m_hDB->getNotifyUsers();}
-    virtual std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return std::map<unsigned int, std::string>();}
+    virtual std::map<int64_t, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return std::map<int64_t, std::string>();}
 
     virtual bool isPlsWait() {return true;}
     virtual void init(TgBot::Message::Ptr pMsg, FILE *fp) = 0;

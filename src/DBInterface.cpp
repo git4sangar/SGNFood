@@ -96,7 +96,7 @@ DBInterface::DBInterface(std::string dbFileName, FILE *fp) {
 
 DBInterface::~DBInterface() {}
 
-void DBInterface::retainProdId(unsigned int iChatId, unsigned int iProdId, FILE *fp) {
+void DBInterface::retainProdId(int64_t iChatId, unsigned int iProdId, FILE *fp) {
     std::stringstream ss;
     SQLite::Transaction transaction(*m_hDB);
     ss << "UPDATE User SET " << User::USER_PROD_ID << " = " << iProdId << " WHERE " << User::USER_CHAT_ID << " = " << iChatId << ";";
@@ -104,7 +104,7 @@ void DBInterface::retainProdId(unsigned int iChatId, unsigned int iProdId, FILE 
     transaction.commit();
 }
 
-unsigned int DBInterface::getChosenProduct(unsigned int iChatId, FILE *fp) {
+unsigned int DBInterface::getChosenProduct(int64_t iChatId, FILE *fp) {
     unsigned int iProdId = 0;
     std::stringstream ss;
 
@@ -207,7 +207,7 @@ bool DBInterface::addNewUser(int64_t chatId, std::string fname, FILE *fp) {
     return true;
 }
 
-int DBInterface::getLeftUserWBal(unsigned int iChatId, FILE *fp) {
+int DBInterface::getLeftUserWBal(int64_t iChatId, FILE *fp) {
     std::stringstream ss;
     int iWBal = 0;
 
@@ -219,7 +219,7 @@ int DBInterface::getLeftUserWBal(unsigned int iChatId, FILE *fp) {
     return iWBal;
 }
 
-void DBInterface::deactivate(unsigned int iChatId, FILE *fp) {
+void DBInterface::deactivate(int64_t iChatId, FILE *fp) {
     std::stringstream ss;
     SQLite::Transaction transaction(*m_hDB);
     User::Ptr pUser = getUserForChatId(iChatId, fp);
@@ -232,7 +232,7 @@ void DBInterface::deactivate(unsigned int iChatId, FILE *fp) {
     }
 }
 
-void DBInterface::updateLeftUser(unsigned int iChatId, FILE *fp) {
+void DBInterface::updateLeftUser(int64_t iChatId, FILE *fp) {
     std::stringstream ss;
     SQLite::Transaction transaction(*m_hDB);
     User::Ptr pUser = getUserForChatId(iChatId, fp);
@@ -255,7 +255,7 @@ User::Ptr DBInterface::getUser(SQLite::Statement *pQuery) {
     User::Ptr pUser     = std::make_shared<User>();
     pUser->m_UserId     = pQuery->getColumn(User::USER_ID.c_str()).getInt();
     pUser->m_Name       = pQuery->getColumn(User::USER_NAME.c_str()).getString();
-    pUser->m_ChatId     = pQuery->getColumn(User::USER_CHAT_ID.c_str()).getInt();
+    pUser->m_ChatId     = pQuery->getColumn(User::USER_CHAT_ID.c_str()).getInt64();
     pUser->m_OrderNo    = pQuery->getColumn(User::USER_ORDER_NO.c_str()).getInt();
     pUser->m_ProdId     = pQuery->getColumn(User::USER_PROD_ID.c_str()).getInt64();
     pUser->m_Address    = pQuery->getColumn(User::USER_ADDRESS.c_str()).getString();
@@ -361,7 +361,7 @@ User::Ptr DBInterface::getUserForUserId(unsigned int iUserId, FILE *fp) {
     return pUser;
 }
 
-User::Ptr DBInterface::getUserForChatId(unsigned int iChatId, FILE *fp) {
+User::Ptr DBInterface::getUserForChatId(int64_t iChatId, FILE *fp) {
     std::stringstream ss;
     User::Ptr pUser;
     ss << "SELECT * FROM User WHERE " << User::USER_CHAT_ID << " = " << iChatId << ";";
@@ -383,7 +383,7 @@ User::Ptr DBInterface::getUserForOrderNo(unsigned int iOrderNo, FILE *fp) {
     return pUser;
 }
 
-int DBInterface::addProductToCart(unsigned int iProdId, unsigned qty, unsigned int iPrice, unsigned int chatId, FILE *fp) {
+int DBInterface::addProductToCart(unsigned int iProdId, unsigned qty, unsigned int iPrice, int64_t chatId, FILE *fp) {
     std::stringstream ss;
     int iQty = 0;
     User::Ptr pUser = getUserForChatId(chatId, fp);
@@ -432,16 +432,16 @@ Notifs::Ptr DBInterface::getNotif(SQLite::Statement *pQuery) {
     Notifs::Ptr pNotif  = std::make_shared<Notifs>();
 
     pNotif->m_NotifId   = pQuery->getColumn(Notifs::NOTIF_ID.c_str()).getUInt();
-    pNotif->m_ChatId    = pQuery->getColumn(Notifs::NOTIF_CHAT_ID.c_str()).getUInt();
+    pNotif->m_ChatId    = pQuery->getColumn(Notifs::NOTIF_CHAT_ID.c_str()).getInt64();
     pNotif->m_UserId    = pQuery->getColumn(Notifs::NOTIF_USER_ID.c_str()).getUInt();
     pNotif->m_Name      = pQuery->getColumn(Notifs::NOTIF_NAME.c_str()).getString();
     pNotif->m_Msg       = pQuery->getColumn(Notifs::NOTIF_MSG.c_str()).getString();
     return pNotif;
 }
 
-void DBInterface::updateNotifications(std::map<unsigned int, std::string> notifs, FILE *fp) {
+void DBInterface::updateNotifications(std::map<int64_t, std::string> notifs, FILE *fp) {
     SQLite::Transaction transaction(*m_hDB);
-    std::map<unsigned int, std::string>::iterator itrNtfy;
+    std::map<int64_t, std::string>::iterator itrNtfy;
 	bool needToCommit = false;
 
     for(itrNtfy = notifs.begin(); itrNtfy != notifs.end(); itrNtfy++) {
@@ -458,7 +458,7 @@ void DBInterface::updateNotifications(std::map<unsigned int, std::string> notifs
     if(needToCommit) transaction.commit();
 }
 
-void DBInterface::removeNotif(unsigned int iNotifId, FILE *fp) {
+void DBInterface::removeNotif(int64_t iNotifId, FILE *fp) {
     SQLite::Transaction transaction(*m_hDB);
     std::stringstream ss;
 

@@ -15,7 +15,7 @@
 
 class QuickMenu : public BaseButton, public std::enable_shared_from_this<QuickMenu> {
     nlohmann::fifo_map<std::string, int> qty, pcs;
-    std::map<unsigned int, std::string> notifyMsgs;
+    std::map<int64_t, std::string> notifyMsgs;
     Product::Ptr pProd;
     std::string strPicFile;
 public:
@@ -60,7 +60,7 @@ public:
     void onClick(TgBot::Message::Ptr pMessage, FILE *fp);
     TgBot::InputFile::Ptr getMedia(TgBot::Message::Ptr pMsg, FILE *fp);
 
-    std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
+    std::map<int64_t, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
 
     static std::string STR_MSG_DEFF_RELEASE;
 };

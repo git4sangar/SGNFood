@@ -177,7 +177,7 @@ Product::Ptr SGNParser::getProduct(item itm, FILE *fp) {
 }
 
 std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator
-    SGNParser::parse(std::string strOrder, std::map<std::string, std::shared_ptr<BaseButton>>& listKBBtns, unsigned int iChatId, FILE *fp) {
+    SGNParser::parse(std::string strOrder, std::map<std::string, std::shared_ptr<BaseButton>>& listKBBtns, int64_t iChatId, FILE *fp) {
     std::vector<std::string> tokens;
     std::string token, strNum;
     int iNum = -1;

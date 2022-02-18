@@ -108,7 +108,7 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
     unsigned int iLoop = 0, iPrev = 0, iNext = 0, iToggle = 0, iRowIndex = 0, iCurItms = 0, iCount = 0;
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
     std::stringstream ss;
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
 
     std::string strChatId   = std::to_string(pMsg->chat->id);
@@ -206,8 +206,8 @@ void ProductList::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: ProductList onClick pMsg %s {\n", time(0), pMsg->text.c_str()); fflush(fp);
     getDBHandle()->addNewUser(pMsg->chat->id, pMsg->from->firstName, fp);
 
-    std::vector<unsigned int>::const_iterator itr;
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::vector<int64_t>::const_iterator itr;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
     unsigned int iLoop = 0, iOrderNo;
     std::stringstream ss;

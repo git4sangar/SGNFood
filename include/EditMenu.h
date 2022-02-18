@@ -20,7 +20,7 @@ class EditMenu : public BaseButton, public std::enable_shared_from_this<EditMenu
     std::vector<Product::Ptr> products;
     std::string asset_file;
     unsigned int iSelPage, iNoOfItems;
-    std::map<unsigned int, std::string> notifyMsgs;
+    std::map<int64_t, std::string> notifyMsgs;
 
 public:
     EditMenu(DBInterface::Ptr hDB) : BaseButton(hDB), iSelPage(0), iNoOfItems(0) {}
@@ -41,7 +41,7 @@ public:
     std::string getParseMode() {return std::string("HTML");}
     void create_product_table(std::string file_name ,FILE *fp);
 
-    std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
+    std::map<int64_t, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     static std::string STR_MSG_DEFF_RELEASE;
 };
 

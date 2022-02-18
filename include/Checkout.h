@@ -24,7 +24,7 @@ class Checkout : public BaseButton, public std::enable_shared_from_this<Checkout
     unsigned int iNoOfItems;
     User::Ptr pUser;
     std::vector<Cart::Ptr> cartItems;
-    std::map<unsigned int, std::string> notifyMsgs;
+    std::map<int64_t, std::string> notifyMsgs;
     std::shared_ptr<HttpClient> pHttpClient;
 
 public:
@@ -47,23 +47,23 @@ public:
     std::shared_ptr<BaseButton> getSharedPtr() {return shared_from_this();}
     std::string getParseMode() {return "HTML";}
 
-    std::string getPaymentString(unsigned int iWho, unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp);
+    std::string getPaymentString(int64_t iWho, unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp);
     std::string getTopUpString();
-    void getPaymentLink(unsigned int iWho, unsigned int iOrderNo, int iAmt, std::string strUserName, std::string strAddress, FILE *fp);
+    void getPaymentLink(int64_t iWho, unsigned int iOrderNo, int iAmt, std::string strUserName, std::string strAddress, FILE *fp);
     std::string getMobileNo(std::string strAddress);
 
     //  Overriding cleanup, otherwise it clears up what is just set in prepareMenu
     void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}
 
-    std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
+    std::map<int64_t, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     TgBot::InputFile::Ptr getMedia(TgBot::Message::Ptr pMsg, FILE *fp);
 
     static std::string STR_MSG_DEFF_RELEASE;
     static std::string STR_BTN_GPAY_TOP_UP, STR_BTN_PAYTM_TOP_UP, STR_BTN_PHONEPE_TOP_UP;
 
     //  For HTTP Client
-    void onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, std::string strPaymentLink, FILE *fp);
-    void onDownloadFailure(unsigned int iChatId, unsigned int iOrderNo, FILE *fp);
+    void onDownloadSuccess(int64_t iChatId, unsigned int iOrderNo, std::string strPaymentLink, FILE *fp);
+    void onDownloadFailure(int64_t iChatId, unsigned int iOrderNo, FILE *fp);
 };
 
 

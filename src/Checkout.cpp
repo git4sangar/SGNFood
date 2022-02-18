@@ -45,7 +45,7 @@ std::string Checkout::getMobileNo(std::string strAddress) {
 
 
 #ifdef AURA
-std::string Checkout::getPaymentString(unsigned int iWho, unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp) {
+std::string Checkout::getPaymentString(int64_t iWho, unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp) {
     getPaymentLink(iWho, iOrderNo, iTotal, strName, strAddress, fp);
     std::stringstream ss;
 
@@ -56,7 +56,7 @@ std::string Checkout::getPaymentString(unsigned int iWho, unsigned int iOrderNo,
     return ss.str();
 }
 #else
-std::string Checkout::getPaymentString(unsigned int iWho, unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp) {
+std::string Checkout::getPaymentString(int64_t iWho, unsigned int iOrderNo, std::string strName, std::string strAddress, int iTotal, FILE *fp) {
     std::stringstream ss;
     int iNewBal = pUser->m_WBalance - iTotal;
 
@@ -73,7 +73,7 @@ std::string Checkout::getPaymentString(unsigned int iWho, unsigned int iOrderNo,
 }
 #endif
 
-void Checkout::getPaymentLink(unsigned int iWho, unsigned int iOrderNo, int iAmt, std::string strUserName, std::string strAddress,FILE *fp) {
+void Checkout::getPaymentLink(int64_t iWho, unsigned int iOrderNo, int iAmt, std::string strUserName, std::string strAddress,FILE *fp) {
     std::stringstream ssTmp, ssUrl;
 
     std::map<std::string, std::string> formData;
@@ -93,11 +93,11 @@ void Checkout::getPaymentLink(unsigned int iWho, unsigned int iOrderNo, int iAmt
 }
 
 //  Called from Http thread context. Accessing member variables is prohibited.
-void Checkout::onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp) {
+void Checkout::onDownloadSuccess(int64_t iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp) {
     boost::property_tree::ptree root;
     std::string strSuccess = "OK";  //  Case sensitive
 
-    std::map<unsigned int, std::string> msgToUsers;
+    std::map<int64_t, std::string> msgToUsers;
     std::stringstream ss, ssMsg1, ssMsg2; ss << strResp;
 	User::Ptr   pUser   = getDBHandle()->getUserForChatId(iChatId, fp);
 
@@ -116,9 +116,9 @@ void Checkout::onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, st
 }
 
 //  Called from Http thread context. Accessing member variables is prohibited.
-void Checkout::onDownloadFailure(unsigned int iChatId, unsigned int iOrderNo, FILE *fp) {
+void Checkout::onDownloadFailure(int64_t iChatId, unsigned int iOrderNo, FILE *fp) {
     std::stringstream ssMsg1;
-    std::map<unsigned int, std::string> msgToUsers;
+    std::map<int64_t, std::string> msgToUsers;
     ssMsg1 << "Something went wrong. Pls try checking out again.\n";
     msgToUsers[iChatId] = ssMsg1.str() ;
     getDBHandle()->updateNotifications(msgToUsers, fp);

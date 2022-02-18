@@ -30,7 +30,7 @@ class SingleOrder : public BaseButton, public std::enable_shared_from_this<Singl
     std::vector<Cart::Ptr> orderItems;
     std::vector<Product::Ptr> products;
     std::map<std::string, unsigned int> mapCmdToInt;
-    std::map<unsigned int, std::string> notifyMsgs;
+    std::map<int64_t, std::string> notifyMsgs;
     POrder::Ptr pOrder;
     std::string asset_file, pageName;
     UserContext usrCtxt;
@@ -56,12 +56,12 @@ public:
     std::vector<std::string> split_address(std::string strAddress);
     int addAddressToPNG(std::shared_ptr<pngwriter> pPNGWriter, int iPgLn, std::string strAddress, int iOrderNo, std::string strUserId);
 
-    std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
+    std::map<int64_t, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     static std::string STR_MSG_DEFF_RELEASE;
 
     //  For HTTP Client
-    void onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, std::string strPaymentLink, FILE *fp);
-    void onDownloadFailure(unsigned int iChatId, unsigned int iOrderNo, FILE *fp);
+    void onDownloadSuccess(int64_t iChatId, unsigned int iOrderNo, std::string strPaymentLink, FILE *fp);
+    void onDownloadFailure(int64_t iChatId, unsigned int iOrderNo, FILE *fp);
 
 	void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp) {}
 };

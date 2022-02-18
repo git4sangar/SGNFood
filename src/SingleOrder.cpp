@@ -138,12 +138,12 @@ int SingleOrder::create_order_items_table(std::shared_ptr<pngwriter> pPNGWriter,
 }
 
 //  Called from Http thread context. Accessing member variables is prohibited.
-void SingleOrder::onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp) {
+void SingleOrder::onDownloadSuccess(int64_t iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp) {
     boost::property_tree::ptree root;
     User::Ptr   pUser;
     std::string strSuccess = "OK", strActive = "ACTIVE", strPaid = "PAID";
     std::stringstream ss, ssMsg1;
-    std::map<unsigned int, std::string> msgToUsers;
+    std::map<int64_t, std::string> msgToUsers;
 
     ss << strResp;
     boost::property_tree::read_json(ss, root);
@@ -173,13 +173,13 @@ void SingleOrder::onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo,
 			ssMsg1 <<"\n<b>Payment not made yet.</b>";
         }
         msgToUsers[iChatId] = ssMsg1.str();
-        fprintf(fp, "ChatId: %d, Msg: %s\n", iChatId, msgToUsers[iChatId].c_str());fflush(fp);
+        fprintf(fp, "ChatId: %ld, Msg: %s\n", iChatId, msgToUsers[iChatId].c_str());fflush(fp);
         getDBHandle()->updateNotifications(msgToUsers, fp);
     }
 }
 
 //  Called from Http thread context. Accessing member variables is prohibited.
-void SingleOrder::onDownloadFailure(unsigned int iChatId, unsigned int iOrderNo, FILE *fp) {}
+void SingleOrder::onDownloadFailure(int64_t iChatId, unsigned int iOrderNo, FILE *fp) {}
 
 TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SingleOrder::prepareMenu {\n", time(0)); fflush(fp);
@@ -188,7 +188,7 @@ TgBot::GenericReply::Ptr SingleOrder::prepareMenu(std::map<std::string, std::sha
     std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
     std::string strText;
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
 
     if(0 == iNoOfItems) {
@@ -275,11 +275,11 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     Product::Ptr pProduct;
     std::string strOrderNo, strCmd, strSNo;
     bool isAdmin = false;
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     User::Ptr pUser = nullptr;
 
     //  Is this user an Admin?
-    std::vector<unsigned int>::const_iterator itr;
+    std::vector<int64_t>::const_iterator itr;
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
     fprintf(fp, "BaseBot %ld: SingleOrder onClick, isAdmin: %d\n", time(0), isAdmin); fflush(fp);
 

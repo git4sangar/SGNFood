@@ -72,7 +72,7 @@ TgBot::GenericReply::Ptr WalletMgmt::prepareMenu(std::map<std::string, std::shar
     unsigned int iLoop = 0, iPrev = 0, iNext = 0, iToggle = 0, iRowIndex = 0;
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
 
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
 
     std::string strChatId   = std::to_string(pMsg->chat->id);
@@ -149,11 +149,11 @@ void WalletMgmt::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 
     //  Check if he is Admin
     bool isAdmin = false;
-    std::vector<unsigned int>::const_iterator itr;
+    std::vector<int64_t>::const_iterator itr;
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
     if(!isAdmin) return;
 
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     std::string strMsg = pMsg->text;
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) ) {
         POrder::Ptr pOrder  = nullptr; User::Ptr pUser    = nullptr;

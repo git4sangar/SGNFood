@@ -49,12 +49,11 @@
 #define MYPORT (60000)
 #define UPDATE_ID_FILE "update_id.txt"
 
-std::map<unsigned int, UserContext> m_Context;
-std::vector<unsigned int> adminChatIds;
+std::map<int64_t, UserContext> m_Context;
+std::vector<int64_t> adminChatIds;
 nlohmann::fifo_map<std::string, std::string> descToCode;
 pthread_mutex_t mtx_01;
-std::vector< std::tuple<unsigned int, unsigned int> > inTm;
-std::map<unsigned int, unsigned int> inMsgTmStamps;
+std::vector< std::tuple<int64_t, unsigned int> > inTm;
 std::string BotVersion::STR_MSG_DEFF_RELEASE;
 //bool isAgent;
 
@@ -88,7 +87,7 @@ void BaseButton::cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::sh
     if(lstBaseBtns.end() != (itrBtn = lstBaseBtns.find(std::to_string(pMsg->chat->id)))) {
         lstBaseBtns.erase(itrBtn);
 
-        std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+        std::map<int64_t, UserContext>::const_iterator itrCntxt;
         if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)))
             m_Context.erase(itrCntxt);
     }
@@ -159,8 +158,8 @@ void petWatchDog(FILE *fp) {
 
 void plsWaitThread(std::shared_ptr<TgBot::Bot> pBot, FILE *fp) {
     time_t curTm;
-    std::vector<unsigned int> chatIds;
-    std::vector< std::tuple<unsigned int, unsigned int> >::iterator itrWait;
+    std::vector<int64_t> chatIds;
+    std::vector< std::tuple<int64_t, unsigned int> >::iterator itrWait;
 
     while(1) {
         chatIds.clear();
@@ -183,7 +182,7 @@ void plsWaitThread(std::shared_ptr<TgBot::Bot> pBot, FILE *fp) {
 void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot, DBInterface::Ptr hDB, FILE *fp) {
     std::vector<Notifs::Ptr> notifs;
     std::vector<Notifs::Ptr>::iterator itr;
-    unsigned int iLoop = 0, iChatId = 0;
+    int64_t iLoop = 0, iChatId = 0;
 	//std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>("1351042610:AAFJriXJPfpsZs--xaKVKp7kjVf7n7tQr7Q");	// ManiMama Bot
 
     while(1) {
@@ -413,7 +412,7 @@ void BotMainLoop(FILE *fp) {
 
         if(pBaseBtn->isPlsWait()) {
             pthread_mutex_lock(&mtx_01);
-            std::vector< std::tuple<unsigned int, unsigned int> >::iterator itrWait;
+            std::vector< std::tuple<int64_t, unsigned int> >::iterator itrWait;
             for(itrWait = inTm.begin(); inTm.end() != itrWait; itrWait++) if(std::get<0>(*itrWait) == pMsg->chat->id) { inTm.erase(itrWait); break; }
             pthread_mutex_unlock(&mtx_01);
         }
@@ -444,7 +443,7 @@ void BotMainLoop(FILE *fp) {
     //fprintf(fp, "BaseBot %ld: Bot username %s\n", time(0), pBot->getApi().getMe()->username.c_str()); fflush(fp);
 
     std::shared_ptr<TgBot::TgLongPoll> pLongPoll  = std::make_shared<TgBot::TgLongPoll>(*pBot, 100, 3);
-	std::int32_t update_id = getUpdateId();
+ 	std::int32_t update_id = getUpdateId();
     while (true) {
         try {
             petWatchDog(fp);

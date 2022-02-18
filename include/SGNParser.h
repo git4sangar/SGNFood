@@ -42,7 +42,7 @@ public:
     std::string getItem(item itm, FILE *fp);
     int getQuantity(std::string strQty, FILE *fp);
     std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator
-            parse(std::string strOrder, std::map<std::string, std::shared_ptr<BaseButton>>& listKBBtns, unsigned int iChatId, FILE *fp);
+            parse(std::string strOrder, std::map<std::string, std::shared_ptr<BaseButton>>& listKBBtns, int64_t iChatId, FILE *fp);
     Product::Ptr getProduct(item itm, FILE *fp);
 };
 

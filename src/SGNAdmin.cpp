@@ -69,7 +69,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
     std::string strText;
     std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
     unsigned int iLoop = 0, iRowIndex = 0;
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
 
@@ -142,14 +142,14 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
 void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: SGNAdmin onClick pMsg %s {\n", time(0), pMsg->text.c_str()); fflush(fp);
 
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     User::Ptr pUser = nullptr;
-    int iOutstanding = 0, iLoop = 0;
+    int64_t iOutstanding = 0, iLoop = 0;
     std::stringstream ss;
 
     //  Is this user an Admin?
 	bool isAdmin = false;
-    std::vector<unsigned int>::const_iterator itr;
+    std::vector<int64_t>::const_iterator itr;
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
 	if(!isAdmin) { fprintf(fp, "Unauthorized Admin\n"); fflush(fp); STR_MSG_DEFF_RELEASE = "Unauthorized Access"; return; }
 

@@ -23,7 +23,7 @@ class WalletMgmt : public BaseButton, public std::enable_shared_from_this<Wallet
     std::vector<POrder::Ptr> orders;
     std::string asset_file, pageName;
     unsigned int iNoOfItems, iSelPage;
-    std::map<unsigned int, std::string> notifyMsgs;
+    std::map<int64_t, std::string> notifyMsgs;
 
 public:
     WalletMgmt(DBInterface::Ptr hDB) : BaseButton(hDB), iNoOfItems(0), iSelPage(0) {}
@@ -48,7 +48,7 @@ public:
     //  Overriding cleanup, otherwise it clears up what is just set in prepareMenu
     void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}
 
-    std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
+    std::map<int64_t, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     static std::string STR_MSG_DEFF_RELEASE;
 };
 

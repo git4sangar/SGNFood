@@ -25,7 +25,7 @@ class ProductList : public BaseButton, public std::enable_shared_from_this<Produ
     std::vector<Product::Ptr> products;
     std::string asset_file, strAddress;
     unsigned int iSelPage, iNoOfItems;
-    std::map<unsigned int, std::string> notifyMsgs;
+    std::map<int64_t, std::string> notifyMsgs;
     bool isAdmin;
 
 public:
@@ -48,7 +48,7 @@ public:
     TgBot::InputFile::Ptr getMedia(TgBot::Message::Ptr pMsg, FILE *fp);
 
     void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}
-    std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
+    std::map<int64_t, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     void create_product_table(std::string file_name, std::string strHdr, FILE *fp);
 
 	bool isMobileNoPresent(std::string strAddress);

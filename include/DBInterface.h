@@ -32,7 +32,8 @@ enum class CartStatus{CARTED, PAYMENT_PENDING, READY_FOR_DELIVERY, DELIVERED, CA
 class User {
 public:
     typedef std::shared_ptr<User> Ptr;
-    unsigned int m_UserId, m_ChatId, m_OrderNo, m_TransacNo;
+    unsigned int m_UserId, m_OrderNo, m_TransacNo;
+    int64_t m_ChatId;
     int m_WBalance;
     unsigned int m_ProdId, m_isActive;
     unsigned long long m_Mobile;
@@ -168,7 +169,8 @@ public:
 class Notifs {
 public:
     typedef std::shared_ptr<Notifs> Ptr;
-    unsigned int m_NotifId, m_ChatId, m_UserId;
+    unsigned int m_NotifId, m_UserId;
+    int64_t m_ChatId;
     std::string m_Name, m_Msg;
 
     static std::string NOTIF_ID;
@@ -206,10 +208,10 @@ public:
     void updateOrderNo(unsigned int iUserId, FILE *fp);
     void updateTransacNo(unsigned int iUserId, FILE *fp);
     bool addNewUser(int64_t chatId, std::string fname, FILE *fp);
-    void updateLeftUser(unsigned int iChatId, FILE *fp);
-	void deactivate(unsigned int iChatId, FILE *fp);
+    void updateLeftUser(int64_t iChatId, FILE *fp);
+	void deactivate(int64_t iChatId, FILE *fp);
     std::vector<User::Ptr> getAllUsers(FILE *fp);
-    User::Ptr getUserForChatId(unsigned int iChatId, FILE *fp);
+    User::Ptr getUserForChatId(int64_t iChatId, FILE *fp);
     User::Ptr getUserForUserId(unsigned int iUserId, FILE *fp);
     User::Ptr getUserForOrderNo(unsigned int iOrderNo, FILE *fp);
     int getNoOfUsers(FILE *fp);
@@ -218,9 +220,9 @@ public:
     User::Ptr forceWalletBalance(std::string strUserId, std::string strAmt, FILE *fp);
 //    std::vector<std::string> getAddressesForUser(unsigned int iUserId, FILE *fp);
 
-    void updateNotifications(std::map<unsigned int, std::string> notifs, FILE *fp);
+    void updateNotifications(std::map<int64_t, std::string> notifs, FILE *fp);
     std::vector<Notifs::Ptr> getNotifications(FILE *fp);
-    void removeNotif(unsigned int iNotifId, FILE *fp);
+    void removeNotif(int64_t iNotifId, FILE *fp);
 
     std::vector<std::string> getCategories(FILE *fp);
     Category::Ptr getCategoryForCode(std::string strCode, FILE *fp);
@@ -239,15 +241,15 @@ public:
     Product::Ptr getProductById(unsigned int iProdId, FILE *fp);
     Product::Ptr getProductByName(std::string strName, FILE *fp);
 
-    void retainProdId(unsigned int iChatId, unsigned int iProdId, FILE *fp);
-    unsigned int getChosenProduct(unsigned int iChatId, FILE *fp);
+    void retainProdId(int64_t iChatId, unsigned int iProdId, FILE *fp);
+    unsigned int getChosenProduct(int64_t iChatId, FILE *fp);
 
     std::vector<Product::Ptr> getProductsForCategory(std::string strCat, FILE *fp);
     std::vector<Product::Ptr> getOneProductForCode(std::string strCode, FILE *fp);
     std::vector<Product::Ptr> getOneProductForName(std::string strName, FILE *fp);
     bool updateProductPrice(std::string strPriceId, std::string strPrice, FILE *fp);
 
-    int addProductToCart(unsigned int iProdId, unsigned qty, unsigned int iPrice, unsigned int chatId, FILE *fp);
+    int addProductToCart(unsigned int iProdId, unsigned qty, unsigned int iPrice, int64_t chatId, FILE *fp);
 	bool isProdCarted(unsigned int iProdId, unsigned int iOrderNo, FILE *fp);
     bool reduceCartQty(int iProdId, unsigned int iOrderNo, FILE *fp);
     bool removeItemFromCart(int iProdId, unsigned int iOrderNo, FILE *fp);
@@ -271,7 +273,7 @@ public:
     std::map<unsigned int, unsigned int> getOrderSummary(FILE *fp);
     void setPaymentLink(unsigned int iOrderNo, std::string strPaymentLink, FILE *fp);
     std::string getPaymentLink(unsigned int iOrderNo, FILE *fp);
-    int getLeftUserWBal(unsigned int iChatId, FILE *fp);
+    int getLeftUserWBal(int64_t iChatId, FILE *fp);
 	std::string updateDeliveryCharge(unsigned int iOrderNo, unsigned int iAmt, FILE *fp);
 	std::string updateUserAddress(int iUserId, std::string strAddress, FILE *fp);
 };

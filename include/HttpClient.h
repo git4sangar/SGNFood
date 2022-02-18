@@ -28,8 +28,8 @@ class HttpResponse {
 public:
     HttpResponse(){};
     virtual ~HttpResponse(){};
-    virtual void onDownloadSuccess(unsigned int iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp) = 0;
-    virtual void onDownloadFailure(unsigned int iChatId, unsigned int iOrderNo, FILE *fp) = 0;
+    virtual void onDownloadSuccess(int64_t iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp) = 0;
+    virtual void onDownloadFailure(int64_t iChatId, unsigned int iOrderNo, FILE *fp) = 0;
 };
 
 class HttpReqPkt;
@@ -41,7 +41,7 @@ class HttpClient : public std::enable_shared_from_this<HttpClient> {
 public:
     HttpClient(FILE *pFP) : fp(pFP) {}
     virtual ~HttpClient() {}
-    void postReqFormData(std::string strUrl, std::map<std::string, std::string> formData, unsigned int iChatId, unsigned int iOrderNo);
+    void postReqFormData(std::string strUrl, std::map<std::string, std::string> formData, int64_t iChatId, unsigned int iOrderNo);
 
     void subscribeListener(std::shared_ptr<HttpResponse> pObj) { pListener = pObj; }
     FILE *getFilePtr() { return fp; }
@@ -60,7 +60,8 @@ public:
 class HttpReqPkt {
 	std::vector<std::string> headers;
 	std::string strUrl, strData;
-	unsigned int reqType, iOrderNo, iChatId;
+	unsigned int reqType, iOrderNo;
+    int64_t iChatId;
 	std::shared_ptr<HttpClient> pHttpClient;
 	std::map<std::string, std::string> mapFormData;
 
@@ -72,7 +73,7 @@ public:
 	std::string getUrl() { return strUrl; }
 	unsigned int getReqType() { return reqType; }
 	unsigned int getOrderNo() { return iOrderNo; }
-	unsigned int getChatId() { return iChatId; }
+	int64_t getChatId() { return iChatId; }
 	std::string getUserData() { return strData; }
 	std::shared_ptr<HttpClient> getClient() { return pHttpClient; }
 	std::map<std::string, std::string> getFormData() { return mapFormData; }
@@ -81,7 +82,7 @@ public:
 	void setUrl(std::string url) { strUrl = url; }
 	void setReqType(unsigned int iReqType) { reqType = iReqType; }
 	void setOrderNo(unsigned int iNo)   { iOrderNo = iNo; }
-	void setChatId(unsigned int iId)    { iChatId = iId; }
+	void setChatId(int64_t iId)    { iChatId = iId; }
 	void setUserData(std::string strCnt) { strData = strCnt; }
 	void setClient(std::shared_ptr<HttpClient> pClient) { pHttpClient = pClient; }
 	void setFormData(std::map<std::string, std::string> frmData) { mapFormData = frmData; }

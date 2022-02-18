@@ -29,7 +29,7 @@ std::string getAddressNotification() {
 TgBot::GenericReply::Ptr MyAddress::prepareMenu(std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: MyAddress::prepareMenu {\n", time(0)); fflush(fp);
 
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
 
     std::vector<TgBot::KeyboardButton::Ptr> row[MAX_BUTTON_ROWS];
@@ -111,7 +111,7 @@ void MyAddress::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     iUserId     = pUser->m_UserId;
     if(isMobileNoPresent(pUser->m_Address)) strAddress  = pUser->m_Address;
 
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id)) ) {
         if(isMobileNoPresent(pMsg->text)) {
             getDBHandle()->addAddressToShipping(iUserId, pMsg->text, fp);

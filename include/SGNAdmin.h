@@ -16,7 +16,7 @@
 #include "BaseButton.h"
 
 class SGNAdmin : public BaseButton, public std::enable_shared_from_this<SGNAdmin> {
-    std::map<unsigned int, std::string> notifyMsgs;
+    std::map<int64_t, std::string> notifyMsgs;
 public:
     SGNAdmin(DBInterface::Ptr hDB) : BaseButton(hDB) {
     }
@@ -36,7 +36,7 @@ public:
     void onClick(TgBot::Message::Ptr pMessage, FILE *fp);
     void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp) {}
 
-    std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
+    std::map<int64_t, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
 
     std::vector<std::string> split_address(std::string strAddress);
     std::vector<unsigned int> getUserIds(std::string strMsg, FILE *fp, char delimiter);

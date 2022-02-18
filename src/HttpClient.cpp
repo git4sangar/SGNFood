@@ -20,7 +20,7 @@ std::queue<HttpReqPkt *> HttpClient::reqQ;
 pthread_mutex_t HttpClient::mtxgQ   = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t HttpClient::mtxgCond = PTHREAD_COND_INITIALIZER;
 
-void HttpClient::postReqFormData(std::string strUrl, std::map<std::string, std::string> formData, unsigned int iChatId, unsigned int iOrderNo) {
+void HttpClient::postReqFormData(std::string strUrl, std::map<std::string, std::string> formData, int64_t iChatId, unsigned int iOrderNo) {
 	HttpReqPkt *pRqPkt	= new HttpReqPkt();
 
 	pRqPkt->setClient(getSharedPtr());

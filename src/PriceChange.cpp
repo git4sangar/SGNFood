@@ -67,7 +67,7 @@ TgBot::GenericReply::Ptr PriceChange::prepareMenu(std::map<std::string, std::sha
     unsigned int iLoop = 0, iRowIndex = 0;
     TgBot::ReplyKeyboardMarkup::Ptr pMainMenu;
 
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
     std::map<std::string, std::shared_ptr<BaseButton> >::const_iterator itrBtn;
     std::string strChatId   = std::to_string(pMsg->chat->id);
 
@@ -129,7 +129,7 @@ TgBot::GenericReply::Ptr PriceChange::prepareMenu(std::map<std::string, std::sha
 
 void PriceChange::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
     fprintf(fp, "BaseBot %ld: PriceChange onClick pMsg %s {\n", time(0), pMsg->text.c_str()); fflush(fp);
-    std::map<unsigned int, UserContext>::const_iterator itrCntxt;
+    std::map<int64_t, UserContext>::const_iterator itrCntxt;
 
     if(m_Context.end() != (itrCntxt = m_Context.find(pMsg->chat->id))) {
         std::string tmpstr, id, price, prod, strMsg = pMsg->text;

@@ -144,7 +144,7 @@ void OrderMgmt::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
 
     //  Check if he is Admin
     bool isAdmin = false;
-    std::vector<unsigned int>::const_iterator itr;
+    std::vector<int64_t>::const_iterator itr;
     for(itr = adminChatIds.begin(); itr != adminChatIds.end(); itr++) if(*itr == pMsg->chat->id) { isAdmin = true; break; }
 
     //  By default land in Your Orders

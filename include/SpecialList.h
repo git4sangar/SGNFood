@@ -25,7 +25,7 @@ class SpecialList : public BaseButton, public std::enable_shared_from_this<Speci
     std::vector<Product::Ptr> products;
     std::string asset_file, category, strAddress;
     unsigned int iSelPage, iNoOfItems;
-    std::map<unsigned int, std::string> notifyMsgs;
+    std::map<int64_t, std::string> notifyMsgs;
     bool isAdmin;
 
 public:
@@ -46,7 +46,7 @@ public:
     std::shared_ptr<BaseButton> getSharedPtr() {return shared_from_this();}
     TgBot::InputFile::Ptr getMedia(TgBot::Message::Ptr pMsg, FILE *fp);
 
-    std::map<unsigned int, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
+    std::map<int64_t, std::string> getNotifyMsgs(TgBot::Message::Ptr pMessage, FILE *fp) { return notifyMsgs; }
     void create_product_table(std::string file_name ,FILE *fp);
     void cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& listAuraBtns, FILE *fp){}
     static std::string STR_MSG_DEFF_RELEASE;
