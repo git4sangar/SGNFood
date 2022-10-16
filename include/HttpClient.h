@@ -20,7 +20,8 @@
 #define	HTTP_REQ_TYPE_DWLD	(1)
 #define	HTTP_REQ_TYPE_UPLD	(2)
 #define HTTP_REQ_TYPE_GET	(3)
-#define HTTP_REQ_TYPE_POST	(4)
+#define HTTP_REQ_TYPE_POST_FORM	(4)
+#define HTTP_REQ_TYPE_POST	(5)
 
 #define MAX_BUFF_SIZE       (16 * ONE_KB)
 
@@ -41,6 +42,7 @@ class HttpClient : public std::enable_shared_from_this<HttpClient> {
 public:
     HttpClient(FILE *pFP) : fp(pFP) {}
     virtual ~HttpClient() {}
+	void postReq(std::string strUrl, std::string strPLoad);
     void postReqFormData(std::string strUrl, std::map<std::string, std::string> formData, int64_t iChatId, unsigned int iOrderNo);
 
     void subscribeListener(std::shared_ptr<HttpResponse> pObj) { pListener = pObj; }
@@ -51,6 +53,7 @@ public:
     static void *run(void *pThis);
     static HttpReqPkt *readFromQ();
     void pushToQ(HttpReqPkt *pReqPkt);
+	void defaultParser(int64_t iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp);
 
     static std::queue<HttpReqPkt *> reqQ;
     static pthread_mutex_t mtxgQ;
@@ -66,7 +69,7 @@ class HttpReqPkt {
 	std::map<std::string, std::string> mapFormData;
 
 public:
-	HttpReqPkt() : reqType {HTTP_REQ_TYPE_POST}, iOrderNo{0}, iChatId{0} {}
+	HttpReqPkt() : reqType {HTTP_REQ_TYPE_POST_FORM}, iOrderNo{0}, iChatId{0} {}
 	virtual ~HttpReqPkt() {}
 
 	std::vector<std::string> getHeaders() { return headers; }

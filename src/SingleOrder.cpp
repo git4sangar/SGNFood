@@ -8,8 +8,8 @@
 
 #include <iostream>
 #include <bits/stdc++.h>
-#include <boost/algorithm/string.hpp>
 #include <memory>
+#include <curl/curl.h>
 
 #include "pngwriter.h"
 
@@ -305,6 +305,23 @@ void SingleOrder::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
         strCmd.clear();
         iOrderNo = 0;
     }
+
+	if(iOrderNo <= MAX_USER_ID) {
+		std::stringstream ss;
+		CURL *curl   = curl_easy_init();
+		     pUser   = getDBHandle()->getUserForUserId(iOrderNo, fp);
+
+		ss.str(); ss << "From Mani Iyer's Carrier Service, Dear " << pUser->m_Name << ", ";
+		char *pMsg   = curl_easy_escape(curl, ss.str().c_str(), 0);
+		ss.str(""); ss << STR_WHATSAPP_LINK << "91" << getMobileNo(pUser->m_Address) << "?text=" << pMsg;
+		fprintf(fp, "BaseBot %ld: SingleOrder onClick, User Link: %s\n", time(0), ss.str().c_str()); fflush(fp);
+		notifyMsgs[0] = ss.str();
+		getDBHandle()->updateNotifications(notifyMsgs, fp); notifyMsgs.clear();
+
+		if(pMsg) curl_free(pMsg);
+		if(curl) curl_easy_cleanup(curl);
+		return;
+	}
 
     //  Confirm, Print, Deliver or Cancel order accordingly
     if(!strCmd.empty() && 0 < iOrderNo) {

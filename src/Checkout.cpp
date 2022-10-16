@@ -18,6 +18,7 @@
 #include "Constants.h"
 #include "Checkout.h"
 #include "HttpClient.h"
+#include "nlohmann_json.hpp"
 
 std::string Checkout::STR_MSG_DEFF_RELEASE  = "";
 std::string Checkout::STR_BTN_GPAY_TOP_UP   = "Topped Up GPay";
@@ -94,16 +95,17 @@ void Checkout::getPaymentLink(int64_t iWho, unsigned int iOrderNo, int iAmt, std
 
 //  Called from Http thread context. Accessing member variables is prohibited.
 void Checkout::onDownloadSuccess(int64_t iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp) {
-    boost::property_tree::ptree root;
     std::string strSuccess = "OK";  //  Case sensitive
 
     std::map<int64_t, std::string> msgToUsers;
     std::stringstream ss, ssMsg1, ssMsg2; ss << strResp;
 	User::Ptr   pUser   = getDBHandle()->getUserForChatId(iChatId, fp);
 
-    boost::property_tree::read_json(ss, root);
-    if(!strSuccess.compare(root.get<std::string>("status"))) {
-        std::string strUrl  = root.get<std::string>("paymentLink");
+	auto root = nlohmann::json::parse(strResp, nullptr, false);
+	if(root.is_discarded()) { fprintf(fp, "Checkout: Error parsing cashfree payment link %s\n", strResp.c_str()); fflush(fp); return; }
+
+    if(strSuccess == root.value<std::string>("status", "")) {
+        std::string strUrl  = root.value<std::string>("paymentLink", "");
 		ssMsg1 << "Click the following link to make the payment for Top Up.\n" << strUrl;
         msgToUsers[iChatId] = ssMsg1.str();
 

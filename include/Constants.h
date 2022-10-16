@@ -65,6 +65,7 @@
 
 #define BOT_DB_PATH     "db/"
 #define BOT_LOG_PATH    "logs/"
+#define BOT_NOTIFS_PATH "notifs/"
 
 #define BOT_FONT_PATH       "fonts/"
 #define BOT_FONT_FILE_BOLD  "Raleway-Bold.ttf"
@@ -74,6 +75,7 @@
 
 #define PROD_DLVRY_CHARGE	(132)
 #define ONE_KB              (1024)
+#define TEN_KB				(10*1024)
 #define MAX_MOBILE_DIGITS   (10)
 #define MAX_WAIT_B4_RESP    (10)
 #define MIN_ITEMS_FOR_PNG   (4)
@@ -87,6 +89,7 @@
 #define SKIP_INTERVAL       (5)
 #define MAX_BUTTON_ROWS     (5)
 #define MAX_USERS           (200000)
+#define MAX_USER_ID			(6000)
 
 #define PNG_HDR_FONT_SZ     (12)
 #define PNG_CNT_FONT_SZ     (10)
@@ -136,7 +139,7 @@
 #define STR_BTN_ADMIN_PG        "Admin Page"
 #define STR_BTN_MENU_MGMT       "Menu Mgmt"
 #define STR_BTN_PARSER          "Parser"
-#define STR_BTN_FUND_ME         "Diwali Bakshanam"
+#define STR_BTN_BAKSHANAM       "Bakshanam"
 #define STR_BTN_MSG_ADMIN       "Msg Admin"
 
 #define STR_BTN_CNFM_ORDER      "Confirm Order"

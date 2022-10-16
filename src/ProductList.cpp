@@ -143,7 +143,6 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
 
     //  Populate the next available row
     createKBBtn(STR_BTN_ABOUT_US, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
-    //createKBBtn(STR_BTN_FUND_ME, row[iRowIndex], lstBaseBtns, lstBaseBtns[STR_BTN_FAQ]);
 #ifndef AURA
     createKBBtn(STR_BTN_TOP_UP, row[iRowIndex], lstBaseBtns);
 #endif
@@ -152,7 +151,8 @@ TgBot::GenericReply::Ptr ProductList::prepareMenu(std::map<std::string, std::sha
 
     createKBBtn(STR_BTN_MAINMENU, row[iRowIndex], lstBaseBtns);
     if(isAdmin) createKBBtn(STR_BTN_ADMIN_PG, row[iRowIndex], lstBaseBtns);
-    else createKBBtn(STR_BTN_FAQ, row[iRowIndex], lstBaseBtns);
+    //else createKBBtn(STR_BTN_FAQ, row[iRowIndex], lstBaseBtns);
+    else createKBBtn(STR_BTN_BAKSHANAM, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_YOUR_ORDERS, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_VIEW_CART, row[iRowIndex], lstBaseBtns);
     iRowIndex++;

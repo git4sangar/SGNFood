@@ -277,6 +277,7 @@ std::vector<User::Ptr> DBInterface::getAllUsers(FILE *fp) {
         pUser   = getUser(&query);
         users.push_back(pUser);
     }
+	fprintf(fp, "Updated notifications for %ld users\n", users.size()); fflush(fp);
     return users;
 }
 
@@ -440,22 +441,27 @@ Notifs::Ptr DBInterface::getNotif(SQLite::Statement *pQuery) {
 }
 
 void DBInterface::updateNotifications(std::map<int64_t, std::string> notifs, FILE *fp) {
-    SQLite::Transaction transaction(*m_hDB);
     std::map<int64_t, std::string>::iterator itrNtfy;
-	bool needToCommit = false;
 
+    std::stringstream ss;
+	static unsigned long uiCount = 0;
+	std::string strNotifsFolder = std::string(BOT_ROOT_PATH) + std::string(BOT_NOTIFS_PATH);
     for(itrNtfy = notifs.begin(); itrNtfy != notifs.end(); itrNtfy++) {
 		User::Ptr pUser = nullptr;
 		if(MAX_USERS < itrNtfy->first) pUser  = getUserForChatId(itrNtfy->first, fp);
 		if(pUser && !pUser->m_isActive) continue;
-        std::stringstream ss;
-        ss << "INSERT INTO Notifs (" << Notifs::NOTIF_CHAT_ID << ", " << Notifs::NOTIF_MSG
-                            << ") VALUES ("
-           << itrNtfy->first << ", \"" << itrNtfy->second << "\");";
-        m_hDB->exec(ss.str());
-		needToCommit = true;
+
+		if(notifs.size() > 10) {
+			ss.str(""); ss << strNotifsFolder << "notification_" << time(0) << "_" << std::setfill('0') << std::setw(4) << ++uiCount << ".txt";
+		} else {
+			ss.str(""); ss << strNotifsFolder << "_notification_" << time(0) << "_" << std::setfill('0') << std::setw(4) << ++uiCount << ".txt";
+		}
+		FILE *fpNotif = fopen(ss.str().c_str(), "w");
+		if(fpNotif) {
+			fprintf(fpNotif, "%ld:%s", itrNtfy->first, itrNtfy->second.c_str()); fflush(fpNotif);
+			fclose(fpNotif);
+		}
     }
-    if(needToCommit) transaction.commit();
 }
 
 void DBInterface::removeNotif(int64_t iNotifId, FILE *fp) {

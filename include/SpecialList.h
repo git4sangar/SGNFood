@@ -37,7 +37,7 @@ public:
     void init(TgBot::Message::Ptr pMsg, FILE *fp) {
         categories.clear(); category.clear(); strAddress.clear();
         products.clear(); asset_file.clear(); iSelPage = 0; iNoOfItems = 0;
-        STR_MSG_DEFF_RELEASE   = "Diwali Sweets and Karam Each pack 250g. Marundu(legiyum) 50gms . Min order ₹750(5 packets).Delivery starts 2-Nov";
+        STR_MSG_DEFF_RELEASE   = "Diwali Sweets and Karam Each pack 250g. Marundu(legiyum) 50gms . Min order ₹875(5 packets). Delivery starts 22nd";
         isAdmin = false; notifyMsgs.clear();
     }
     std::string getMsg() { return STR_MSG_DEFF_RELEASE;}

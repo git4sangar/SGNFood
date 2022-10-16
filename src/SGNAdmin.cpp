@@ -115,7 +115,7 @@ TgBot::GenericReply::Ptr SGNAdmin::prepareMenu(std::map<std::string, std::shared
 
     createKBBtn(STR_BTN_SEND_MSG, row[iRowIndex], lstBaseBtns);
     createKBBtn(STR_BTN_ALL_DLVRD, row[iRowIndex], lstBaseBtns, getSharedPtr());
-    createKBBtn(STR_BTN_REMIND_CHKOUT, row[iRowIndex], lstBaseBtns, getSharedPtr());
+    createKBBtn(STR_BTN_BAKSHANAM, row[iRowIndex], lstBaseBtns);
     iRowIndex++;
 
     createKBBtn(STR_BTN_MENU_MGMT, row[iRowIndex], lstBaseBtns);
@@ -181,9 +181,10 @@ void SGNAdmin::onClick(TgBot::Message::Ptr pMsg, FILE *fp) {
                     << std::setfill(' ') << std::setw(5) << "Amt" << "    "
                     << std::setfill(' ') << std::setw(5) << "Bal" << "</b>\n";
                 for(auto &order : orders) ss << std::setfill(' ') << std::setw(5) << order->m_OrdrTm.substr(5,5) << "    "
-                                             << std::setfill(' ') << std::setw(5) << order->m_OrderNo << "    "
-                                             << std::setfill(' ') << std::setw(5) << order->m_Amt << "    "
-                                             << std::setfill(' ') << std::setw(5) << order->m_WBalance << "\n";
+					                       << std::setfill(' ') << std::setw(5) << order->m_OrderNo << "    "
+                    					   << std::setfill(' ') << std::setw(5) << order->m_Amt << "    "
+					                       << std::setfill(' ') << std::setw(5) << order->m_WBalance << "\n";
+				
                 if(0 < old_orders.size()) {
                     ss << "----------\n";
                     ss << "Name: " << old_orders[0]->m_Name;

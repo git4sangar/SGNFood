@@ -6,7 +6,6 @@
  */
 
 
-#include <OrderMgmt.h>
 #include <iostream>
 #include <unistd.h>     // fork()
 #include <stdlib.h>     // exit()
@@ -15,6 +14,9 @@
 #include <tuple>
 #include <thread>
 #include <pthread.h>
+#include <tuple>
+#include <list>
+#include <dirent.h>
 
 //  socket
 #include <sys/types.h>
@@ -26,6 +28,7 @@
 #include "fifo_map.h"
 
 #include "BaseButton.h"
+#include "OrderMgmt.h"
 #include "FAQs.h"
 #include "Version.h"
 #include "vigenere/encrypt.h"
@@ -55,9 +58,56 @@ nlohmann::fifo_map<std::string, std::string> descToCode;
 pthread_mutex_t mtx_01;
 std::vector< std::tuple<int64_t, unsigned int> > inTm;
 std::string BotVersion::STR_MSG_DEFF_RELEASE;
-//bool isAgent;
+
+
+void petWatchDog(FILE *fp) {
+   int sockfd = 0;
+   struct hostent *he;
+   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+   struct sockaddr_in their_addr;
+
+   he=gethostbyname("localhost");
+   their_addr.sin_family = AF_INET;      /* host byte order */
+   their_addr.sin_port = htons(MYPORT);  /* short, network byte order */
+   their_addr.sin_addr = *((struct in_addr *)he->h_addr);
+   bzero(&(their_addr.sin_zero), 8);     /* zero the rest of the struct */
+   sendto(sockfd, BIN_FILE_PATH, strlen(BIN_FILE_PATH)+1, 0,
+             (struct sockaddr *)&their_addr, sizeof(struct sockaddr));
+   close(sockfd);
+   //fprintf(fp, "BaseBot %ld: Petting WatchDog\n", time(0)); fflush(fp);
+}
+
+std::int32_t getUpdateId() {
+    std::string root_path   = std::string(BOT_ROOT_PATH);
+    std::string log_path    = std::string(BOT_LOG_PATH);
+    std::string update_file	= root_path + log_path + UPDATE_ID_FILE;
+
+    std::string strUpdateId("0");
+    std::ifstream myfile(update_file);
+	if(myfile.is_open()) {
+	    myfile >> strUpdateId;
+		myfile.close();
+	}
+    return std::stoi(strUpdateId);    
+}
+
+void setUpdateId(std::int32_t updateId) {
+	static std::int32_t prev = 0;
+    std::string root_path   = std::string(BOT_ROOT_PATH);
+    std::string log_path    = std::string(BOT_LOG_PATH);
+    std::string update_file	= root_path + log_path + UPDATE_ID_FILE;
+
+	if(prev != updateId) {
+		prev = updateId;
+	    std::ofstream myfile(update_file, std::ios::trunc);
+	    myfile << std::to_string(updateId);
+		myfile.flush();
+	    myfile.close();
+	}
+}
 
 void initGlobals(FILE *fp) {
+    petWatchDog(fp);
     descToCode.clear();
     descToCode[BREAKFAST]       = "TF-";
     descToCode[BISIBELEBATH]    = "TF-";
@@ -80,6 +130,16 @@ void initGlobals(FILE *fp) {
     pthread_t tCurThread;
     pthread_create(&tCurThread, NULL, &HttpClient::run, (void *)fp);
     pthread_detach(tCurThread);
+
+	auto pHttpClient = std::make_shared<HttpClient>(fp);
+
+	std::stringstream ss;
+	auto newUpdateId = getUpdateId();
+	ss << "{\"offset\":" << newUpdateId << ", \"limit\" : " << 100 << "}";
+	fprintf(fp, "Global Init: Clearing stale requests : %s\n", ss.str().c_str()); fflush(fp);
+	pHttpClient->postReq("https://api.telegram.org/bot1351042610:AAFJriXJPfpsZs--xaKVKp7kjVf7n7tQr7Q/getUpdates", ss.str());
+	sleep(5); // Wait until HttpReq made for cleaning stale reqs returns
+	setUpdateId(newUpdateId);
 }
 
 void BaseButton::cleanup(TgBot::Message::Ptr pMsg, std::map<std::string, std::shared_ptr<BaseButton>>& lstBaseBtns, FILE *fp) {
@@ -139,23 +199,6 @@ std::string getMobileNo(std::string strAddress) {
     return strMobile.substr(strMobile.length() - MAX_MOBILE_DIGITS);
 }
 
-void petWatchDog(FILE *fp) {
-   int sockfd = 0;
-   struct hostent *he;
-   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-   struct sockaddr_in their_addr;
-
-   he=gethostbyname("localhost");
-   their_addr.sin_family = AF_INET;      /* host byte order */
-   their_addr.sin_port = htons(MYPORT);  /* short, network byte order */
-   their_addr.sin_addr = *((struct in_addr *)he->h_addr);
-   bzero(&(their_addr.sin_zero), 8);     /* zero the rest of the struct */
-   sendto(sockfd, BIN_FILE_PATH, strlen(BIN_FILE_PATH)+1, 0,
-             (struct sockaddr *)&their_addr, sizeof(struct sockaddr));
-   close(sockfd);
-   //fprintf(fp, "BaseBot %ld: Petting WatchDog\n", time(0)); fflush(fp);
-}
-
 void plsWaitThread(std::shared_ptr<TgBot::Bot> pBot, FILE *fp) {
     time_t curTm;
     std::vector<int64_t> chatIds;
@@ -179,35 +222,75 @@ void plsWaitThread(std::shared_ptr<TgBot::Bot> pBot, FILE *fp) {
     }
 }
 
+std::tuple<int64_t, std::string> splitString(std::string strSrc) {
+	std::tuple<int64_t, std::string> ret;
+	if(strSrc.empty()) return ret;
+
+	std::size_t pos = strSrc.find_first_of(":");
+	if(std::string::npos != pos) {
+		int64_t chat_id = std::stoll(strSrc.substr(0, pos));
+		ret = std::make_tuple(chat_id, strSrc.substr(pos+1));
+	}
+	return ret;
+}
+
 void sendNotifyThread(std::shared_ptr<TgBot::Bot> pBot, DBInterface::Ptr hDB, FILE *fp) {
-    std::vector<Notifs::Ptr> notifs;
-    std::vector<Notifs::Ptr>::iterator itr;
-    int64_t iLoop = 0, iChatId = 0;
-	//std::shared_ptr<TgBot::Bot> pBot = std::make_shared<TgBot::Bot>("1351042610:AAFJriXJPfpsZs--xaKVKp7kjVf7n7tQr7Q");	// ManiMama Bot
-
+	std::string strNotifsFolder = std::string(BOT_ROOT_PATH) + std::string(BOT_NOTIFS_PATH);
+	int iTotal = -1;
     while(1) {
-        //  Check if any in database
-        notifs = hDB->getNotifications(fp);
+		std::vector<std::string> tempNames;
+	    DIR *dir = opendir(strNotifsFolder.c_str());
+		struct dirent *entry = NULL;
+		while(NULL != (entry = readdir(dir))) {
+			if(entry->d_name[0] == '.') continue;
+			tempNames.push_back(entry->d_name);
+		}
+		if(dir) closedir(dir);
 
-        if(!notifs.empty()) {
-            fprintf(fp, "Got %ld notification request.\n", notifs.size()); fflush(fp);
-            for(iLoop = 1, itr = notifs.begin(); notifs.end() != itr; itr++, iLoop++) {
-                iChatId = (MAX_USERS > (*itr)->m_ChatId) ? adminChatIds[1] : (*itr)->m_ChatId;
-                try {
-                    pBot->getApi().sendMessage(iChatId, (*itr)->m_Msg, false, 0, nullptr, "HTML");
-                    if(!(iLoop%10)) pBot->getApi().sendMessage(adminChatIds[1], "Pls wait sending notifications.", false, 0, nullptr, "HTML");
-                } catch(std::exception &e) {
-                    std::string strExcept = e.what();
-                    if(std::string::npos != strExcept.find("blocked") || std::string::npos != strExcept.find("not found")) hDB->deactivate(iChatId, fp);
-                    fprintf(fp, "Exception : %s, while sending notification to user.\n", strExcept.c_str()); fflush(fp);
-                }
-                if(itr != notifs.end())hDB->removeNotif((*itr)->m_NotifId, fp);
-            }
-            if(10 < iLoop) pBot->getApi().sendMessage(adminChatIds[1], "Sent all notifications.", false, 0, nullptr, "HTML");
+		if(iTotal < 0 && tempNames.size() > 25) {
+			iTotal = tempNames.size();
+			fprintf(fp, "-------- Got %ld notifications to send --------\n", tempNames.size()); fflush(fp);
+		}
 
-            notifs.clear();
-            fprintf(fp, "Sent all notifications.\n"); fflush(fp);
-        }
+		std::list<std::string> fileNames;
+		for(auto& tempName : tempNames) {
+			if(tempName[0] == '_') fileNames.push_front(tempName);
+			else fileNames.push_back(tempName);
+		}
+	
+		unsigned int iLoop = 0;
+	    for(const auto& fileName : fileNames) {
+			iLoop++;
+			if(iTotal > 0) iTotal--;
+
+			std::string strFileName = strNotifsFolder + fileName;
+	        FILE *fpNotif = fopen(strFileName.c_str(), "r");
+			if(fpNotif == NULL) continue;
+	        char strCntnt[TEN_KB];
+	        int iLen = fread(strCntnt, 1, TEN_KB, fpNotif);
+	        strCntnt[iLen] = '\0';
+	        fclose(fpNotif);
+
+	        auto retVal = splitString(strCntnt);
+			auto chat_id = std::get<0>(retVal);
+            auto iChatId = (MAX_USERS > chat_id) ? adminChatIds[1] : chat_id;
+			try {
+	        	pBot->getApi().sendMessage(iChatId, std::get<1>(retVal), false, 0, nullptr, "HTML");
+    	        if(!(iLoop % 25)) pBot->getApi().sendMessage(adminChatIds[1], "Sending notifications...", false, 0, nullptr, "HTML");
+        		if(iTotal == 0) {
+					pBot->getApi().sendMessage(adminChatIds[1], "Sent all notifications.", false, 0, nullptr, "HTML");
+					fprintf(fp, "---------- Sent all notifications ---------\n"); fflush(fp);
+					iTotal = -1;
+				}
+			} catch(std::exception &e) {
+                std::string strExcept = e.what();
+                if(std::string::npos != strExcept.find("Forbidden") || std::string::npos != strExcept.find("deactivated")) hDB->deactivate(iChatId, fp);
+                fprintf(fp, "Exception : %s, while sending notification to user %ld.\n", strExcept.c_str(), iChatId); fflush(fp);
+			}
+    	    std::remove(strFileName.c_str());
+			if(!(iLoop % 25)) break;
+	    }
+
         sleep(2);
     }
 }
@@ -233,35 +316,6 @@ std::map<std::string, std::shared_ptr<BaseButton>>::const_iterator isSingleOrder
         retItr = listBaseBtns.find(STR_BTN_SINGLE_ORDER);
     }
     return retItr;
-}
-
-std::int32_t getUpdateId() {
-    std::string root_path   = std::string(BOT_ROOT_PATH);
-    std::string log_path    = std::string(BOT_LOG_PATH);
-    std::string update_file	= root_path + log_path + UPDATE_ID_FILE;
-
-    std::string strUpdateId("0");
-    std::ifstream myfile(update_file);
-	if(myfile.is_open()) {
-	    myfile >> strUpdateId;
-		myfile.close();
-	}
-    return std::stoi(strUpdateId);    
-}
-
-void setUpdateId(std::int32_t updateId) {
-	static std::int32_t prev = 0;
-    std::string root_path   = std::string(BOT_ROOT_PATH);
-    std::string log_path    = std::string(BOT_LOG_PATH);
-    std::string update_file	= root_path + log_path + UPDATE_ID_FILE;
-
-	if(prev != updateId) {
-		prev = updateId;
-	    std::ofstream myfile(update_file, std::ios::trunc);
-	    myfile << std::to_string(updateId);
-		myfile.flush();
-	    myfile.close();
-	}
 }
 
 void BotMainLoop(FILE *fp) {
@@ -301,7 +355,7 @@ void BotMainLoop(FILE *fp) {
     listBaseBtns[STR_BTN_EMPTY_CART]    = listBaseBtns[STR_BTN_MAINMENU];
     listBaseBtns[STR_BTN_FAQ]           = std::make_shared<FAQs>(hDB);
 
-    listBaseBtns[STR_BTN_FUND_ME]       = std::make_shared<SpecialList>(hDB);
+    listBaseBtns[STR_BTN_BAKSHANAM]     = std::make_shared<SpecialList>(hDB);
     listBaseBtns[STR_BTN_VIEW_CART]     = std::make_shared<ViewCart>(hDB);
     listBaseBtns[STR_BTN_REMOVE]        = listBaseBtns[STR_BTN_VIEW_CART];
 
@@ -442,17 +496,22 @@ void BotMainLoop(FILE *fp) {
     });
     //fprintf(fp, "BaseBot %ld: Bot username %s\n", time(0), pBot->getApi().getMe()->username.c_str()); fflush(fp);
 
-    std::shared_ptr<TgBot::TgLongPoll> pLongPoll  = std::make_shared<TgBot::TgLongPoll>(*pBot, 100, 3);
+    std::shared_ptr<TgBot::TgLongPoll> pLongPoll  = std::make_shared<TgBot::TgLongPoll>(*pBot, 10, 3);
  	std::int32_t update_id = getUpdateId();
+	setUpdateId(update_id + 1);
+    petWatchDog(fp);
+	
     while (true) {
         try {
             petWatchDog(fp);
     		pBot->getApi().deleteWebhook();
-            update_id = pLongPoll->start(update_id);
-			setUpdateId(update_id);
+            std::int32_t new_id = pLongPoll->start();
+			if(new_id > update_id) { update_id = new_id; setUpdateId(update_id); }
         } catch (std::exception& e) {
 			if(update_id > 0) update_id++;
-            fprintf(fp, "BaseBot %ld: An exception occured at longPoll %s\nUpdating id %d\n", time(0), e.what(), update_id); fflush(fp);
+			std::string strException = e.what();
+            fprintf(fp, "BaseBot %ld: An exception occured at longPoll %s\nUpdating id %d\n", time(0), strException.c_str(), update_id); fflush(fp);
+			//if(strException.find("make sure that only one bot instance is running") != std::string::npos) return;
         }
     }
 }
@@ -498,5 +557,4 @@ int main() {
     exit(EXIT_SUCCESS);
     return 0;
 }
-
 

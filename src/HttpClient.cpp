@@ -15,6 +15,7 @@
 #include <curl/curl.h>
 
 #include "Constants.h"
+#include "nlohmann_json.hpp"
 
 std::queue<HttpReqPkt *> HttpClient::reqQ;
 pthread_mutex_t HttpClient::mtxgQ   = PTHREAD_MUTEX_INITIALIZER;
@@ -25,7 +26,7 @@ void HttpClient::postReqFormData(std::string strUrl, std::map<std::string, std::
 
 	pRqPkt->setClient(getSharedPtr());
 	pRqPkt->setChatId(iChatId);
-	pRqPkt->setReqType(HTTP_REQ_TYPE_POST);
+	pRqPkt->setReqType(HTTP_REQ_TYPE_POST_FORM);
 	pRqPkt->setUrl(strUrl);
 	pRqPkt->setOrderNo(iOrderNo);
 	pRqPkt->setFormData(formData);
@@ -33,6 +34,24 @@ void HttpClient::postReqFormData(std::string strUrl, std::map<std::string, std::
 	pRqPkt->addHeader(std::string("Content-Type: application/x-www-form-urlencoded"));
 
 	pushToQ(pRqPkt);
+}
+
+void HttpClient::postReq(std::string strUrl, std::string strPLoad) {
+    if (strPLoad.empty()) {
+        std::cout << "HttpClient: Invalid post payload" << std::endl;
+        return;
+    }
+    HttpReqPkt* pRqPkt = new HttpReqPkt();
+    pRqPkt->setClient(shared_from_this());
+    pRqPkt->setReqType(HTTP_REQ_TYPE_POST);
+    pRqPkt->setUrl(strUrl);
+    pRqPkt->setUserData(strPLoad);
+
+    pRqPkt->addHeader(std::string("Accept: application/json"));
+    pRqPkt->addHeader(std::string("Content-Type: application/json"));
+
+    fprintf(fp, "Post Req: %s\n", strUrl.c_str()); fflush(fp);
+    pushToQ(pRqPkt);
 }
 
 void HttpClient :: pushToQ(HttpReqPkt *pReqPkt) {
@@ -75,13 +94,14 @@ void *HttpClient :: run(void *pFilePtr) {
 
     std::string strCAFile		= std::string(BOT_ROOT_PATH) + std::string(CA_CERT_FILE);
     while(1) {
+		std::string strResp;
     	form = NULL; field = NULL; curl_hdrs	= NULL; formData.clear();
     	pReqPkt	= HttpClient::readFromQ();
     	pThis   = pReqPkt->getClient();
     	fprintf(fp, "HttpClient: Got HTTP req: %s\n", pReqPkt->getUrl().c_str()); fflush(fp);
 
         CURL *curl  = curl_easy_init();
-        if(curl && pThis->pListener) {
+        if(curl) {
             curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 0L);
             curl_easy_setopt(curl, CURLOPT_URL, pReqPkt->getUrl().c_str());
 
@@ -99,9 +119,20 @@ void *HttpClient :: run(void *pFilePtr) {
 
             switch(pReqPkt->getReqType()) {
 				case HTTP_REQ_TYPE_POST:
+                    memset(pPostPayLoad, 0, MAX_BUFF_SIZE);
+                    //  Need to copy to a buffer & make POST request. Otherwise not working
+                    strncpy(pPostPayLoad, pReqPkt->getUserData().c_str(), (MAX_BUFF_SIZE - 1));
+                    std::cout << "Post payload " << pPostPayLoad << std::endl;
+                    curl_easy_setopt(curl, CURLOPT_POST, 1L);
+                    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, pPostPayLoad);
+                    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_function);
+                    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)&strResp);
+                    break;
+
+				case HTTP_REQ_TYPE_POST_FORM:
 				    curl_easy_setopt(curl, CURLOPT_POST, 1L);
 					curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_function);
-					curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&pThis->strResp);
+					curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&strResp);
 
 					formData    = pReqPkt->getFormData();
 					std::stringstream ss; std::string prefix;
@@ -121,13 +152,14 @@ void *HttpClient :: run(void *pFilePtr) {
 
             CURLcode infoResp = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &respCode);
             if(CURLE_OK == res && CURLE_OK == infoResp && respCode >= 200 && respCode <= 299) {
-                fprintf(fp, "HttpClient: ChatId: %d, Response Data: %s, Response code %ld\n",
-                        pReqPkt->getOrderNo(), pThis->strResp.c_str(), respCode); fflush(fp);
-                pThis->pListener->onDownloadSuccess(pReqPkt->getChatId(), pReqPkt->getOrderNo(), pThis->strResp, fp);
+                fprintf(fp, "HttpClient Response\nChatId: %d\n---Response Data---\n%s\nResponse code : %ld\n",
+                        pReqPkt->getOrderNo(), strResp.c_str(), respCode); fflush(fp);
+                if(pThis->pListener) pThis->pListener->onDownloadSuccess(pReqPkt->getChatId(), pReqPkt->getOrderNo(), strResp, fp);
+				else pThis->defaultParser(pReqPkt->getChatId(), pReqPkt->getOrderNo(), strResp, fp);
             } else {
 				fprintf(fp, "HttpClient: Error: ChatId %d, Res %d, infoResp %d, respCode %ld, response %s\n",
 				        pReqPkt->getOrderNo(), res, infoResp, respCode, pThis->strResp.c_str()); fflush(fp);
-                pThis->pListener->onDownloadFailure(pReqPkt->getChatId(), pReqPkt->getOrderNo(), fp);
+                if(pThis->pListener) pThis->pListener->onDownloadFailure(pReqPkt->getChatId(), pReqPkt->getOrderNo(), fp);
             }
         }
         if(curl_hdrs) {curl_slist_free_all(curl_hdrs); curl_hdrs = NULL; }
@@ -155,6 +187,34 @@ size_t HttpClient :: write_function(char *ptr, size_t size, size_t nmemb, void *
     }
     return iTotal;
 }
+
+void HttpClient :: defaultParser(int64_t iChatId, unsigned int iOrderNo, std::string strResp, FILE *fp) {
+    fprintf(fp, "Default Parser: size of Resp : %ld { \n", strResp.size()); fflush(fp);
+	if(strResp.size() == 0) return;
+	uint32_t updateId = 0;
+
+	auto root =  nlohmann::json::parse(strResp, nullptr, false);
+	if(root.is_discarded() || !root["ok"]) return;
+
+	nlohmann::json results	= root["result"];
+	fprintf(fp, "Default Parser: Size of results : %ld\n", results.size()); fflush(fp);
+	if(results.size() == 0) return;
+
+	for(uint32_t iLoop = 0; iLoop < results.size(); iLoop++) {
+		nlohmann::json result	= results[iLoop];
+		updateId	= result["update_id"];
+	}
+
+	std::stringstream ss;
+    ss << "{\"offset\":" << (updateId+1) << ", \"limit\" : " << 100 << "}";
+    fprintf(fp, "Default Parser: Making Post Request Post payload : %s\n", ss.str().c_str()); fflush(fp);
+    postReq("https://api.telegram.org/bot1351042610:AAFJriXJPfpsZs--xaKVKp7kjVf7n7tQr7Q/getUpdates", ss.str());	
+    fprintf(fp, "Default Parser: } \n"); fflush(fp);
+}
+
+
+
+
 
 
 /*
